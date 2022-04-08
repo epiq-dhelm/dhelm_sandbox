@@ -1,0 +1,241 @@
+#!/bin/python3
+
+import sys
+from tkinter import *
+
+import time
+import RFExplorer
+print(RFExplorer, __file__)
+from RFExplorer import RFE_Common
+import math
+
+#---------------------------------------------------------
+# global variables and initialization
+#---------------------------------------------------------
+
+# List of field labels
+labels = [
+    "Start Freq MHz:",
+    "Power Level (0 - 3):",
+    "Number of Steps:",
+    "Freq Step in KHz:",
+    "Step Time in ms:",
+]
+
+user_entry = []
+usb_port = ''
+
+SERIALPORT = None    #serial port identifier, use None to autodetect
+#SERIALPORT = '/dev/ttyUSB0'    #serial port identifier, use None to autodetect
+#SERIALPORT = '/dev/ttyUSB1'    #serial port identifier, use None to autodetect
+BAUDRATE = 500000
+
+objRFE = RFExplorer.RFECommunicator()     #Initialize object and thread
+#objRFE.AutoConfigure = False
+objRFE.AutoConfigure = True
+
+#These values can be limited by specific RF Explorer Spectrum Analyzer model.
+#Check RFE SA Comparation chart from www.rf-explorer.com\models to know what
+#frequency setting are available for your model
+#These freq settings will be updated later in SA condition.
+SPAN_SIZE_MHZ = 50           #Initialize settings
+START_SCAN_MHZ = 50
+STOP_SCAN_MHZ = 960
+RESET = True
+
+root = Tk()
+root.wm_title('RFE Signal Generator')
+current_frame = Frame(root)
+print("in initialization")
+
+def power_on():
+    global cw_freq, cw_power
+
+    print("power on")
+    frequency = cw_freq.get()
+    intfreq = int(frequency) * 1000
+    print("frequency ", intfreq)
+
+    power = int(cw_power.get())
+    if power > 3 or power < 0:
+        print("invalid power", power, "changing to 3")
+        power = 3
+    print("power", power)
+
+
+    cmd = "C3-F:" + "{:07d}".format(intfreq) + ",0," + str(power)
+
+    print(cmd)
+    objRFE.SendCommand(cmd)
+
+
+
+def power_off():
+    print("power off")
+    objRFE.SendCommand_GeneratorRFPowerOFF()
+
+def continuous_wave():
+    global current_frame, cw_freq, cw_power
+
+    print("continuous wave")
+
+    current_frame.destroy()
+    current_frame = Frame(root)
+
+    label = Label(master=current_frame, text="Frequency MHz: ")
+    label.grid(row = 0, column = 0, padx = 20, pady = 10)
+    cw_freq = Entry(master=current_frame, width = 20)
+    cw_freq.grid(row = 0, column = 1, padx = 20, pady = 10)
+
+    label2 = Label(master=current_frame, text="Power (0-3) : ")
+    label2.grid(row = 1, column = 0, padx = 20, pady = 10)
+    cw_power = Entry(master=current_frame, width = 20)
+    cw_power.grid(row = 1, column = 1, padx = 20, pady = 10)
+
+    Button(current_frame, text = 'Power On', command = power_on).grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Power Off', command = power_off).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Back', command = top_window).grid(row = 2, column = 3, sticky = W, padx = 20, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+
+
+def start():
+
+    print("start sweep")
+
+    frequency = int(user_entry[0].get())
+    intfreq = int(frequency) * 1000
+
+    power = int(user_entry[1].get())
+    if power > 3 or power < 0:
+        print("invalid power", power, "changing to 3")
+        power = 3
+
+    steps = user_entry[2].get()
+
+    step_width = user_entry[3].get()
+
+    step_time = user_entry[4].get()
+
+    cmd = "C3-F:" + "{:07d}".format(intfreq) + ",0," + str(power) + "," + "{:04d}".format(int(steps)) + "," + "{:07d}".format(int(step_width)) + "," + "{:05d}".format(int(step_time))
+
+    print(cmd)
+    objRFE.SendCommand(cmd)
+    
+
+
+def clear():
+
+    print("clear")
+
+    for idx, text in enumerate(labels):
+        user_entry[idx].delete(0, END)
+
+
+
+def frequency_sweep():
+    global current_frame
+
+    current_frame.destroy()
+    frame = Frame(root)
+    current_frame = frame
+
+    # Loop over the list of field labels
+    for idx, text in enumerate(labels):
+
+        # Create a Label widget with the text from the labels list
+        label = Label(current_frame, text=text)
+
+        # Create an Entry widget
+        user_entry.append(Entry(current_frame, width=20))
+
+        # Use the grid geometry manager to place the Label and
+        # Entry widgets in the row whose index is idx
+        label.grid(row=idx, column=0, padx=10, pady=10, sticky="e")
+
+        user_entry[idx].grid(row=idx, column=1, padx=10, pady=10)
+
+    Button(current_frame, text = 'Start Sweep', command = start).grid(row = idx+1, column = 0, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Stop Sweep', command = power_off).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Clear', command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Back', command = top_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+def top_window():
+    global current_frame
+
+    current_frame.destroy()
+    current_frame = Frame(root)
+    Button(current_frame, text = 'Frequency Sweep', command = frequency_sweep).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Continuous Wave', command = continuous_wave).grid(row = 1, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Exit', command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+def connect():
+
+    print("Connecting")
+
+    #Find and show valid serial ports
+    objRFE.GetConnectedPorts()
+
+    #Connect to available port
+    if (objRFE.ConnectPort(SERIALPORT, BAUDRATE)):
+        if RESET:
+            print("Resetting device...")
+            #Reset the unit to start fresh
+            objRFE.SendCommand("r")
+            #Wait for unit to notify reset completed
+            while(objRFE.IsResetEvent):
+                pass
+            #Wait for unit to stabilize
+            time.sleep(4)
+
+    print("connected...")
+    #Request RF Explorer configuration
+    objRFE.SendCommand_RequestConfigData()
+
+    #Wait to receive configuration and model details
+    while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
+        objRFE.ProcessReceivedString(True)    #Process the received configuration
+
+    if(objRFE.IsGenerator() == False):
+        exit_program()
+
+    top_window()
+
+def exit_program():
+    global objRFE
+
+    print("exit program")
+    objRFE.Close()
+    objRFE = None
+    exit()
+
+def main_window():
+    global current_frame
+
+
+    current_frame.destroy()
+    current_frame = Frame(root)
+
+#    label = Label(master=current_frame, text="USB Port: ")
+#    label.grid(row = 0, column = 0, padx = 20, pady = 10)
+#    usb_entry = Entry(master=current_frame, width = 20)
+#    usb_entry.grid(row = 0, column = 1, padx = 20, pady = 10)
+
+    Button(current_frame, text = 'Connect ', command = connect).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Exit', command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+
+
+
+objRFE.VerboseLevel = 10
+
+main_window()
+
+root.mainloop()
+
+objRFE.Close()
+objRFE = None
+

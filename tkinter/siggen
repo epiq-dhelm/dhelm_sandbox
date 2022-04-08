@@ -1,81 +1,152 @@
 #!/bin/python3
 
+import sys
+from tkinter import *
 
-import tkinter as tk
+import time
+import RFExplorer
+print(RFExplorer, __file__)
+from RFExplorer import RFE_Common
+import math
+
+def power_on():
+    print("power on")
+
+def power_off():
+    print("power off")
+
+def continuous_sweep():
+    global root, current_frame, labels, entry
+
+    print("continuous sweep")
+
+    current_frame.destroy()
+    current_frame = Frame(root)
+
+    label = Label(master=current_frame, text="Frequency MHz: ")
+    label.grid(row = 0, column = 0, padx = 20, pady = 10)
+    entry = Entry(master=current_frame, width = 20)
+    entry.grid(row = 0, column = 1, padx = 20, pady = 10)
+
+    label2 = Label(master=current_frame, text="Power (0-3) : ")
+    label2.grid(row = 1, column = 0, padx = 20, pady = 10)
+    entry2 = Entry(master=current_frame, width = 20)
+    entry2.grid(row = 1, column = 1, padx = 20, pady = 10)
+
+    Button(current_frame, text = 'Power On', command = power_on).grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Power Off', command = power_off).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Back', command = top_window).grid(row = 2, column = 3, sticky = W, padx = 20, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+
 
 def start():
+    global user_entry, labels
+
     print("submit")
+
     for idx, text in enumerate(labels):
-        value = entry[idx].get()
+        value = user_entry[idx].get()
         print(labels[idx], "\t", value)
 
 def clear():
+    global user_entry, labels
+
     print("clear")
+
     for idx, text in enumerate(labels):
-        entry[idx].delete(0, tk.END)
+        user_entry[idx].delete(0, END)
 
 def stop():
     print("stop")
 
-# Create a new window with the title "Address Entry Form"
-window = tk.Tk()
-window.title("Frequency Sweep")
+
+def frequency_sweep():
+    global root, current_frame, user_entry, labels
+
+    current_frame.destroy()
+    frame = Frame(root)
+    current_frame = frame
+
+    # Loop over the list of field labels
+    for idx, text in enumerate(labels):
+
+        # Create a Label widget with the text from the labels list
+        label = Label(current_frame, text=text)
+
+        # Create an Entry widget
+        user_entry.append(Entry(current_frame, width=20))
+
+        # Use the grid geometry manager to place the Label and
+        # Entry widgets in the row whose index is idx
+        label.grid(row=idx, column=0, padx=10, pady=10, sticky="e")
+
+        user_entry[idx].grid(row=idx, column=1, padx=10, pady=10)
+
+    Button(current_frame, text = 'Start Sweep', command = start).grid(row = idx+1, column = 0, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Stop Sweep', command = stop).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Clear', command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Back', command = top_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+def top_window():
+    global root, current_frame, labels, entry
+    current_frame.destroy()
+    current_frame = Frame(root)
+    Button(current_frame, text = 'Frequency Sweep', command = frequency_sweep).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Continuous Sweep', command = continuous_sweep).grid(row = 1, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Exit', command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+def connect():
+    global usb_entry
+
+    usb_port = usb_entry.get()
+
+    if usb_port == '':
+        print("null")
+
+    print("connecting to usb port", usb_port)
+    time.sleep(2)
+    print("connected...")
+    top_window()
+
+def exit_program():
+    exit()
+
+def main_window():
+    global root, current_frame, labels, usb_entry
+
+    current_frame.destroy()
+    current_frame = Frame(root)
+
+    label = Label(master=current_frame, text="USB Port: ")
+    label.grid(row = 0, column = 0, padx = 20, pady = 10)
+    usb_entry = Entry(master=current_frame, width = 20)
+    usb_entry.grid(row = 0, column = 1, padx = 20, pady = 10)
+
+    Button(current_frame, text = 'Connect ', command = connect).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Exit', command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
+    current_frame.pack(fill="both", expand=True)
 
 
-# Create a new frame `frm_gen` to contain the Label
-# and Entry widgets for entering address information
-#frm_gen = tk.Frame(relief=tk.RAISED, borderwidth=10)
-frm_gen = tk.Frame(borderwidth=10)
-# Pack the frame into the window
-frm_gen.pack()
 
 # List of field labels
 labels = [
-    "Start Freq MHz:", 
+    "Start Freq MHz:",
     "Power Level (0 - 3):",
     "Number of Steps:",
     "Step Time in ms:",
 ]
 
-entry = []
+user_entry = []
+usb_port = ''
 
-# Loop over the list of field labels
-for idx, text in enumerate(labels):
-#    window.columnconfigure(0, weight=1, minsize=250)
-#    window.columnconfigure(1, weight=1, minsize=250)
-#    window.rowconfigure(idx, weight=1, minsize=100)
+root = Tk()
+root.wm_title('RFE Signal Generator')
+current_frame = Frame(root)
 
-    # Create a Label widget with the text from the labels list
-    label = tk.Label(master=frm_gen, text=text)
-    # Create an Entry widget
-    entry.append(tk.Entry(master=frm_gen, width=20))
-    # Use the grid geometry manager to place the Label and
-    # Entry widgets in the row whose index is idx
-    label.grid(row=idx, column=0, padx=10, pady=10, sticky="e")
-#    entry.grid(row=idx, column=1)
-    entry[idx].grid(row=idx, column=1, padx=10, pady=10)
+main_window()
 
-# Create a new frame `frm_buttons` to contain the
-# Submit and Clear buttons. This frame fills the
-# whole window in the horizontal direction and has
-# 5 pixels of horizontal and vertical padding.
-frm_buttons = tk.Frame()
-frm_buttons.pack(fill=tk.X, ipadx=5, ipady=5)
+root.mainloop()
 
-# Create the "Submit" button and pack it to the
-# right side of `frm_buttons`
-btn_submit = tk.Button(master=frm_buttons, text="Start Sweep", command=start)
-btn_submit.pack(side=tk.RIGHT, padx=10, ipadx=10)
-
-# Create the "Stop" button and pack it to the
-# right side of `frm_buttons`
-btn_clear = tk.Button(master=frm_buttons, text="Stop Sweep", command=stop)
-btn_clear.pack(side=tk.RIGHT, padx=10, ipadx=10)
-
-# Create the "Clear" button and pack it to the
-# right side of `frm_buttons`
-btn_clear = tk.Button(master=frm_buttons, text="Clear", command=clear)
-btn_clear.pack(side=tk.RIGHT, padx=10, ipadx=10)
-
-# Start the application
-window.mainloop()
