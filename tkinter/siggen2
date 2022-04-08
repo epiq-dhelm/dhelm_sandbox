@@ -1,0 +1,124 @@
+#!/bin/python3
+
+import sys
+from tkinter import *
+
+def power_on():
+    print("power on")
+
+def power_off():
+    print("power off")
+
+def continuous_sweep():
+    global current_frame, labels, entry
+
+    print("continuous sweep")
+
+    current_frame.destroy()
+    current_frame = Frame(root)
+
+    label = Label(master=current_frame, text="Frequency MHz: ")
+    label.grid(row = 0, column = 0, padx = 20, pady = 10)
+    entry = Entry(master=current_frame, width = 20)
+    entry.grid(row = 0, column = 1, padx = 20, pady = 10)
+
+    label2 = Label(master=current_frame, text="Power (0-3) : ")
+    label2.grid(row = 1, column = 0, padx = 20, pady = 10)
+    entry2 = Entry(master=current_frame, width = 20)
+    entry2.grid(row = 1, column = 1, padx = 20, pady = 10)
+
+    Button(current_frame, text = 'Power On', command = power_on).grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Power Off', command = power_off).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Back', command = main_window).grid(row = 2, column = 3, sticky = W, padx = 20, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+
+
+def start():
+    global user_entry, labels
+
+    print("submit")
+
+    for idx, text in enumerate(labels):
+        value = user_entry[idx].get()
+        print(labels[idx], "\t", value)
+
+def clear():
+    global user_entry, labels
+
+    print("clear")
+
+    for idx, text in enumerate(labels):
+        user_entry[idx].delete(0, END)
+
+def stop():
+    print("stop")
+
+
+def frequency_sweep():
+    global current_frame, user_entry, labels
+
+    current_frame.destroy()
+    frame = Frame(root)
+    current_frame = frame
+
+    # Loop over the list of field labels
+    for idx, text in enumerate(labels):
+
+        # Create a Label widget with the text from the labels list
+        label = Label(current_frame, text=text)
+
+        # Create an Entry widget
+        user_entry.append(Entry(current_frame, width=20))
+
+        # Use the grid geometry manager to place the Label and
+        # Entry widgets in the row whose index is idx
+        label.grid(row=idx, column=0, padx=10, pady=10, sticky="e")
+
+        user_entry[idx].grid(row=idx, column=1, padx=10, pady=10)
+
+    Button(current_frame, text = 'Start Sweep', command = start).grid(row = idx+1, column = 0, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Stop Sweep', command = stop).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Clear', command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Back', command = main_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+def main_window():
+    global current_frame, labels, entry
+
+    current_frame.destroy()
+    current_frame = Frame(root)
+
+    label = Label(master=current_frame, text="USB Port: ")
+    label.grid(row = 0, column = 0, padx = 20, pady = 10)
+    entry = Entry(master=current_frame, width = 20)
+    entry.grid(row = 0, column = 1, padx = 20, pady = 10)
+
+    Button(current_frame, text = 'Frequency Sweep', command = frequency_sweep).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Continuous Sweep', command = continuous_sweep).grid(row = 1, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Exit', command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
+    current_frame.pack(fill="both", expand=True)
+
+
+def exit_program():
+    exit()
+
+# List of field labels
+labels = [
+    "Start Freq MHz:",
+    "Power Level (0 - 3):",
+    "Number of Steps:",
+    "Step Time in ms:",
+]
+
+user_entry = []
+
+root = Tk()
+root.wm_title('RFE Signal Generator')
+#root.geometry("300x100")
+current_frame = Frame(root)
+
+main_window()
+
+root.mainloop()
+
