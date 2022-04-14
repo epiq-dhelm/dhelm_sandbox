@@ -1,0 +1,29 @@
+#!/bin/python3
+
+# Import module
+from tkinter import *
+ 
+# Create object
+root = Tk()
+ 
+# Adjust size
+root.geometry("500x500")
+ 
+
+current_frame = Frame(root)
+
+# creating the Label with
+# the text Middle
+Label_middle = Label(root, text ='Connecting...', font=("Ariel", 15))
+ 
+# Placing the Label at
+# the middle of the root window
+# relx and rely should be properly
+# set to position the label on
+# root window
+Label_middle.place(relx = 0.5,
+                   rely = 0.5,
+                   anchor = 'center')
+ 
+# Execute tkinter
+root.mainloop()

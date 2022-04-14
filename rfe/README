@@ -1,0 +1,3 @@
+To run siggen
+sudo pip3 install RFExplorer tkinter
+./siggen

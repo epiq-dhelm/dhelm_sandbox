@@ -41,43 +41,42 @@ objRFE.AutoConfigure = True
 SPAN_SIZE_MHZ = 50           #Initialize settings
 START_SCAN_MHZ = 50
 STOP_SCAN_MHZ = 960
-RESET = True
+RESET = False
 
 root = Tk()
 root.wm_title('RFE Signal Generator')
 current_frame = Frame(root)
-print("in initialization")
 
 def power_on():
     global cw_freq, cw_power
 
-    print("power on")
+    #print("power on")
     frequency = cw_freq.get()
     intfreq = int(frequency) * 1000
-    print("frequency ", intfreq)
+    #print("frequency ", intfreq)
 
     power = int(cw_power.get())
     if power > 3 or power < 0:
         print("invalid power", power, "changing to 3")
         power = 3
-    print("power", power)
+    #print("power", power)
 
 
     cmd = "C3-F:" + "{:07d}".format(intfreq) + ",0," + str(power)
 
-    print(cmd)
+    #print(cmd)
     objRFE.SendCommand(cmd)
 
 
 
 def power_off():
-    print("power off")
+    #print("power off")
     objRFE.SendCommand_GeneratorRFPowerOFF()
 
 def continuous_wave():
     global current_frame, cw_freq, cw_power
 
-    print("continuous wave")
+    #print("continuous wave")
 
     current_frame.destroy()
     current_frame = Frame(root)
@@ -101,7 +100,7 @@ def continuous_wave():
 
 def start():
 
-    print("start sweep")
+    #print("start sweep")
 
     frequency = int(user_entry[0].get())
     intfreq = int(frequency) * 1000
@@ -119,14 +118,14 @@ def start():
 
     cmd = "C3-F:" + "{:07d}".format(intfreq) + ",0," + str(power) + "," + "{:04d}".format(int(steps)) + "," + "{:07d}".format(int(step_width)) + "," + "{:05d}".format(int(step_time))
 
-    print(cmd)
+    #print(cmd)
     objRFE.SendCommand(cmd)
     
 
 
 def clear():
 
-    print("clear")
+    #print("clear")
 
     for idx, text in enumerate(labels):
         user_entry[idx].delete(0, END)
@@ -172,8 +171,10 @@ def top_window():
     current_frame.pack(fill="both", expand=True)
 
 def connect():
-
     print("Connecting")
+    label = Label(master=current_frame, text="Connecting... ", font=("Arial", 15))
+    label.place(relx = 0.5, rely = 0.5, anchor = 'center')
+    current_frame.pack(fill="both", expand=True)
 
     #Find and show valid serial ports
     objRFE.GetConnectedPorts()
@@ -190,7 +191,7 @@ def connect():
             #Wait for unit to stabilize
             time.sleep(4)
 
-    print("connected...")
+    print("Connected...")
     #Request RF Explorer configuration
     objRFE.SendCommand_RequestConfigData()
 
@@ -211,28 +212,14 @@ def exit_program():
     objRFE = None
     exit()
 
-def main_window():
-    global current_frame
 
 
-    current_frame.destroy()
-    current_frame = Frame(root)
+objRFE.VerboseLevel = 0
 
-#    label = Label(master=current_frame, text="USB Port: ")
-#    label.grid(row = 0, column = 0, padx = 20, pady = 10)
-#    usb_entry = Entry(master=current_frame, width = 20)
-#    usb_entry.grid(row = 0, column = 1, padx = 20, pady = 10)
+root.geometry('600x200+100+100')
+root.resizable(True, True)
 
-    Button(current_frame, text = 'Connect ', command = connect).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Exit', command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
-    current_frame.pack(fill="both", expand=True)
-
-
-
-
-objRFE.VerboseLevel = 10
-
-main_window()
+connect()
 
 root.mainloop()
 

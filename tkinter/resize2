@@ -9,19 +9,25 @@ root = Tk()
 # Adjust size
 root.geometry("500x500")
  
-# Specify Grid
-Grid.rowconfigure(root,0,weight=1)
-Grid.columnconfigure(root,0,weight=1)
- 
-Grid.rowconfigure(root,1,weight=1)
- 
-# Create Buttons
-button_1 = Button(root,text="Button 1")
-button_2 = Button(root,text="Button 2")
- 
-# Set grid
-button_1.grid(row=0,column=0,sticky="NSEW")
-button_2.grid(row=1,column=0,sticky="NSEW")
+
+current_frame = Frame(root)
+
+text=Text(root)
+text.place(relx = 0.5, rely = 0.5, anchor = 'center')
+#text.grid(column = 0, row = 5, sticky = 'nwes')
+
+# Configure the alignment of the text
+text.tag_configure("tag_name", justify='center', font=("Ariel",15))
+
+# Insert a Demo Text
+text.insert("1.0", "Connecting...")
+
+# Add the tag in the given text
+text.tag_add("tag_name", "1.0", "end")
+text.place(relx = 0.5, rely = 0.5, anchor = 'center')
+text.pack()
+
+
  
 # Execute tkinter
 root.mainloop()
