@@ -4,10 +4,9 @@ import sys
 from tkinter import *
 
 import time
-import RFExplorer
-print(RFExplorer, __file__)
-from RFExplorer import RFE_Common
 import math
+
+from usbconnect import *
 
 #---------------------------------------------------------
 # global variables and initialization
@@ -24,13 +23,14 @@ labels = [
 
 user_entry = []
 usb_port = ''
+current_state = ""
 
 SERIALPORT = None    #serial port identifier, use None to autodetect
 #SERIALPORT = '/dev/ttyUSB0'    #serial port identifier, use None to autodetect
 #SERIALPORT = '/dev/ttyUSB1'    #serial port identifier, use None to autodetect
 BAUDRATE = 500000
 
-objRFE = RFExplorer.RFECommunicator()     #Initialize object and thread
+objRFE = USBConnect()     #Initialize object and thread
 #objRFE.AutoConfigure = False
 objRFE.AutoConfigure = True
 
@@ -41,7 +41,7 @@ objRFE.AutoConfigure = True
 SPAN_SIZE_MHZ = 50           #Initialize settings
 START_SCAN_MHZ = 50
 STOP_SCAN_MHZ = 960
-RESET = False
+RESET = True
 
 root = Tk()
 root.wm_title('RFE Signal Generator')
@@ -49,58 +49,69 @@ current_frame = Frame(root)
 
 def power_on():
     global cw_freq, cw_power
+    
+    if objRFE.VerboseLevel > 0:
+        print("power on")
 
-    #print("power on")
     frequency = cw_freq.get()
     intfreq = int(frequency) * 1000
-    #print("frequency ", intfreq)
+
+    if objRFE.VerboseLevel > 0:
+        print("frequency ", intfreq)
 
     power = int(cw_power.get())
     if power > 3 or power < 0:
         print("invalid power", power, "changing to 3")
         power = 3
-    #print("power", power)
+
+    if objRFE.VerboseLevel > 0:
+        print("power", power)
 
 
     cmd = "C3-F:" + "{:07d}".format(intfreq) + ",0," + str(power)
 
-    #print(cmd)
+    if objRFE.VerboseLevel > 0:
+        print(cmd)
+
     objRFE.SendCommand(cmd)
 
 
 
 def power_off():
-    #print("power off")
+    if objRFE.VerboseLevel > 0:
+        print("power off")
     objRFE.SendCommand_GeneratorRFPowerOFF()
 
 def continuous_wave():
     global current_frame, cw_freq, cw_power
 
-    #print("continuous wave")
+    if objRFE.VerboseLevel > 0:
+        print("continuous wave")
 
     current_frame.destroy()
     current_frame = Frame(root)
 
-    label = Label(master=current_frame, text="Frequency MHz: ")
+    label = Label(master=current_frame, text="Frequency MHz: ", font=("Arial", 12))
     label.grid(row = 0, column = 0, padx = 20, pady = 10)
     cw_freq = Entry(master=current_frame, width = 20)
     cw_freq.grid(row = 0, column = 1, padx = 20, pady = 10)
 
-    label2 = Label(master=current_frame, text="Power (0-3) : ")
+    label2 = Label(master=current_frame, text="Power (0-3) : ", font=("Arial", 12))
     label2.grid(row = 1, column = 0, padx = 20, pady = 10)
     cw_power = Entry(master=current_frame, width = 20)
     cw_power.grid(row = 1, column = 1, padx = 20, pady = 10)
 
-    Button(current_frame, text = 'Power On', command = power_on).grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Power Off', command = power_off).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Back', command = top_window).grid(row = 2, column = 3, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Power On', font=("Arial", 12), command = power_on).grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Power Off', font=("Arial", 12), command = power_off).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Back', font=("Arial", 12), command = top_window).grid(row = 2, column = 3, sticky = W, padx = 20, pady = 10)
     current_frame.pack(fill="both", expand=True)
 
 
 
 def start():
 
-    #print("start sweep")
+    if objRFE.VerboseLevel > 0:
+        print("start sweep")
 
     frequency = int(user_entry[0].get())
     intfreq = int(frequency) * 1000
@@ -117,15 +128,17 @@ def start():
     step_time = user_entry[4].get()
 
     cmd = "C3-F:" + "{:07d}".format(intfreq) + ",0," + str(power) + "," + "{:04d}".format(int(steps)) + "," + "{:07d}".format(int(step_width)) + "," + "{:05d}".format(int(step_time))
-
-    #print(cmd)
+ 
+    if objRFE.VerboseLevel > 0:
+        print(cmd)
     objRFE.SendCommand(cmd)
     
 
 
 def clear():
 
-    #print("clear")
+    if objRFE.VerboseLevel > 0:
+        print("clear")
 
     for idx, text in enumerate(labels):
         user_entry[idx].delete(0, END)
@@ -138,12 +151,13 @@ def frequency_sweep():
     current_frame.destroy()
     frame = Frame(root)
     current_frame = frame
+    user_entry = []
 
     # Loop over the list of field labels
     for idx, text in enumerate(labels):
 
         # Create a Label widget with the text from the labels list
-        label = Label(current_frame, text=text)
+        label = Label(current_frame, text=text, font=("Arial", 12))
 
         # Create an Entry widget
         user_entry.append(Entry(current_frame, width=20))
@@ -154,10 +168,10 @@ def frequency_sweep():
 
         user_entry[idx].grid(row=idx, column=1, padx=10, pady=10)
 
-    Button(current_frame, text = 'Start Sweep', command = start).grid(row = idx+1, column = 0, sticky = NSEW, padx = 10, pady = 10)
-    Button(current_frame, text = 'Stop Sweep', command = power_off).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
-    Button(current_frame, text = 'Clear', command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
-    Button(current_frame, text = 'Back', command = top_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Start Sweep', font=("Arial", 12), command = start).grid(row = idx+1, column = 0, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Stop Sweep', font=("Arial", 12), command = power_off).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Clear', font=("Arial", 12), command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Back', font=("Arial", 12), command = top_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
     current_frame.pack(fill="both", expand=True)
 
 def top_window():
@@ -165,24 +179,92 @@ def top_window():
 
     current_frame.destroy()
     current_frame = Frame(root)
-    Button(current_frame, text = 'Frequency Sweep', command = frequency_sweep).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Continuous Wave', command = continuous_wave).grid(row = 1, column = 1, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Exit', command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Frequency Sweep', font=("Arial", 12), command = frequency_sweep).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Continuous Wave', font=("Arial", 12), command = continuous_wave).grid(row = 1, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Exit', font=("Arial", 12), command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
     current_frame.pack(fill="both", expand=True)
 
+
+def enterhandler(e):
+    global current_state
+    if current_state == "getport":
+        go()
+        current_state = ''
+
+
+def go():
+    portno = int(user_entry[0].get())
+    if portno >= len(objRFE.m_arrValidCP2102Ports) or portno < 0:
+        print("Error: Invalid Port Number", portno)
+    else:
+        PortName = objRFE.m_arrValidCP2102Ports[portno].device
+        if objRFE.VerboseLevel > 0:
+            print("Selected name", PortName)
+
+    objRFE.ConnectPort(PortName, BAUDRATE)
+
+    if RESET:
+        if objRFE.VerboseLevel > 0:
+            print("Resetting device...")
+        #Reset the unit to start fresh
+        objRFE.SendCommand("r")
+        #Wait for unit to stabilize
+        time.sleep(10)
+
+    if objRFE.VerboseLevel > 0:
+        print("Connected...")
+
+    top_window()
+
+def GetPort():
+    global current_frame, current_state
+
+    current_frame.destroy()
+    frame = Frame(root)
+    current_frame = frame
+    current_state = "getport"
+
+    title = Label(current_frame, text= "Available Ports:", font=("Arial", 12))
+    title.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+
+    for idx, objPort in enumerate(objRFE.m_arrValidCP2102Ports):
+        tmp_txt = str(idx) + "     " +  objPort.device
+        label = Label(current_frame, text=tmp_txt, font=("Arial", 12))
+        # Entry widgets in the row whose index is idx
+        label.grid(row=idx+1, column=0, padx=10, pady=10, sticky="w")
+
+    user_label = Label(current_frame, text= "Enter Port Number:", font=("Arial", 12))
+    user_label.grid(row=idx+2, column=0, padx=10, pady=10, sticky="w")
+    user_entry.append(Entry(current_frame, width=5))
+    user_entry[0].grid(row=idx+2, column=1, padx=10, pady=10)
+    user_entry[0].focus_set()
+
+    current_frame.pack(fill="both", expand=True)
+
+
+
 def connect():
-    print("Connecting")
-    label = Label(master=current_frame, text="Connecting... ", font=("Arial", 15))
+    global objRFE
+    PortName = None
+    if objRFE.VerboseLevel > 0:
+        print("Connecting")
+    label = Label(master=current_frame, text="Connecting... ", font=("Arial", 12))
     label.place(relx = 0.5, rely = 0.5, anchor = 'center')
     current_frame.pack(fill="both", expand=True)
 
     #Find and show valid serial ports
     objRFE.GetConnectedPorts()
 
+    #if we have more than one port we need to determine which one.
+    if (len(objRFE.m_arrValidCP2102Ports) > 1):
+        GetPort()
     #Connect to available port
-    if (objRFE.ConnectPort(SERIALPORT, BAUDRATE)):
+    else:
+        PortName = objRFE.m_arrValidCP2102Ports.device
+        objRFE.ConnectPort(PortName, BAUDRATE)
         if RESET:
-            print("Resetting device...")
+            if objRFE.VerboseLevel > 0:
+                print("Resetting device...")
             #Reset the unit to start fresh
             objRFE.SendCommand("r")
             #Wait for unit to notify reset completed
@@ -191,38 +273,51 @@ def connect():
             #Wait for unit to stabilize
             time.sleep(4)
 
-    print("Connected...")
-    #Request RF Explorer configuration
-    objRFE.SendCommand_RequestConfigData()
+        if objRFE.VerboseLevel > 0:
+            print("Connected...")
 
-    #Wait to receive configuration and model details
-    while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
-        objRFE.ProcessReceivedString(True)    #Process the received configuration
-
-    if(objRFE.IsGenerator() == False):
-        exit_program()
-
-    top_window()
+        top_window()
 
 def exit_program():
     global objRFE
 
-    print("exit program")
-    objRFE.Close()
+    if objRFE.VerboseLevel > 0:
+        print("exit program")
+    objRFE.ClosePort()
     objRFE = None
     exit()
 
 
 
-objRFE.VerboseLevel = 0
+objRFE.VerboseLevel = 10
 
-root.geometry('600x200+100+100')
+root.geometry('600x300+100+100')
 root.resizable(True, True)
+root.bind('<Return>', enterhandler)
 
 connect()
 
 root.mainloop()
 
-objRFE.Close()
+objRFE.ClosePort()
 objRFE = None
 
+"""
+        #More than one port ask the user which one.
+        print("Available Ports:")
+        bConnected = False
+        while (bConnected == False):
+            i = 0
+            for objPort in objRFE.m_arrValidCP2102Ports:
+                print(i, objPort.device)
+                i += 1
+            print("Enter port number")
+            inpt = input()
+            p = int(inpt)
+            if p >= len(objRFE.m_arrValidCP2102Ports) or p < 0:
+                print("Invalid input", p)
+            else:
+                PortName = objRFE.m_arrValidCP2102Ports[p].device
+                print("Selected name", PortName)
+                bConnected = True
+"""
