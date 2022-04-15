@@ -1,7 +1,7 @@
 #!/bin/python3
 from usbconnect import *
 
-SERIALPORT = None    #serial port identifier, use None to autodetect
+SERIALPORT = "/dev/ttyUSB1"
 #SERIALPORT = '/dev/ttyUSB0'    #serial port identifier, use None to autodetect
 #SERIALPORT = '/dev/ttyUSB1'    #serial port identifier, use None to autodetect
 BAUDRATE = 500000
@@ -10,5 +10,5 @@ BAUDRATE = 500000
 objcon = USBConnect() 
 objcon.VerboseLevel = 10
 objcon.GetConnectedPorts()
-objcon.ConnectPort("/dev/ttySKIQ_UART0", BAUDRATE)
+objcon.ConnectPort(SERIALPORT, BAUDRATE)
 objcon.SendCommand_GeneratorRFPowerOFF()

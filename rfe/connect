@@ -10,7 +10,8 @@ import serial
 import platform
 import threading
 
-SERIALPORT = None
+#SERIALPORT = "/dev/ttySKIQ_UART0"
+SERIALPORT = "/dev/ttyUSB1"
 BAUDRATE = 500000
 
 class USBConnect(object):    

@@ -41,14 +41,26 @@ objRFE.AutoConfigure = True
 SPAN_SIZE_MHZ = 50           #Initialize settings
 START_SCAN_MHZ = 50
 STOP_SCAN_MHZ = 960
-RESET = True
+RESET = False
 
 root = Tk()
 root.wm_title('RFE Signal Generator')
 current_frame = Frame(root)
 
-def power_on():
-    global cw_freq, cw_power
+def power_off(on_button):
+    global current_state
+    if objRFE.VerboseLevel > 0:
+        print("power off")
+    on_button.configure(bg = "#f0f0f0")
+    current_state = " "
+
+    objRFE.SendCommand_GeneratorRFPowerOFF()
+
+def continuous_power_on(on_button):
+    global cw_freq, cw_power, current_state
+
+    current_state = "red"
+    on_button.configure(bg= "red")
     
     if objRFE.VerboseLevel > 0:
         print("power on")
@@ -75,13 +87,6 @@ def power_on():
 
     objRFE.SendCommand(cmd)
 
-
-
-def power_off():
-    if objRFE.VerboseLevel > 0:
-        print("power off")
-    objRFE.SendCommand_GeneratorRFPowerOFF()
-
 def continuous_wave():
     global current_frame, cw_freq, cw_power
 
@@ -101,17 +106,25 @@ def continuous_wave():
     cw_power = Entry(master=current_frame, width = 20)
     cw_power.grid(row = 1, column = 1, padx = 20, pady = 10)
 
-    Button(current_frame, text = 'Power On', font=("Arial", 12), command = power_on).grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Power Off', font=("Arial", 12), command = power_off).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
+    on_button = Button(current_frame, text = 'Power On') 
+    on_button.configure(font=("Arial", 12), command = lambda name= on_button: continuous_power_on(name) )
+    on_button.grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Power Off', font=("Arial", 12), command = lambda name = on_button: power_off(name)).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
     Button(current_frame, text = 'Back', font=("Arial", 12), command = top_window).grid(row = 2, column = 3, sticky = W, padx = 20, pady = 10)
     current_frame.pack(fill="both", expand=True)
 
 
 
-def start():
+
+
+def start_sweep(on_button):
+    global user_entry, current_state
 
     if objRFE.VerboseLevel > 0:
         print("start sweep")
+    
+    on_button.configure(bg= "red")
+    current_state = "red"
 
     frequency = int(user_entry[0].get())
     intfreq = int(frequency) * 1000
@@ -136,7 +149,6 @@ def start():
 
 
 def clear():
-
     if objRFE.VerboseLevel > 0:
         print("clear")
 
@@ -146,11 +158,12 @@ def clear():
 
 
 def frequency_sweep():
-    global current_frame
+    global current_frame, user_entry
 
     current_frame.destroy()
     frame = Frame(root)
     current_frame = frame
+
     user_entry = []
 
     # Loop over the list of field labels
@@ -168,8 +181,10 @@ def frequency_sweep():
 
         user_entry[idx].grid(row=idx, column=1, padx=10, pady=10)
 
-    Button(current_frame, text = 'Start Sweep', font=("Arial", 12), command = start).grid(row = idx+1, column = 0, sticky = NSEW, padx = 10, pady = 10)
-    Button(current_frame, text = 'Stop Sweep', font=("Arial", 12), command = power_off).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
+    on_button = Button(current_frame, text = 'Start Sweep') 
+    on_button.configure(font=("Arial", 12), command = lambda name= on_button: start_sweep(name) )
+    on_button.grid(row = idx+1, column = 0, sticky = W, padx = 10, pady = 10)
+    Button(current_frame, text = 'Stop Sweep', font=("Arial", 12), command = lambda name = on_button: power_off(name)).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
     Button(current_frame, text = 'Clear', font=("Arial", 12), command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
     Button(current_frame, text = 'Back', font=("Arial", 12), command = top_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
     current_frame.pack(fill="both", expand=True)
