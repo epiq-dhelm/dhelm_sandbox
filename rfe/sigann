@@ -1,0 +1,176 @@
+#!/bin/python3
+
+import io
+import time
+import signal
+  
+import serial
+import serial.tools.list_ports
+
+import numpy as np
+
+import matplotlib.pyplot  as plt 
+
+STARTFREQ = 1000000  #greater than 240
+ENDFREQ = 1100000
+AMPTOP = 0
+AMPBOTTOM = -210
+CFGAMPBOTTOM = -AMPBOTTOM
+SAMPLEPOINTS = 7
+SWEEPPOINTS = (SAMPLEPOINTS + 1) * 16 
+SWEEPSTEP = ((ENDFREQ-STARTFREQ) / SWEEPPOINTS)
+
+print(SWEEPPOINTS)
+
+config = ['Start_Freq (Khz)\t', 'Freq_Step (Hz)\t\t', 'Amp_Top (dBm)\t\t', 'Amp_Bottom (dBm)\t', 'Sweep_points\t\t', 'ExpModuleActive\t\t', 'CurrentMode\t\t', 'Min_Freq (Khz)\t\t', 'Max_Freq (Khz)\t\t', 'Max_Span (Khz)\t\t', 'RBW (Khz)\t\t', 'AmpOffset (dB)\t\t', 'CalculatorMode \t\t']
+
+#plt.ylim(-130, 0)
+x_axis = np.arange(STARTFREQ, ENDFREQ, SWEEPSTEP, dtype=np.uint64)
+
+def handler(signum, frame):
+    global running
+
+    print("ending...")
+    running = False
+
+
+def connect():
+    return ser
+
+def SendCommand(port, cmd):
+    sCompleteCommand = "#" + chr(len(cmd) + 2) + cmd
+    bytestr = sCompleteCommand.encode('utf-8')
+    length = port.write(bytestr)
+    print("length sent", length)
+    print("RFE Command: #(" + str(len(sCompleteCommand)) + ")" + cmd + " [" + " ".join("{:02X}".format(ord(c)) for c in sCompleteCommand) + "]")
+
+def ProcessCommand(line, ):
+    global running, cnfg_received
+
+    cmd = str(line[0:5], 'utf-8', errors='ignore')
+    print('cmd: ', cmd, '  len: ',  len(line), " cnfg ", cnfg_received)
+
+    newline = str(line, 'utf-8', errors='ignore')
+
+    if cmd == '#Sn':
+        print('Serial Number')
+
+    if cmd == '#C2-M':
+        print('current setup')
+    
+    if cmd == '#C2-F':
+        listline = newline.replace("#C2-F:", "")
+        print('\nCurrent Config')
+        mylist = listline.split(",")
+        for idx, fname in enumerate(config):
+            print(fname, mylist[idx])
+        print("\n")
+        cnfg_received = True
+
+    #sweep data
+    if cmd[0:2] == '$S' and cnfg_received:
+        print("sweep_data")
+
+        plt.clf()
+        plt.axis([STARTFREQ, ENDFREQ, AMPBOTTOM, AMPTOP])
+        newlinelen = len(line) 
+        newline = line[3:newlinelen]
+        datalen = len(newline) - 2
+        data = np.frombuffer(newline, dtype=np.uint8, count=datalen, offset=0)
+        newdata = -1 * data
+        plt.plot(x_axis, newdata)
+        plt.pause(0.01)
+        if plt.get_fignums():
+            running = True
+        else:
+            running = False
+
+    if cmd[0:2] == '$z' :
+        print("large sweep")
+        plt.clf()
+        plt.axis([STARTFREQ, ENDFREQ, AMPBOTTOM, AMPTOP])
+        newlinelen = len(line) 
+        newline = line[4:newlinelen]
+        datalen = len(newline) - 2
+        data = np.frombuffer(newline, dtype=np.uint8, count=datalen, offset=0)
+        newdata = -1 * data
+        print(newdata)
+        plt.plot(x_axis, newdata)
+        plt.pause(0.01)
+        if plt.get_fignums():
+            running = True
+        else:
+            running = False
+
+
+    if cmd[0:2] == '$s' and cnfg_received:
+        print("ext sweep") 
+
+signal.signal(signal.SIGINT, handler)
+
+ports = list(serial.tools.list_ports.comports())
+if(ports):
+    print("Detected COM ports:")
+    for idx, objPort in enumerate(ports):
+        print(idx, objPort.device)
+
+val = input("enter port number")
+
+port = serial.Serial(ports[int(val)].device, 500000, timeout=5.0)
+
+sio = io.TextIOWrapper(io.BufferedRWPair(port, port))
+print(port.name)
+
+
+cnfg_received = False
+
+#reset device
+cmd = "r"
+SendCommand(port, cmd)
+
+time.sleep(5)
+
+"""
+#set config data
+cmd = "C2-F:" + "{:07d}".format(STARTFREQ) + "," + "{:07d}".format(ENDFREQ) + "," + "{:04d}".format(AMPTOP) + "," + "{:04d}".format(CFGAMPBOTTOM)
+SendCommand(port, cmd)
+"""
+#set config data
+cmd = "C2-F:" + "{:07d}".format(STARTFREQ) + "," + "{:07d}".format(ENDFREQ) + "," + "{:04d}".format(AMPTOP) + "," + "{:04d}".format(CFGAMPBOTTOM)
+SendCommand(port, cmd)
+#set sweep points
+cmd = "CJ" + chr(SAMPLEPOINTS)
+SendCommand(port, cmd)
+time.sleep(1)
+"""
+#set sweep points
+cmd = "Cj" + chr(1) + chr(0xFF)
+SendCommand(port, cmd)
+time.sleep(1)
+"""
+
+#get configuration data
+cmd = "C0"
+SendCommand(port, cmd)
+
+
+print("reading...")
+
+running = True
+
+while running:
+    try:
+        line = port.readline()
+        ProcessCommand(line)
+
+        if cmd[0:3] == '#Sn':
+            print('serial number')
+
+
+
+    except serial.SerialException as e:
+        print('Device error: {}'.format(e))
+        break
+
+
+plt.show()

@@ -26,22 +26,13 @@ usb_port = ''
 current_state = ""
 
 SERIALPORT = None    #serial port identifier, use None to autodetect
-#SERIALPORT = '/dev/ttyUSB0'    #serial port identifier, use None to autodetect
-#SERIALPORT = '/dev/ttyUSB1'    #serial port identifier, use None to autodetect
 BAUDRATE = 500000
 
 objRFE = USBConnect()     #Initialize object and thread
-#objRFE.AutoConfigure = False
-objRFE.AutoConfigure = True
-
-#These values can be limited by specific RF Explorer Spectrum Analyzer model.
-#Check RFE SA Comparation chart from www.rf-explorer.com\models to know what
-#frequency setting are available for your model
-#These freq settings will be updated later in SA condition.
 SPAN_SIZE_MHZ = 50           #Initialize settings
 START_SCAN_MHZ = 50
 STOP_SCAN_MHZ = 960
-RESET = False
+RESET = True
 
 root = Tk()
 root.wm_title('RFE Signal Generator')
@@ -94,28 +85,26 @@ def continuous_wave():
         print("continuous wave")
 
     current_frame.destroy()
+    root.geometry('550x200')
     current_frame = Frame(root)
 
-    label = Label(master=current_frame, text="Frequency MHz: ", font=("Arial", 12))
+    label = Label(master=current_frame, text="Frequency MHz: ", font=("Arial", 16))
     label.grid(row = 0, column = 0, padx = 20, pady = 10)
-    cw_freq = Entry(master=current_frame, width = 20)
+    cw_freq = Entry(master=current_frame, width = 10, font=("Ariel", 16))
+    cw_freq.focus_set()
     cw_freq.grid(row = 0, column = 1, padx = 20, pady = 10)
 
-    label2 = Label(master=current_frame, text="Power (0-3) : ", font=("Arial", 12))
+    label2 = Label(master=current_frame, text="Power (0-3) : ", font=("Arial", 16))
     label2.grid(row = 1, column = 0, padx = 20, pady = 10)
-    cw_power = Entry(master=current_frame, width = 20)
+    cw_power = Entry(master=current_frame, width = 10, font=("Ariel", 16))
     cw_power.grid(row = 1, column = 1, padx = 20, pady = 10)
 
     on_button = Button(current_frame, text = 'Power On') 
-    on_button.configure(font=("Arial", 12), command = lambda name= on_button: continuous_power_on(name) )
+    on_button.configure(font=("Arial", 16), command = lambda name= on_button: continuous_power_on(name) )
     on_button.grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Power Off', font=("Arial", 12), command = lambda name = on_button: power_off(name)).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Back', font=("Arial", 12), command = top_window).grid(row = 2, column = 3, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Power Off', font=("Arial", 16), command = lambda name = on_button: power_off(name)).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Back', font=("Arial", 16), command = top_window).grid(row = 2, column = 2, sticky = W, padx = 20, pady = 10)
     current_frame.pack(fill="both", expand=True)
-
-
-
-
 
 def start_sweep(on_button):
     global user_entry, current_state
@@ -161,6 +150,7 @@ def frequency_sweep():
     global current_frame, user_entry
 
     current_frame.destroy()
+    root.geometry('750x350')
     frame = Frame(root)
     current_frame = frame
 
@@ -170,10 +160,13 @@ def frequency_sweep():
     for idx, text in enumerate(labels):
 
         # Create a Label widget with the text from the labels list
-        label = Label(current_frame, text=text, font=("Arial", 12))
+        label = Label(current_frame, text=text, font=("Arial", 16))
 
         # Create an Entry widget
-        user_entry.append(Entry(current_frame, width=20))
+        user_entry.append(Entry(current_frame, width=20, font=("Ariel", 16)))
+
+        if idx == 0:
+            user_entry[0].focus_set()
 
         # Use the grid geometry manager to place the Label and
         # Entry widgets in the row whose index is idx
@@ -182,21 +175,22 @@ def frequency_sweep():
         user_entry[idx].grid(row=idx, column=1, padx=10, pady=10)
 
     on_button = Button(current_frame, text = 'Start Sweep') 
-    on_button.configure(font=("Arial", 12), command = lambda name= on_button: start_sweep(name) )
+    on_button.configure(font=("Arial", 16), command = lambda name= on_button: start_sweep(name) )
     on_button.grid(row = idx+1, column = 0, sticky = W, padx = 10, pady = 10)
-    Button(current_frame, text = 'Stop Sweep', font=("Arial", 12), command = lambda name = on_button: power_off(name)).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
-    Button(current_frame, text = 'Clear', font=("Arial", 12), command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
-    Button(current_frame, text = 'Back', font=("Arial", 12), command = top_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Stop Sweep', font=("Arial", 16), command = lambda name = on_button: power_off(name)).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Clear', font=("Arial", 16), command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
+    Button(current_frame, text = 'Back', font=("Arial", 16), command = top_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
     current_frame.pack(fill="both", expand=True)
 
 def top_window():
-    global current_frame
+    global current_frame, root
 
     current_frame.destroy()
+    root.geometry('650x100')
     current_frame = Frame(root)
-    Button(current_frame, text = 'Frequency Sweep', font=("Arial", 12), command = frequency_sweep).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Continuous Wave', font=("Arial", 12), command = continuous_wave).grid(row = 1, column = 1, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Exit', font=("Arial", 12), command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Frequency Sweep', font=("Arial", 16), command = frequency_sweep).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Continuous Wave', font=("Arial", 16), command = continuous_wave).grid(row = 1, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Exit', font=("Arial", 16), command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
     current_frame.pack(fill="both", expand=True)
 
 
@@ -224,7 +218,7 @@ def go():
         #Reset the unit to start fresh
         objRFE.SendCommand("r")
         #Wait for unit to stabilize
-        time.sleep(10)
+        time.sleep(4)
 
     if objRFE.VerboseLevel > 0:
         print("Connected...")
@@ -239,18 +233,18 @@ def GetPort():
     current_frame = frame
     current_state = "getport"
 
-    title = Label(current_frame, text= "Available Ports:", font=("Arial", 12))
+    title = Label(current_frame, text= "Available Ports:", font=("Arial", 16))
     title.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
 
     for idx, objPort in enumerate(objRFE.m_arrValidCP2102Ports):
         tmp_txt = str(idx) + "     " +  objPort.device
-        label = Label(current_frame, text=tmp_txt, font=("Arial", 12))
+        label = Label(current_frame, text=tmp_txt, font=("Arial", 16))
         # Entry widgets in the row whose index is idx
         label.grid(row=idx+1, column=0, padx=10, pady=10, sticky="w")
 
-    user_label = Label(current_frame, text= "Enter Port Number:", font=("Arial", 12))
+    user_label = Label(current_frame, text= "Enter Port Number:", font=("Arial", 16))
     user_label.grid(row=idx+2, column=0, padx=10, pady=10, sticky="w")
-    user_entry.append(Entry(current_frame, width=5))
+    user_entry.append(Entry(current_frame, width=5, font=("Ariel", 16)))
     user_entry[0].grid(row=idx+2, column=1, padx=10, pady=10)
     user_entry[0].focus_set()
 
@@ -263,7 +257,7 @@ def connect():
     PortName = None
     if objRFE.VerboseLevel > 0:
         print("Connecting")
-    label = Label(master=current_frame, text="Connecting... ", font=("Arial", 12))
+    label = Label(master=current_frame, text="Connecting... ", font=("Arial", 16))
     label.place(relx = 0.5, rely = 0.5, anchor = 'center')
     current_frame.pack(fill="both", expand=True)
 
@@ -282,9 +276,6 @@ def connect():
                 print("Resetting device...")
             #Reset the unit to start fresh
             objRFE.SendCommand("r")
-            #Wait for unit to notify reset completed
-            while(objRFE.IsResetEvent):
-                pass
             #Wait for unit to stabilize
             time.sleep(4)
 
@@ -296,7 +287,7 @@ def connect():
 def exit_program():
     global objRFE
 
-    if objRFE.VerboseLevel > 0:
+    if objRFE.VerboseLevel > 10:
         print("exit program")
     objRFE.ClosePort()
     objRFE = None
@@ -304,9 +295,9 @@ def exit_program():
 
 
 
-objRFE.VerboseLevel = 10
+objRFE.VerboseLevel = 0
 
-root.geometry('600x300+100+100')
+root.geometry('550x250+100+200')
 root.resizable(True, True)
 root.bind('<Return>', enterhandler)
 
@@ -317,22 +308,3 @@ root.mainloop()
 objRFE.ClosePort()
 objRFE = None
 
-"""
-        #More than one port ask the user which one.
-        print("Available Ports:")
-        bConnected = False
-        while (bConnected == False):
-            i = 0
-            for objPort in objRFE.m_arrValidCP2102Ports:
-                print(i, objPort.device)
-                i += 1
-            print("Enter port number")
-            inpt = input()
-            p = int(inpt)
-            if p >= len(objRFE.m_arrValidCP2102Ports) or p < 0:
-                print("Invalid input", p)
-            else:
-                PortName = objRFE.m_arrValidCP2102Ports[p].device
-                print("Selected name", PortName)
-                bConnected = True
-"""
