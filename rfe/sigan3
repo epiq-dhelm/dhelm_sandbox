@@ -30,6 +30,8 @@ START_SCAN_MHZ = 1000
 STOP_SCAN_MHZ = 1200
 SWEEPPOINTS = 112
 SWEEPDATA = (SWEEPPOINTS + 1) * 16
+RESET = True
+lasti = 10000
 
 class Window(Frame):
 
@@ -73,14 +75,16 @@ class Window(Frame):
 
         return SpanSizeTemp, StartFreqTemp, StopFreqTemp
 
-    def GetData(self, sweepdata, count):
+    def GetData(self, sweepdata, tot):
         amp = arr.array('f',[])
         freq = arr.array('f',[])
-        for nDataPoint in range(SWEEPDATA):
-            amp.append(sweepdata.GetAmplitudeDBM(nDataPoint, None, False))
+        for nDataPoint in range(tot):
+            val = sweepdata.GetAmplitudeDBM(nDataPoint, None, False)
+            amp.append(val)
+#            print(nDataPoint, val) 
             freq.append(sweepdata.GetFrequencyMHZ(nDataPoint))
-        print(len(freq), freq[0])
-        print(len(amp), amp[0], max(amp))
+#        print(len(freq), freq[0])
+#        print(len(amp), amp[0], max(amp), min(amp))
 
         return freq, amp
 
@@ -88,13 +92,16 @@ class Window(Frame):
     def animate(self,i):
         self.objSweep=None
         self.objRFE.ProcessReceivedString(True);
-        self.numitems = self.objRFE.SweepData.Count - 1
-        print(i, self.numitems)
-        if (self.numitems > 0):
-            objSweep=self.objRFE.SweepData.GetData(self.numitems)
-            self.freq, self.amp = self.GetData(objSweep, self.numitems)
-        
-        self.line.set_ydata(self.amp)  # update the data
+        num = self.objRFE.SweepData.Count - 1
+        if self.numitems != num:
+            self.numitems = num
+            if (self.numitems > 0):
+                objSweep=self.objRFE.SweepData.GetData(self.numitems)
+                tot=objSweep.TotalDataPoints
+#                print(self.numitems, tot)
+                self.freq, self.amp = self.GetData(objSweep, tot)
+            
+                self.line.set_ydata(self.amp)  # update the data
 
         return self.line,
 
@@ -111,23 +118,25 @@ class Window(Frame):
         #Create the controls, note use of grid
 
 
-        tk.Label(self,text="Ana").grid(column=0, row=3)
+#        tk.Label(self,text="Ana").grid(column=0, row=3)
 
         self.fig = plt.Figure()
         self.ax = self.fig.add_subplot(111)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().grid(column=0,row=4)
+#        self.canvas.get_tk_widget().grid(column=0,row=4)
+        self.canvas.get_tk_widget().pack(side="top", fill='both', expand=True)
 
         #Connect to available port
         if (self.objRFE.ConnectPort(SERIALPORT, BAUDRATE)):
-            print("Reseting device...")
-            #Reset the unit to start fresh
-            self.objRFE.SendCommand("r")
-            #Wait for unit to notify reset completed
-            while(self.objRFE.IsResetEvent):
-                pass
-            #Wait for unit to stabilize
-            time.sleep(4)
+            if RESET:
+                print("Resetting device...")
+                #Reset the unit to start fresh
+                self.objRFE.SendCommand("r")
+                #Wait for unit to notify reset completed
+                while(self.objRFE.IsResetEvent):
+                    pass
+                #Wait for unit to stabilize
+                time.sleep(4)
 
             #Request RF Explorer configuration
             self.objRFE.SendCommand_RequestConfigData()
@@ -138,7 +147,7 @@ class Window(Frame):
 
             #If object is an analyzer, we can scan for received sweeps
             if(self.objRFE.IsAnalyzer()):
-                self.objRFE.SendCommand_SweepDataPoints(SWEEPPOINTS)
+#                self.objRFE.SendCommand_SweepDataPoints(SWEEPDATA)
 
                 #Control settings
                 SpanSize, StartFreq, StopFreq = self.ControlSettings(self.objRFE)
@@ -156,22 +165,30 @@ class Window(Frame):
                         self.objRFE.ProcessReceivedString(True);
                         self.numitems = self.objRFE.SweepData.Count - 1
 
-                    if (self.numitems>0):
-                        self.objSweep=self.objRFE.SweepData.GetData(self.numitems)
-                        self.freq, self.amp = self.GetData(self.objSweep, SWEEPPOINTS)
-                        self.line, = self.ax.plot(self.freq, self.amp)        
-                        self.ax.axis([StartFreq, StopFreq, min(self.amp) - 10, 0 ])
+                        if (self.numitems>0):
+                            self.objSweep=self.objRFE.SweepData.GetData(self.numitems)
+                            tot=self.objSweep.TotalDataPoints
+                            self.freq, self.amp = self.GetData(self.objSweep, tot)
+                            self.line, = self.ax.plot(self.freq, self.amp)        
+                            self.ax.axis([StartFreq, StopFreq, min(self.amp) - 10, 0 ])
                 else:
                     print("Error: settings are wrong.\nPlease, change and try again")
             else:
                 print("Error: This is a generator not analyzer")
+
         self.ani = animation.FuncAnimation(self.fig, self.animate, np.arange(1, 200), interval=25, blit=False)
 
 
 
+def resize(event):
+    print("widget", event.widget)
+    print("height", event.height, "width", event.width)
+
+    app.fig.subplots_adjust(left=0.05, bottom=0.07, right=0.95, top=0.95, wspace=0, hspace=0)
 
 
 root = tk.Tk()
-root.geometry("700x400")
+#root.bind("<Configure>", resize)
+root.geometry("700x500")
 app = Window(root)
 tk.mainloop()

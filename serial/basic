@@ -1,0 +1,56 @@
+#!/bin/python3
+
+import io
+import time
+  
+import serial
+import serial.tools.list_ports
+
+import binascii
+
+def SendCommand(port, cmd):
+    sCompleteCommand = "#" + chr(len(cmd) + 2) + cmd
+    bytestr = sCompleteCommand.encode('utf-8')
+    length = port.write(bytestr)
+    print("length sent", length)
+    print("RFE Command: #(" + str(len(sCompleteCommand)) + ")" + cmd + " [" + " ".join("{:02X}".format(ord(c)) for c in sCompleteCommand) + "]")
+
+
+ports = list(serial.tools.list_ports.comports())
+if(ports):
+    print("Detected COM ports:")
+    for idx, objPort in enumerate(ports):
+        print(idx, objPort.device)
+
+val = input("enter port number")
+
+ser = serial.Serial(ports[int(val)].device, 500000, timeout=5.0)
+
+#ser = serial.Serial('/dev/ttyUSB3', 500000, timeout=5.0)
+sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
+print(ser.name)
+
+cmd = "r"
+SendCommand(ser, cmd)
+
+time.sleep(2)
+
+cmd = "C0"
+SendCommand(ser, cmd)
+print("reading...")
+
+while 1:
+    try:
+        line = ser.readline()
+#        print(line)
+        newline = str(line[0:5], 'utf-8', errors='ignore')
+        if newline == '#C2-F':
+            print('config received')
+        print(newline)
+
+        print("len", len(line))
+    except serial.SerialException as e:
+        print('Device error: {}'.format(e))
+        break
+
+
