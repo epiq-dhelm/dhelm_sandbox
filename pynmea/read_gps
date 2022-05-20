@@ -1,0 +1,51 @@
+#!/bin/python3
+
+import io
+
+import serial
+import pynmea2
+
+
+ser = serial.Serial('/dev/ttymxc0', 9600, timeout=5.0)
+sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
+date = ""
+while 1:
+    try:
+        line = ser.readline()
+        newline = str(line, 'utf-8', errors='ignore')
+        if "GGA" in newline:
+            data = pynmea2.parse(newline)
+
+            timestamp = data.timestamp
+            lat, lon, alt = data.latitude, data.longitude, data.altitude
+            lat_dir, lon_dir, num_sats = data.lat_dir, data.lon_dir, data.num_sats
+            gps_qual = data.gps_qual
+            if gps_qual != 0:
+                fix = "yes"
+            else:
+                fix = "no"
+            print("fix(y/n): ", fix, " Timestamp(UTC):"  , timestamp,  " Lat:", "{:4.6}".format(lat), lat_dir,  " Long:", "{:4.6}".format(lon), lon_dir,  " Altitude:", alt,  " Num Sats:", num_sats)
+
+        if "RMC" in newline:
+            data = pynmea2.parse(newline)
+            date = data.datetime.date()
+            print("date",date)
+            
+
+        if "GSV" in newline:
+            data = pynmea2.parse(newline)
+            sats_in_view = data.num_sv_in_view
+            print("sats in view",sats_in_view)
+
+        if "VTG" in newline:
+            data = pynmea2.parse(newline)
+            horizontal_speed = data.spd_over_grnd_kmph
+            print("speed over ground Kmph", horizontal_speed)
+
+
+    except serial.SerialException as e:
+        print('Device error: {}'.format(e))
+        break
+    except pynmea2.ParseError as e:
+#        print('Parse error: {}'.format(e))
+        continue

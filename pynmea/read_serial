@@ -1,0 +1,24 @@
+#!/bin/python3
+
+import io
+
+import serial
+import pynmea2
+
+
+ser = serial.Serial('/dev/ttySKIQ_UART2', 9600, timeout=5.0)
+sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
+
+while 1:
+    try:
+        line = ser.readline()
+        newline = str(line, 'utf-8', errors='ignore')
+#        print(len(newline), " : ", newline)
+        msg = pynmea2.parse(newline)
+        print("decoded msg: ",repr(msg))
+    except serial.SerialException as e:
+        print('Device error: {}'.format(e))
+        break
+    except pynmea2.ParseError as e:
+#        print('Parse error: {}'.format(e))
+        continue
