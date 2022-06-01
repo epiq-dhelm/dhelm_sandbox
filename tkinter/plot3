@@ -47,34 +47,17 @@ class Window(Frame):
 
         #Create the controls, note use of grid
 
-        self.labelSpeed = Label(self,text="Speed (km/Hr)",width=12)
-        self.labelSpeed.grid(row=0,column=1, sticky='nsew')
-        self.labelAmplitude = Label(self,text="Amplitude",width=12)
-        self.labelAmplitude.grid(row=0,column=2, sticky='nsew')
-
-        self.textSpeed = Entry(self,width=12)
-        self.textSpeed.grid(row=1,column=1, sticky='nsew')
-        self.textAmplitude = Entry(self,width=12)
-        self.textAmplitude.grid(row=1,column=2, sticky='nsew')
-
-        self.textAmplitude.insert(0, "1.0")
-        self.textSpeed.insert(0, "1.0")
-        self.v = 1.0
-        self.A = 1.0
-
-
-        self.buttonPlot = Button(self,text="Plot",command=self.Plot,width=12)        
-        self.buttonPlot.grid(row=2,column=1, sticky='nsew')
-
-        self.buttonClear = Button(self,text="Clear",command=self.Clear,width=12)
-        self.buttonClear.grid(row=2,column=2, sticky='nsew')
-
-
-        self.buttonClear.bind(lambda e:self.Clear)
 
 
 
-        tk.Label(self,text="SHM Simulation").grid(column=0, row=3)
+        self.buttonPlot = Button(self,text="Plot")
+        self.buttonPlot.pack()
+
+        self.buttonClear = Button(self,text="Clear")
+        self.buttonClear.pack()
+
+
+        tk.Label(self,text="SHM Simulation").pack()
 
         self.fig = plt.Figure()
 
@@ -86,7 +69,7 @@ class Window(Frame):
 
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().grid(column=0,row=4, sticky='nsew')
+        self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
 
         self.ani = animation.FuncAnimation(self.fig, self.animate, np.arange(1, 200), interval=25, blit=False)
@@ -96,7 +79,5 @@ class Window(Frame):
 
 root = tk.Tk()
 root.geometry("700x400")
-root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=1)
 app = Window(root)
 tk.mainloop()

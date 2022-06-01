@@ -49,7 +49,7 @@ STOP_SCAN_MHZ = 960
 RESET = True
 DEBUG = False
 
-root = Tk()
+root = Tk(className='HappyName')
 root.wm_title('RFE Signal Generator')
 current_frame = Frame(root)
 
