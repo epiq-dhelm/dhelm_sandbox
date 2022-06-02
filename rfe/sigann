@@ -138,11 +138,12 @@ SendCommand(port, cmd)
 #set config data
 cmd = "C2-F:" + "{:07d}".format(STARTFREQ) + "," + "{:07d}".format(ENDFREQ) + "," + "{:04d}".format(AMPTOP) + "," + "{:04d}".format(CFGAMPBOTTOM)
 SendCommand(port, cmd)
+
+"""
 #set sweep points
 cmd = "CJ" + chr(SAMPLEPOINTS)
 SendCommand(port, cmd)
 time.sleep(1)
-"""
 #set sweep points
 cmd = "Cj" + chr(1) + chr(0xFF)
 SendCommand(port, cmd)

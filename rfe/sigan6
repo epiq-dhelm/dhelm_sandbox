@@ -1,0 +1,347 @@
+#!/bin/python3
+
+#---------Imports
+import io
+import time
+import signal
+import serial
+import serial.tools.list_ports
+import array as arr
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+import tkinter as tk
+from tkinter import ttk
+from tkinter import *
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+#---------End of imports
+
+
+
+from tkinter import Frame,Label,Entry,Button
+
+
+GET_CONFIG = "C0"
+DO_RESET   = "r"
+
+SERIALPORT = None    #serial port identifier, use None to autodetect
+BAUDRATE = 500000
+
+SPAN_SIZE_MHZ = 50           #Initialize settings
+START_SCAN_MHZ = 1000
+STOP_SCAN_MHZ = START_SCAN_MHZ + SPAN_SIZE_MHZ
+SWEEPPOINTS = 112
+SWEEPDATA = (SWEEPPOINTS + 1) * 16
+RESET = True
+
+def handler(signum, frame):
+    global running
+
+    print("ending...")
+    running = False
+
+
+def SendCommand(port, cmd):
+    sCompleteCommand = "#" + chr(len(cmd) + 2) + cmd
+    bytestr = sCompleteCommand.encode('utf-8')
+    length = port.write(bytestr)
+    print("length sent", length)
+    print("RFE Command: #(" + str(len(sCompleteCommand)) + ")" + 
+            cmd + " [" + " ".join("{:02X}".format(ord(c)) for c in sCompleteCommand) + "]")
+
+def ProcessCommand(port ):
+    global running, cnfg_received
+    
+    try:
+        line = port.readline()
+
+        if cmd[0:3] == '#Sn':
+            print('serial number')
+
+    except serial.SerialException as e:
+        print('Device error: {}'.format(e))
+        break
+
+    cmd = str(line[0:5], 'utf-8', errors='ignore')
+    print('cmd: ', cmd, '  len: ',  len(line), " cnfg ", cnfg_received)
+
+    newline = str(line, 'utf-8', errors='ignore')
+
+    if cmd == '#Sn':
+        print('Serial Number')
+
+    if cmd == '#C2-M':
+        print('current setup')
+    
+    if cmd == '#C2-F':
+        listline = newline.replace("#C2-F:", "")
+        print('\nCurrent Config')
+        mylist = listline.split(",")
+        for idx, fname in enumerate(config):
+            print(fname, mylist[idx])
+        print("\n")
+        cnfg_received = True
+
+    #sweep data
+    if cmd[0:2] == '$S' and cnfg_received:
+        print("sweep_data")
+
+        plt.clf()
+        plt.axis([STARTFREQ, ENDFREQ, AMPBOTTOM, AMPTOP])
+        newlinelen = len(line) 
+        newline = line[3:newlinelen]
+        datalen = len(newline) - 2
+        data = np.frombuffer(newline, dtype=np.uint8, count=datalen, offset=0)
+        newdata = -1 * data
+        return True
+
+    if cmd[0:2] == '$z' :
+        print("large sweep")
+        plt.clf()
+        plt.axis([STARTFREQ, ENDFREQ, AMPBOTTOM, AMPTOP])
+        newlinelen = len(line) 
+        newline = line[4:newlinelen]
+        datalen = len(newline) - 2
+        data = np.frombuffer(newline, dtype=np.uint8, count=datalen, offset=0)
+        newdata = -1 * data
+        print(newdata)
+        plt.plot(x_axis, newdata)
+        plt.pause(0.01)
+        if plt.get_fignums():
+            running = True
+        else:
+            running = False
+
+
+    if cmd[0:2] == '$s': 
+        print("ext sweep") 
+
+    return False
+
+
+class FreqWindow(Toplevel):
+
+    def __init__(self, master = None):
+
+        super().__init__(master = master)
+        self.title("Frequency")
+        self.geometry("600x200")
+        self.columnconfigure(3, weight=2)
+        freqlabel = Label(self, text ="Frequency (MHz): ", font=("Arial", 16));
+        freqlabel.grid(row=0, column=0)
+        
+        self.freqentry = Entry(self, width = 15, font=("Arial", 16))
+        center_freq = int(((START_SCAN_MHZ) + (SPAN_SIZE_MHZ / 2)) ) 
+        self.freqentry.insert(1, str(center_freq))
+        self.freqentry.grid(row=0, column=1)
+
+        spanlabel = Label(self, text ="Span (Mhz): ", font=("Arial", 16));
+        spanlabel.grid(row=1, column=0)
+        
+        self.spanentry = Entry(self, width = 15, font=("Arial", 16))
+        span = SPAN_SIZE_MHZ 
+        self.spanentry.insert(1, str(span))
+        self.spanentry.grid(row=1, column=1)
+
+        enterButton = Button(self, text = 'Enter', font=("Arial", 16), command = self.get_entry)
+        enterButton.grid(row=0, column = 3, sticky='e')
+
+
+    def get_entry(self):
+        global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
+        print("get entry")
+       
+        new_center = int(self.freqentry.get())
+        new_span = int(self.spanentry.get())
+        print(new_center, new_span)
+
+        START_SCAN_MHZ = new_center - (new_span / 2)
+        STOP_SCAN_MHZ = new_center + (new_span / 2)
+        print(START_SCAN_MHZ, STOP_SCAN_MHZ)
+
+        SPAN_SIZE_MHZ = new_span
+        app.build_plot(frame)
+
+class AmpWindow(Toplevel):
+
+    def __init__(self, master = None):
+
+        super().__init__(master = master)
+        self.title("Amplitude")
+        self.geometry("400x400")
+        label = Label(self, text ="This is a new Window")
+        label.pack()
+
+class Window(Frame):
+    def __init__(self, master = None):
+        Frame.__init__(self, master)
+        self.master = master
+
+    def GetData(self, sweepdata, tot):
+        amp = arr.array('f',[])
+        freq = arr.array('f',[])
+        for nDataPoint in range(tot):
+            val = sweepdata.GetAmplitudeDBM(nDataPoint, None, False)
+            amp.append(val)
+#            print(nDataPoint, val) 
+            freq.append(sweepdata.GetFrequencyMHZ(nDataPoint))
+#        print(len(freq), freq[0])
+#        print(len(amp), amp[0], max(amp), min(amp))
+
+        return freq, amp
+
+
+    def animate(self,i):
+        self.objSweep=None
+        self.objRFE.ProcessReceivedString(True);
+        num = self.objRFE.SweepData.Count - 1
+        if self.numitems != num:
+            self.numitems = num
+            if (self.numitems > 0):
+                objSweep=self.objRFE.SweepData.GetData(self.numitems)
+                tot=objSweep.TotalDataPoints
+#                print(self.numitems, tot)
+                self.freq, self.amp = self.GetData(objSweep, tot)
+            
+                self.line.set_ydata(self.amp)  # update the data
+
+        return self.line,
+
+
+    def init_comms(self):
+        global port
+        signal.signal(signal.SIGINT, handler)
+
+        ports = list(serial.tools.list_ports.comports())
+        if(ports):
+            print("Detected COM ports:")
+            for idx, objPort in enumerate(ports):
+                print(idx, objPort.device)
+
+        val = input("enter port number")
+
+        port = serial.Serial(ports[int(val)].device, 500000, timeout=5.0)
+
+        print(port.name)
+
+        cnfg_received = False
+
+        if RESET:
+            #reset device
+            cmd = DO_RESET 
+            SendCommand(port, cmd)
+
+            time.sleep(5)
+
+
+    def init_window(self, content):
+        self.objSweep=None
+        self.buttonFreq = Button(content,text="Frequency")
+
+        # Following line will bind click event
+        # On any click left / right button
+        # of mouse a new window will be opened
+        self.buttonFreq.bind("<Button>",
+                 lambda e: FreqWindow(self.master))
+
+#        self.buttonFreq.grid_columnconfigure(3, weight=1)
+#        self.buttonFreq.grid_rowconfigure(0, weight=1)
+        self.buttonFreq.grid(row=0,column=3, sticky= 'nsew')
+
+#        self.buttonAmp = Button(content,text="Amplitude", height=10)
+        self.buttonAmp = Button(content,text="Amplitude")
+        self.buttonAmp.bind("<Button>",
+                 lambda e: AmpWindow(self.master))
+#        self.buttonAmp.grid_columnconfigure(3, weight=1)
+#        self.buttonAmp.grid_rowconfigure(1, weight=1)
+        self.buttonAmp.grid(row=1,column=3, sticky='nsew')
+
+        self.fig = plt.Figure()
+        self.ax = self.fig.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=frame)
+        self.canvas.get_tk_widget().grid(column=0,row=0, sticky = 'nsew')
+
+    def build_plot(self, frame):
+        
+        #Request RF Explorer configuration
+        cmd = GET_CONFIG
+        SendCommand(port, cmd)
+
+        #Wait to receive configuration and model details
+        while(!cnfg_received) and running:
+            print("waiting")
+            sleep(1)
+
+
+        #Control settings
+        print("User settings:" + "Span: " + str(SPAN_SIZE_MHZ) +"MHz"+  
+                " - " + "Start freq: " + str(START_SCAN_MHZ) +"MHz"+" - " + 
+                "Stop freq: " + str(STOP_SCAN_MHZ) + "MHz")
+
+        SpanSize = SPAN_SIZE_MHZ * 1000000
+        StartFreq = START_SCAN_MHZ
+        StopFreq = STOP_SCAN_MHZ
+
+        if(SpanSize and StartFreq and StopFreq):
+            nInd = 0
+            
+            data_rcvd = ProcessCommand()
+
+            #wait till we get screen data
+            while (!line_rcvd) and running:
+                data_rcvd = ProcessCommand()
+
+            self.numitems = self.objRFE.SweepData.Count - 1
+            while (self.numitems <= 0):
+                self.objRFE.ProcessReceivedString(True);
+                self.numitems = self.objRFE.SweepData.Count - 1
+            
+            print(self.numitems)
+
+            if (self.numitems > 0):
+                self.objSweep=self.objRFE.SweepData.GetData(self.numitems)
+                tot=self.objSweep.TotalDataPoints
+                self.freq, self.amp = self.GetData(self.objSweep, tot)
+                self.line, = self.ax.plot(self.freq, self.amp)        
+                self.ax.axis([StartFreq, StopFreq, min(self.amp) - 10, 0 ])
+            else: 
+                print("somethings wrong")
+        else:
+            print("Error: settings are wrong.\nPlease, change and try again")
+
+    def go_animate(self):
+        self.ani = animation.FuncAnimation(self.fig, self.animate, np.arange(1, 200), interval=25, blit=False)
+
+
+
+
+
+root = tk.Tk()
+root.geometry("800x500")
+root.title("sigann")
+content = ttk.Frame(root, padding=(3,3,12,12))
+frame = ttk.Frame(content, borderwidth=5, relief="ridge", width=200, height=100)
+
+content.grid(column=0, row=0, sticky='nsew')
+frame.grid(column=0, row=0, columnspan=3, rowspan=2, sticky='nsew')
+
+root.columnconfigure(0, weight=1)
+root.rowconfigure(0, weight=1)
+frame.columnconfigure(0, weight=1)
+frame.rowconfigure(0, weight=1)
+content.columnconfigure(0, weight=3)
+content.columnconfigure(1, weight=3)
+content.columnconfigure(2, weight=3)
+content.columnconfigure(3, weight=1)
+content.rowconfigure(0, weight=1)
+content.rowconfigure(1, weight=1)
+
+
+app = Window(root)
+app.init_comms()
+app.init_window(content)
+app.build_plot(frame)
+app.go_animate()
+tk.mainloop()
