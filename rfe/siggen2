@@ -47,7 +47,7 @@ SPAN_SIZE_MHZ = 50           #Initialize settings
 START_SCAN_MHZ = 50
 STOP_SCAN_MHZ = 960
 RESET = True
-DEBUG = False
+DEBUG = FALSE
 
 root = Tk(className='HappyName')
 root.wm_title('RFE Signal Generator')
@@ -318,8 +318,18 @@ def connect():
     current_frame.pack(fill="both", expand=True)
 
     for idx, objPort in enumerate(ports):
-        if (objPort.device == "/dev/ttyAMA0" or objPort.device == "/dev/ttyS4"):
+
+        """
+        if (objPort.device == "/dev/ttyAMA0") : 
+            print("after", objPort.device)
             ports.remove(objPort)
+        """
+        if (objPort.device == "/dev/ttySKIQ_UART0"):
+            ports.remove(objPort)
+            continue
+        if (objPort.device == "/dev/ttyS4") : 
+            ports.remove(objPort)
+            continue
 
     #if we have more than one port we need to determine which one.
     if (len(ports) > 1):

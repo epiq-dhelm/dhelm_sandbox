@@ -1,0 +1,32 @@
+[org.compiz.unityshell]
+show-launcher = ""
+lock-screen = "<Control><Alt>l"
+show-desktop-key = "<Control><Alt>d"
+launcher-switcher-forward = ""
+launcher-switcher-prev = ""
+
+[org.compiz.core]
+maximize-window-key = "<Control><Alt>Up"
+unmaximize-or-minimize-window-key = "<Control><Alt>Down"
+
+[org.compiz.put]
+put-center-key = "<Control><Alt>KP_Begin"
+put-left-key = "<Control><Alt>KP_Left"
+put-right-key = "<Control><Alt>KP_Right"
+put-top-key = "<Control><Alt>KP_Up"
+put-bottom-key = "<Control><Alt>KP_Down"
+put-bottom-button = "<Control><Alt>KP_Down"
+put-topright-key = "<Control><Alt>KP_Prior"
+put-bottomleft-key = "<Control><Alt>KP_End"
+put-bottomright-key = "<Control><Alt>KP_Next"
+put-restore-key = "<Control><Alt>KP_Insert"
+put-pointer-key = "<Control><Alt>z"
+
+[org.compiz.expo]
+expo-key = "<Control><Alt>s"
+
+[org.compiz.grid]
+put-maximize-key = "<Control><Alt>Up"
+put-restore-key = "<Control><Alt>Down"
+left-maximize = "<Control><Alt>Left"
+right-maximize = "<Control><Alt>Right"

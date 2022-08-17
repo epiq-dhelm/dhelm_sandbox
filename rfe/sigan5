@@ -4,6 +4,7 @@
 
 import time
 import RFExplorer
+print(RFExplorer.__file__)
 from RFExplorer import RFE_Common
 import math
 import array as arr
@@ -25,11 +26,11 @@ import matplotlib.animation as animation
 from tkinter import Frame,Label,Entry,Button
 
 
-SERIALPORT = None    #serial port identifier, use None to autodetect
+SERIALPORT = "/dev/ttyUSB0"    #serial port identifier, use None to autodetect
 BAUDRATE = 500000
 
 SPAN_SIZE_MHZ = 50           #Initialize settings
-START_SCAN_MHZ = 1000
+START_SCAN_MHZ = 975
 STOP_SCAN_MHZ = START_SCAN_MHZ + SPAN_SIZE_MHZ
 SWEEPPOINTS = 112
 SWEEPDATA = (SWEEPPOINTS + 1) * 16
@@ -55,6 +56,8 @@ def ControlSettings(objAnalazyer):
         #Control minimum start frequency
         if(objAnalazyer.MinFreqMHZ > START_SCAN_MHZ):
             print("Min Start freq: " + str(objAnalazyer.MinFreqMHZ)+"MHz")
+            self.objRFE.Close()
+            exit()
         else:
             objAnalazyer.StartFrequencyMHZ = START_SCAN_MHZ
             StartFreqTemp = objAnalazyer.StartFrequencyMHZ
@@ -62,9 +65,13 @@ def ControlSettings(objAnalazyer):
             #Control maximum stop frequency
             if(objAnalazyer.MaxFreqMHZ < STOP_SCAN_MHZ):
                 print("Max Start freq: " + str(objAnalazyer.MaxFreqMHZ)+"MHz")
+                self.objRFE.Close()
+                exit()
             else:
                 if((StartFreqTemp + SpanSizeTemp) > STOP_SCAN_MHZ):
                     print("Max Stop freq (START_SCAN_MHZ + SPAN_SIZE_MHZ): " + str(STOP_SCAN_MHZ) +"MHz")
+                    self.objRFE.Close()
+                    exit()
                 else:
                     StopFreqTemp = (StartFreqTemp + SpanSizeTemp)
 
@@ -75,6 +82,8 @@ class FreqWindow(Toplevel):
     def __init__(self, master = None):
 
         super().__init__(master = master)
+
+        self.win = Toplevel
         self.title("Frequency")
         self.geometry("600x200")
         self.columnconfigure(3, weight=2)
@@ -86,42 +95,67 @@ class FreqWindow(Toplevel):
         self.freqentry.insert(1, str(center_freq))
         self.freqentry.grid(row=0, column=1)
 
-        spanlabel = Label(self, text ="Span (Mhz): ", font=("Arial", 16));
-        spanlabel.grid(row=1, column=0)
-        
-        self.spanentry = Entry(self, width = 15, font=("Arial", 16))
-        span = SPAN_SIZE_MHZ 
-        self.spanentry.insert(1, str(span))
-        self.spanentry.grid(row=1, column=1)
-
         enterButton = Button(self, text = 'Enter', font=("Arial", 16), command = self.get_entry)
         enterButton.grid(row=0, column = 3, sticky='e')
 
 
     def get_entry(self):
         global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
-        print("get entry")
+        print("get freq")
        
         new_center = int(self.freqentry.get())
-        new_span = int(self.spanentry.get())
-        print(new_center, new_span)
+        print(new_center)
 
-        START_SCAN_MHZ = new_center - (new_span / 2)
-        STOP_SCAN_MHZ = new_center + (new_span / 2)
+        START_SCAN_MHZ = new_center - (SPAN_SIZE_MHZ / 2)
+        STOP_SCAN_MHZ = new_center + (SPAN_SIZE_MHZ / 2)
         print(START_SCAN_MHZ, STOP_SCAN_MHZ)
 
-        SPAN_SIZE_MHZ = new_span
+        app.init_window(content)
         app.build_plot(frame)
+        app.go_animate()
 
-class AmpWindow(Toplevel):
+        self.win.destroy(self)
+
+class SpanWindow(Toplevel):
 
     def __init__(self, master = None):
 
         super().__init__(master = master)
-        self.title("Amplitude")
+        self.win = Toplevel
+        self.title("Span")
         self.geometry("400x400")
-        label = Label(self, text ="This is a new Window")
-        label.pack()
+        self.columnconfigure(3, weight=2)
+        spanlabel = Label(self, text ="Span (Mhz): ", font=("Arial", 16));
+        spanlabel.grid(row=0, column=0)
+        
+        self.spanentry = Entry(self, width = 15, font=("Arial", 16))
+        span = SPAN_SIZE_MHZ 
+        self.spanentry.insert(1, str(span))
+        self.spanentry.grid(row=0, column=1)
+
+        enterSButton = Button(self, text = 'Enter', font=("Arial", 16), command = self.get_entry)
+        enterSButton.grid(row=0, column = 3, sticky='e')
+
+    def get_entry(self):
+        global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
+        print("get span")
+       
+        new_span = int(self.spanentry.get())
+        print(new_span)
+
+        center = STOP_SCAN_MHZ - (SPAN_SIZE_MHZ / 2) 
+        print(center)
+
+        START_SCAN_MHZ = center - (new_span / 2)
+        STOP_SCAN_MHZ = center + (new_span / 2)
+        print(START_SCAN_MHZ, STOP_SCAN_MHZ)
+
+        SPAN_SIZE_MHZ = new_span
+        app.init_window(content)
+        app.build_plot(frame)
+        app.go_animate()
+
+        self.win.destroy(self)
 
 class Window(Frame):
     def __init__(self, master = None):
@@ -134,15 +168,13 @@ class Window(Frame):
         for nDataPoint in range(tot):
             val = sweepdata.GetAmplitudeDBM(nDataPoint, None, False)
             amp.append(val)
-#            print(nDataPoint, val) 
             freq.append(sweepdata.GetFrequencyMHZ(nDataPoint))
-#        print(len(freq), freq[0])
-#        print(len(amp), amp[0], max(amp), min(amp))
 
         return freq, amp
 
 
     def animate(self,i):
+
         self.objSweep=None
         self.objRFE.ProcessReceivedString(True);
         num = self.objRFE.SweepData.Count - 1
@@ -151,10 +183,38 @@ class Window(Frame):
             if (self.numitems > 0):
                 objSweep=self.objRFE.SweepData.GetData(self.numitems)
                 tot=objSweep.TotalDataPoints
-#                print(self.numitems, tot)
                 self.freq, self.amp = self.GetData(objSweep, tot)
-            
+                if i % 10 == 0:
+                    print("config start", self.objRFE.StartFrequencyMHZ, "config stop ", self.objRFE.StopFrequencyMHZ )
+                    print("Freq min ", min(self.freq), " max ", max(self.freq))
+                    print("Amp min ", min(self.amp), " max ", max(self.amp))
+
+                 
                 self.line.set_ydata(self.amp)  # update the data
+                self.line.set_xdata(self.freq)  # update the data
+
+                # display the peak values
+                self.ann.remove()
+                ymax = max(self.amp)
+                xpos = np.argmax(self.amp)
+                xmax = self.freq[xpos]
+
+                xtextpos = 5
+                ytextpos = 5
+
+                greater_textsize = 20
+                if xmax + greater_textsize > self.objRFE.StopFrequencyMHZ:
+                    xtextpos = - greater_textsize
+                    ytextpos = - greater_textsize
+
+
+                xmax_int = int(xmax * 1000)
+                xmax = xmax_int / 1000 
+                
+                display_text = "x = " + str((xmax)) + " y = " + str(ymax)
+                self.ann = self.ax.annotate(display_text, xy=(xmax, ymax), xytext=(xmax + xtextpos, ymax + ytextpos), 
+                        arrowprops=dict(arrowstyle="->", facecolor='black'),)
+                self.objRFE.CleanSweepData()
 
         return self.line,
 
@@ -166,6 +226,7 @@ class Window(Frame):
         self.objRFE.GetConnectedPorts()
 
         self.objRFE.VerboseLevel = 0
+
         #Connect to available port
         if (self.objRFE.ConnectPort(SERIALPORT, BAUDRATE)):
             if RESET:
@@ -177,9 +238,7 @@ class Window(Frame):
                     pass
                 #Wait for unit to stabilize
                 time.sleep(4)
-            #If object is an analyzer, we can scan for received sweeps
-            if(not self.objRFE.IsAnalyzer()):
-                exit()
+
 
     def init_window(self, content):
         self.objSweep=None
@@ -191,16 +250,11 @@ class Window(Frame):
         self.buttonFreq.bind("<Button>",
                  lambda e: FreqWindow(self.master))
 
-#        self.buttonFreq.grid_columnconfigure(3, weight=1)
-#        self.buttonFreq.grid_rowconfigure(0, weight=1)
         self.buttonFreq.grid(row=0,column=3, sticky= 'nsew')
 
-#        self.buttonAmp = Button(content,text="Amplitude", height=10)
-        self.buttonAmp = Button(content,text="Amplitude")
+        self.buttonAmp = Button(content,text="Span")
         self.buttonAmp.bind("<Button>",
-                 lambda e: AmpWindow(self.master))
-#        self.buttonAmp.grid_columnconfigure(3, weight=1)
-#        self.buttonAmp.grid_rowconfigure(1, weight=1)
+                 lambda e: SpanWindow(self.master))
         self.buttonAmp.grid(row=1,column=3, sticky='nsew')
 
         self.fig = plt.Figure()
@@ -208,18 +262,9 @@ class Window(Frame):
         self.canvas = FigureCanvasTkAgg(self.fig, master=frame)
         self.canvas.get_tk_widget().grid(column=0,row=0, sticky = 'nsew')
 
+
     def build_plot(self, frame):
         
-        it_exists = 'self.objSweep' in locals() or 'self.objSweep' in globals()
-        if it_exists:
-            del self.objSweep
-
-        it_exists = 'self.line' in locals() or 'self.line' in globals()
-        print(it_exists)
-        if it_exists:
-            self.line.clf()
-            print("clearing")
-
         #Request RF Explorer configuration
         self.objRFE.SendCommand_RequestConfigData()
 
@@ -228,6 +273,12 @@ class Window(Frame):
             self.objRFE.ProcessReceivedString(True)    #Process the received configuration
 
 
+        #If object is an analyzer, we can scan for received sweeps
+        if(not self.objRFE.IsAnalyzer()):
+            print("not an analyzer, exit", self.objRFE.IsAnalyzer() )
+            self.objRFE.Close()
+            exit()
+
         #Control settings
         SpanSize, StartFreq, StopFreq = ControlSettings(self.objRFE)
 
@@ -235,35 +286,48 @@ class Window(Frame):
             nInd = 0
             #Set new configuration into device
             self.objRFE.UpdateDeviceConfig(StartFreq, StopFreq)
-            self.objRFE.ProcessReceivedString(True);
+            self.objRFE.ProcessReceivedString(True)
 
+            # wait until we have indication that the new configuration is in device
+            while (StartFreq != self.objRFE.StartFrequencyMHZ):
+                self.objRFE.ProcessReceivedString(True)
 
             self.numitems = self.objRFE.SweepData.Count - 1
+
+            # wait until we have received data
             while (self.numitems <= 0):
                 self.objRFE.ProcessReceivedString(True);
                 self.numitems = self.objRFE.SweepData.Count - 1
             
-            print(self.numitems)
+            print("config min", self.objRFE.StartFrequencyMHZ, "config max ", self.objRFE.StopFrequencyMHZ )
 
             if (self.numitems > 0):
                 self.objSweep=self.objRFE.SweepData.GetData(self.numitems)
                 tot=self.objSweep.TotalDataPoints
                 self.freq, self.amp = self.GetData(self.objSweep, tot)
+                print("Freq min ", min(self.freq), " max ", max(self.freq))
+                print("Amp min ", min(self.amp), " max ", max(self.amp))
                 self.line, = self.ax.plot(self.freq, self.amp)        
                 self.ax.axis([StartFreq, StopFreq, min(self.amp) - 10, 0 ])
+                ymax = max(self.amp)
+                xpos = np.argmax(self.amp)
+                xmax = self.freq[xpos]
+                display_text = "x = " + str(int(xmax)) + " y = " + str(ymax)
+                self.ann = self.ax.annotate(display_text, xy=(xmax, ymax), xytext=(xmax+5, ymax + 5), arrowprops=dict(arrowstyle="->", facecolor='black'),)
+
             else: 
                 print("somethings wrong")
         else:
             print("Error: settings are wrong.\nPlease, change and try again")
 
     def go_animate(self):
-        self.ani = animation.FuncAnimation(self.fig, self.animate, np.arange(1, 200), interval=25, blit=False)
+        self.ani = animation.FuncAnimation(self.fig, self.animate, None, interval=25, blit=False)
 
 
+root = Tk(className='annName')
+root.wm_title('RFE Signal Analyzer')
 
 
-
-root = tk.Tk()
 root.geometry("800x500")
 root.title("sigann")
 content = ttk.Frame(root, padding=(3,3,12,12))
@@ -290,3 +354,4 @@ app.init_window(content)
 app.build_plot(frame)
 app.go_animate()
 tk.mainloop()
+app.objRFE.Close()

@@ -33,8 +33,23 @@ SPAN_SIZE_MHZ = 50           #Initialize settings
 START_SCAN_MHZ = 1000
 STOP_SCAN_MHZ = START_SCAN_MHZ + SPAN_SIZE_MHZ
 SWEEPPOINTS = 112
-SWEEPDATA = (SWEEPPOINTS + 1) * 16
+SWEEPSTEP = SPAN_SIZE_MHZ / SWEEPPOINTS 
+print(SWEEPSTEP * 1000000)
+
+STARTFREQ = START_SCAN_MHZ * 1000   #greater than 240M
+ENDFREQ = STOP_SCAN_MHZ * 1000
+AMPTOP = 0
+AMPBOTTOM = -120
+CFGAMPBOTTOM = -AMPBOTTOM
+
 RESET = True
+
+config = ['Start_Freq (Khz)\t', 'Freq_Step (Hz)\t\t', 'Amp_Top (dBm)\t\t', 'Amp_Bottom (dBm)\t', 'Sweep_points\t\t', 'ExpModuleActive\t\t', 'CurrentMode\t\t', 'Min_Freq (Khz)\t\t', 'Max_Freq (Khz)\t\t', 'Max_Span (Khz)\t\t', 'RBW (Khz)\t\t', 'AmpOffset (dB)\t\t', 'CalculatorMode \t\t']
+
+
+cnfg_received = False
+model_received = False
+reset_received = False
 
 def handler(signum, frame):
     global running
@@ -51,29 +66,38 @@ def SendCommand(port, cmd):
     print("RFE Command: #(" + str(len(sCompleteCommand)) + ")" + 
             cmd + " [" + " ".join("{:02X}".format(ord(c)) for c in sCompleteCommand) + "]")
 
-def ProcessCommand(port ):
+def ProcessCommand():
     global running, cnfg_received
     
     try:
         line = port.readline()
 
-        if cmd[0:3] == '#Sn':
-            print('serial number')
-
     except serial.SerialException as e:
         print('Device error: {}'.format(e))
-        break
 
     cmd = str(line[0:5], 'utf-8', errors='ignore')
     print('cmd: ', cmd, '  len: ',  len(line), " cnfg ", cnfg_received)
+    print(line)
 
     newline = str(line, 'utf-8', errors='ignore')
+    print(newline)
 
-    if cmd == '#Sn':
-        print('Serial Number')
+    if cmd == '(C) A':
+        print('reset received')
+        reset_received = True
+
+    if cmd[0:3] == '#Sn':
+        serial = newline[3:19]
+        print('Serial Number: ' + serial)
+
+    if cmd[0:3] == '#Se':
+        eserial = newline[3:19]
+        print('Expansion Serial Number: ' + eserial)
 
     if cmd == '#C2-M':
-        print('current setup')
+        model = newline[6:9]
+        print('Device Model Received' + model)
+        model_received = True
     
     if cmd == '#C2-F':
         listline = newline.replace("#C2-F:", "")
@@ -82,25 +106,28 @@ def ProcessCommand(port ):
         for idx, fname in enumerate(config):
             print(fname, mylist[idx])
         print("\n")
-        cnfg_received = True
+
+        print("step", mylist[1])
+
+        mystep = int(SWEEPSTEP * 1000000)
+
+        if mystep == int(mylist[1]):
+            cnfg_received = True
 
     #sweep data
     if cmd[0:2] == '$S' and cnfg_received:
-        print("sweep_data")
+#        print("sweep_data")
 
-        plt.clf()
-        plt.axis([STARTFREQ, ENDFREQ, AMPBOTTOM, AMPTOP])
         newlinelen = len(line) 
         newline = line[3:newlinelen]
         datalen = len(newline) - 2
         data = np.frombuffer(newline, dtype=np.uint8, count=datalen, offset=0)
         newdata = -1 * data
-        return True
+
+        return True, newdata
 
     if cmd[0:2] == '$z' :
         print("large sweep")
-        plt.clf()
-        plt.axis([STARTFREQ, ENDFREQ, AMPBOTTOM, AMPTOP])
         newlinelen = len(line) 
         newline = line[4:newlinelen]
         datalen = len(newline) - 2
@@ -118,7 +145,7 @@ def ProcessCommand(port ):
     if cmd[0:2] == '$s': 
         print("ext sweep") 
 
-    return False
+    return False, 0
 
 
 class FreqWindow(Toplevel):
@@ -127,7 +154,17 @@ class FreqWindow(Toplevel):
 
         super().__init__(master = master)
         self.title("Frequency")
-        self.geometry("600x200")
+        
+        curr_x = root.winfo_x()
+        curr_y = root.winfo_y()
+        
+        print(curr_x, curr_y)
+        new_x = curr_x + 800
+        new_y = curr_y
+        geo = "600x200" + '+' + str(new_x) + '+' + str(new_y)
+        print(geo)
+
+        self.geometry(geo)
         self.columnconfigure(3, weight=2)
         freqlabel = Label(self, text ="Frequency (MHz): ", font=("Arial", 16));
         freqlabel.grid(row=0, column=0)
@@ -150,18 +187,21 @@ class FreqWindow(Toplevel):
 
 
     def get_entry(self):
-        global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
+        global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ, STARTFREQ, ENDFREQ
         print("get entry")
        
         new_center = int(self.freqentry.get())
         new_span = int(self.spanentry.get())
         print(new_center, new_span)
 
-        START_SCAN_MHZ = new_center - (new_span / 2)
-        STOP_SCAN_MHZ = new_center + (new_span / 2)
+        START_SCAN_MHZ = int(new_center - (new_span / 2))
+        STOP_SCAN_MHZ = int(new_center + (new_span / 2))
+        STARTFREQ = START_SCAN_MHZ * 1000   #greater than 240M
+        ENDFREQ = STOP_SCAN_MHZ * 1000
         print(START_SCAN_MHZ, STOP_SCAN_MHZ)
 
         SPAN_SIZE_MHZ = new_span
+        app.clear_plot()
         app.build_plot(frame)
 
 class AmpWindow(Toplevel):
@@ -179,33 +219,16 @@ class Window(Frame):
         Frame.__init__(self, master)
         self.master = master
 
-    def GetData(self, sweepdata, tot):
-        amp = arr.array('f',[])
-        freq = arr.array('f',[])
-        for nDataPoint in range(tot):
-            val = sweepdata.GetAmplitudeDBM(nDataPoint, None, False)
-            amp.append(val)
-#            print(nDataPoint, val) 
-            freq.append(sweepdata.GetFrequencyMHZ(nDataPoint))
-#        print(len(freq), freq[0])
-#        print(len(amp), amp[0], max(amp), min(amp))
-
-        return freq, amp
-
-
     def animate(self,i):
-        self.objSweep=None
-        self.objRFE.ProcessReceivedString(True);
-        num = self.objRFE.SweepData.Count - 1
-        if self.numitems != num:
-            self.numitems = num
-            if (self.numitems > 0):
-                objSweep=self.objRFE.SweepData.GetData(self.numitems)
-                tot=objSweep.TotalDataPoints
-#                print(self.numitems, tot)
-                self.freq, self.amp = self.GetData(objSweep, tot)
-            
-                self.line.set_ydata(self.amp)  # update the data
+        self.data_rcvd, self.new_data = ProcessCommand()
+
+        #wait till we get screen data
+        while (not self.data_rcvd) and running:
+            print("animate wait")
+            self.data_rcvd, self.new_data = ProcessCommand()
+       
+#        print(len(self.new_data), self.new_data)
+        self.line.set_ydata(self.new_data)  # update the data
 
         return self.line,
 
@@ -226,15 +249,14 @@ class Window(Frame):
 
         print(port.name)
 
-        cnfg_received = False
 
         if RESET:
             #reset device
             cmd = DO_RESET 
             SendCommand(port, cmd)
 
-            time.sleep(5)
-
+        while (not reset_received) and running:
+            ProcessCommand()
 
     def init_window(self, content):
         self.objSweep=None
@@ -263,16 +285,37 @@ class Window(Frame):
         self.canvas = FigureCanvasTkAgg(self.fig, master=frame)
         self.canvas.get_tk_widget().grid(column=0,row=0, sticky = 'nsew')
 
+    def clear_plot(self):
+        self.fig.clf()
+        self.ax = self.fig.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=frame)
+        self.canvas.get_tk_widget().grid(column=0,row=0, sticky = 'nsew')
+
     def build_plot(self, frame):
-        
+        global running, cnfg_received, model_received
+
+
+        #Wait to receive configuration and model details
+        while (not model_received) and running:
+            ProcessCommand()
+
+        #set config data
+        cmd = "C2-F:" + "{:07d}".format(STARTFREQ) + "," + "{:07d}".format(ENDFREQ) + "," + "{:04d}".format(AMPTOP) + "," + "{:04d}".format(CFGAMPBOTTOM)
+        SendCommand(port, cmd)
+
         #Request RF Explorer configuration
         cmd = GET_CONFIG
         SendCommand(port, cmd)
+        cnfg_received = False
+
 
         #Wait to receive configuration and model details
-        while(!cnfg_received) and running:
-            print("waiting")
-            sleep(1)
+        while (not cnfg_received) and running:
+#            print("waiting for config")
+            ProcessCommand()
+
+        if not running:
+            exit()
 
 
         #Control settings
@@ -285,27 +328,22 @@ class Window(Frame):
         StopFreq = STOP_SCAN_MHZ
 
         if(SpanSize and StartFreq and StopFreq):
+            
+            self.x_axis = np.arange(START_SCAN_MHZ , STOP_SCAN_MHZ, SWEEPSTEP, dtype=float)
             nInd = 0
             
-            data_rcvd = ProcessCommand()
+            self.data_rcvd, self.new_data = ProcessCommand()
 
             #wait till we get screen data
-            while (!line_rcvd) and running:
-                data_rcvd = ProcessCommand()
+            while (not self.data_rcvd) and running:
+                self.data_rcvd, self.new_data = ProcessCommand()
 
-            self.numitems = self.objRFE.SweepData.Count - 1
-            while (self.numitems <= 0):
-                self.objRFE.ProcessReceivedString(True);
-                self.numitems = self.objRFE.SweepData.Count - 1
-            
-            print(self.numitems)
 
-            if (self.numitems > 0):
-                self.objSweep=self.objRFE.SweepData.GetData(self.numitems)
-                tot=self.objSweep.TotalDataPoints
-                self.freq, self.amp = self.GetData(self.objSweep, tot)
-                self.line, = self.ax.plot(self.freq, self.amp)        
-                self.ax.axis([StartFreq, StopFreq, min(self.amp) - 10, 0 ])
+            print(len(self.x_axis), self.x_axis, len(self.new_data), self.new_data)
+
+            if (len(self.new_data) > 0):
+                self.line, = self.ax.plot(self.x_axis, self.new_data)        
+                self.ax.axis([StartFreq, StopFreq, min(self.new_data) - 10, 0 ])
             else: 
                 print("somethings wrong")
         else:
@@ -313,7 +351,6 @@ class Window(Frame):
 
     def go_animate(self):
         self.ani = animation.FuncAnimation(self.fig, self.animate, np.arange(1, 200), interval=25, blit=False)
-
 
 
 
@@ -338,6 +375,8 @@ content.columnconfigure(3, weight=1)
 content.rowconfigure(0, weight=1)
 content.rowconfigure(1, weight=1)
 
+
+running = True
 
 app = Window(root)
 app.init_comms()

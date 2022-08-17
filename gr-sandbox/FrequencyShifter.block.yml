@@ -1,0 +1,38 @@
+id: FrequencyShifter
+label: Frequency Shifter Block
+category: '[GRC Hier Blocks]'
+
+parameters:
+-   id: frequency
+    label: Frequency
+    dtype: real
+    default: '0'
+    hide: none
+-   id: samp_rate
+    label: Sample Rate
+    dtype: real
+    default: '0'
+    hide: none
+
+inputs:
+-   label: in
+    dtype: complex
+    vlen: 1
+
+outputs:
+-   label: out
+    dtype: complex
+    vlen: 1
+
+templates:
+    imports: 'from FrequencyShifter import FrequencyShifter  # grc-generated hier_block'
+    make: "FrequencyShifter(\n    frequency=${ frequency },\n    samp_rate=${ samp_rate\
+        \ },\n)"
+    callbacks:
+    - set_frequency(${ frequency })
+    - set_samp_rate(${ samp_rate })
+
+documentation: /home/dhelm/dhelm_sandbox/gr-sandbox/FrequencyShifter.py
+grc_source: /home/dhelm/dhelm_sandbox/gr-sandbox/freqshifter.grc
+
+file_format: 1

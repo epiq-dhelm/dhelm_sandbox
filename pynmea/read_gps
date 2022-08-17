@@ -6,7 +6,7 @@ import serial
 import pynmea2
 
 
-ser = serial.Serial('/dev/ttySKIQ_UART2', 9600, timeout=5.0)
+ser = serial.Serial('/dev/ttySKIQ_UART0', 9600, timeout=5.0)
 sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
 date = ""
 while 1:
