@@ -1,14 +1,19 @@
 #!/bin/python3
 
 import sys
+
+import tkinter as tk
+from tkinter import ttk
 from tkinter import *
+from tkinter.messagebox import Message
 
 import time
 import math
 
 import RFExplorer
-#print(RFExplorer.__file__)
+print(RFExplorer.__file__)
 from RFExplorer import RFE_Common
+
 
 
 """
@@ -49,7 +54,7 @@ SPAN_SIZE_MHZ = 50           #Initialize settings
 START_SCAN_MHZ = 50
 STOP_SCAN_MHZ = 960
 RESET = True
-DEBUG = FALSE
+DEBUG = TRUE
 
 root = Tk(className='HappyName')
 root.wm_title('RFE Signal Generator')
@@ -61,25 +66,7 @@ def enterhandler(e):
     if DEBUG:
         print("enterhandler", current_state, e)
 
-    if current_state == "getport":
         go()
-        current_state = ''
-"""
-    if current_state == "continuous_wave":
-        continuous_power_on()
-
-    if current_state == "frequency_sweep":
-        start_sweep()
-"""
-
-def SendCommand(cmd):
-    global port
-
-    sCompleteCommand = "#" + chr(len(cmd) + 2) + cmd
-    bytestr = sCompleteCommand.encode('utf-8')
-    length = port.write(bytestr)
-    if DEBUG:
-        print(length, "RFE Command: #(" + str(len(sCompleteCommand)) + ")" + cmd + " [" + " ".join("{:02X}".format(ord(c)) for c in sCompleteCommand) + "]")
 
 
 def power_off(on_button):
@@ -87,7 +74,7 @@ def power_off(on_button):
         print("power off")
     on_button.configure(bg = "#f0f0f0")
     
-    SendCommand("CP0")
+    objRFE.SendCommand("CP0")
 
 def continuous_power_on(on_button):
     global cw_freq, cw_power, current_color
@@ -123,7 +110,7 @@ def continuous_power_on(on_button):
 
     cmd = "C3-F:" + "{:07d}".format(intfreq) + ","+ str(highpower)+ "," + str(config_power)
 
-    SendCommand(cmd)
+    objRFE.SendCommand(cmd)
 
 def continuous_wave():
     global current_frame, cw_freq, cw_power, current_state
@@ -187,7 +174,7 @@ def start_sweep(on_button):
 
     cmd = "C3-F:" + "{:07d}".format(intfreq) + "," + str(highpower) + "," + str(config_power) + "," + "{:04d}".format(int(steps)) + "," + "{:07d}".format(int(step_width)) + "," + "{:05d}".format(int(step_time))
  
-    SendCommand(cmd)
+    objRFE.SendCommand(cmd)
     
 def clear():
     if DEBUG:
@@ -250,120 +237,6 @@ def top_window():
 
 
 
-
-
-def go():
-    global ports, port
-    portno = int(user_entry[0].get())
-
-    if portno >= len(ports) or portno < 0:
-        print("Error: Invalid Port Number", portno)
-        GetPort()
-    else:
-        port.baudrate = BAUDRATE
-        port.port = ports[portno].device
-        port.timeout = 5.0
-        port.open()
-
-        if DEBUG:
-            print("Selected name", port.port)
-
-    if RESET:
-        if DEBUG:
-            print("Resetting device...")
-
-        #Reset the unit to start fresh
-        SendCommand("r")
-
-        #Wait for unit to stabilize
-        time.sleep(4)
-
-    if DEBUG:
-        print("Connected...")
-
-    top_window()
-
-def GetPort():
-    global ports, port, current_frame, current_state 
-
-    current_frame.destroy()
-    frame = Frame(root)
-    current_frame = frame
-    current_state = "getport"
-
-    title = Label(current_frame, text= "Available Ports:", font=("Arial", 16))
-    title.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
-
-
-    for idx, objPort in enumerate(ports):
-        tmp_txt = str(idx) + "     " +  objPort.device
-        label = Label(current_frame, text=tmp_txt, font=("Arial", 16))
-        # Entry widgets in the row whose index is idx
-        label.grid(row=idx+1, column=0, padx=10, pady=10, sticky="w")
-
-    user_label = Label(current_frame, text= "Enter Port Number:", font=("Arial", 16))
-    user_label.grid(row=idx+2, column=0, padx=10, pady=10, sticky="w")
-    user_entry.append(Entry(current_frame, width=5, font=("Ariel", 16)))
-    user_entry[0].grid(row=idx+2, column=1, padx=10, pady=10)
-    user_entry[0].focus_set()
-
-    current_frame.pack(fill="both", expand=True)
-
-def connect():
-    global ports, port
-
-    if DEBUG:
-        print("Connecting")
-
-    label = Label(master=current_frame, text="Connecting... ", font=("Arial", 16))
-    label.place(relx = 0.5, rely = 0.5, anchor = 'center')
-    current_frame.pack(fill="both", expand=True)
-
-    for idx, objPort in enumerate(ports):
-
-        if (objPort.device == "/dev/ttyAMA0") : 
-            print("deleting AMA0", objPort.device)
-            ports.remove(objPort)
-            continue
-
-        if (objPort.device == "/dev/ttySKIQ_UART0"):
-            print("deleting SKIQ_UART0", objPort.device)
-            ports.remove(objPort)
-            continue
-        
-        if (objPort.device == "/dev/ttyS4") : 
-            print("deleting ttyS4", objPort.device)
-            ports.remove(objPort)
-            continue
-
-        print("deleted nothing", objPort.device)
-
-    #if we have more than one port we need to determine which one.
-    if (len(ports) > 1):
-        GetPort()
-    #Connect to available port
-    else:
-        port.baudrate = BAUDRATE
-        port.port = ports[0].device
-        port.timeout = 5.0
-        port.open()
-#        port = serial.Serial(ports[0].device, 500000, timeout=5.0)
- 
-        if RESET:
-            if DEBUG:
-                print("Resetting device...")
-
-            #Reset the unit to start fresh
-            SendCommand("r")
-
-            #Wait for unit to stabilize
-            time.sleep(4)
-
-        if DEBUG:
-            print("Connected...")
-
-        top_window()
-
 def exit_program():
     global port
     if DEBUG:
@@ -371,23 +244,206 @@ def exit_program():
     port.close()
     exit()
 
+# The user hit enter after picking a port
+def go():
+    global app, user_entry
+    portno = int(user_entry.get())
+
+    # verify the entered number
+    if portno >= len(objRFE.m_arrValidCP2102Ports) or portno < 0:
+        showinfo("Error", "Error: Invalid Port Number " + str(portno) , 2)
+        return
+
+    else:
+        PortName = objRFE.m_arrValidCP2102Ports[portno].device
+        if DEBUG:
+            print("Selected name", PortName)
+
+    #Connect to available port
+    objRFE.ConnectPort(PortName, BAUDRATE)
+    if DEBUG:
+        print("Connected...")
+
+    # remove the labels for the various ports so we can display that we are resetting 
+    # the device
+    for obj in label:
+        obj.after(10, obj.destroy())
+    
+    user_label2 = Label(current_frame, text= "Resetting device ...", font=("Arial", 16))
+    user_label2.grid(row=1, column=0, padx=10, pady=10, sticky="w")
+    current_frame.pack(fill="both", expand=True)
+
+    # if configured reset the device 
+    if RESET:
+        if DEBUG:
+            print("Resetting device...")
+
+        #Reset the unit to start fresh
+        objRFE.SendCommand("r")
+
+        #Wait for unit to notify reset completed
+        while(objRFE.IsResetEvent):
+            pass
+
+        #Wait for unit to stabilize
+        # for some reason we need to do a messagebox to get this to work.
+        showinfo("Info", "Resetting Device", None)
+        time.sleep(4)
+
+    top_window()
+
+
+# Display the window to let the user select the port desired and pick one
+def GetPort():
+    global app, current_frame, user_entry
+
+    # delete one if it exists
+    current_frame.destroy()
+    frame = Frame(root)
+    current_frame = frame
+
+    # for some reason when it only goes through the for loop once if it 
+    # deletes something.  So this while loop fixes that.
+    done = False
+    while (not done):
+        deleted = False
+
+        for objPort in objRFE.m_arrValidCP2102Ports:
+            if (objPort.device == "/dev/ttyAMA0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART1"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttyS4") :
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+        if deleted == False:
+            done = True
+
+    # see if we have more than one valid port, if so we need to display a window with the
+    # choices
+    if len(objRFE.m_arrValidCP2102Ports) > 1:
+
+        # print the title of the window
+        title = Label(current_frame, text= "Available Ports:", font=("Arial", 16))
+        title.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+
+        # build labels that contain each available port
+        ctr = 0
+        for objPort in objRFE.m_arrValidCP2102Ports:
+            tmp_txt = str(ctr) + "     " +  objPort.device
+            label.append(Label(current_frame, text=tmp_txt, font=("Arial", 16)))
+            # Entry widgets in the row whose index is idx
+            label[ctr].grid(row=ctr+1, column=0, padx=10, pady=10, sticky="w")
+            ctr += 1
+        
+
+        # Display the label that tells the user what to do
+        user_label = Label(current_frame, text= "Enter Port Number:", font=("Arial", 16))
+        user_label.grid(row=ctr+2, column=0, padx=10, pady=10, sticky="w")
+
+        # build the Entry box for them to enter it.
+        user_entry = Entry(current_frame, width=5, font=("Ariel", 16))
+        user_entry.grid(row=ctr+2, column=1, padx=10, pady=10)
+
+        # put the cursor inside the entry box
+        user_entry.focus_set()
+
+        # display it
+        current_frame.pack(fill="both", expand=True)
+
+    # if there is exactly one port no need to select it, connect to it
+    elif len(objRFE.m_arrValidCP2102Ports) == 1:
+        PortName = objRFE.m_arrValidCP2102Ports[0].device
+        if DEBUG:
+            print("Selected name", PortName)
+
+        #Connect to available port
+        objRFE.ConnectPort(PortName, BAUDRATE)
+        if DEBUG:
+            print("Connected...")
+
+        # if configured to reset, reset it and display that on the window.
+        if RESET:
+            user_label = Label(current_frame, text= "Resetting device ...", 
+                    font=("Arial", 16))
+            user_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+            
+            # display it
+            current_frame.pack(fill="both", expand=True)
+
+            #Reset the unit to start fresh
+            objRFE.SendCommand("r")
+
+            #Wait for unit to notify reset completed
+            while(objRFE.IsResetEvent):
+                pass
+
+            #Wait for unit to stabilize
+            showinfo("Info", "Resetting Device", None)
+            time.sleep(4)
+
+        # build the main window
+        content, frame = build_window()
+
+        # initialize the main window
+        app.init_window(content) 
+
+    else: #no valid ports
+        showinfo("Error", "No Valid Ports Found", 5)
+        
+        #remove this window
+        root.destroy()
+
+        # leave
+        cleanup()
+    
+    return True
+
+# used to display a message box describing the info
+def showinfo(msgtitle, text, waittime):
+    newroot = Tk()
+
+
+    if waittime != None:
+        newroot.after(waittime * 1000, newroot.destroy)
+    else:
+        # if waittime is None then we just quickly display the box and move on
+        newroot.after(10, newroot.destroy)
+
+    # make this window small so it can't be seen under the message box
+    # there is no way to place the message box itself so we place the window
+    newroot.geometry('10x10+200+200')
+
+    # create and show the message box
+    try:
+        Message(title=msgtitle, message=text, master=newroot).show()
+    except TclError:
+        pass
+
 
 root.geometry('550x350+100+200')
 root.resizable(True, True)
 root.bind('<Return>', enterhandler)
 
-# create the RFE object
+# list of port labels
+label = []
+
 objRFE = RFExplorer.RFECommunicator()
 
-# Get the connected ports tat RFE can see
 objRFE.GetConnectedPorts()
 
-# determine RFE verbose level
 objRFE.VerboseLevel = 0
 
-# go get the USB port the user wants
 GetPort()
-
 
 root.mainloop()
 
