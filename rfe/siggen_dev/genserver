@@ -1,0 +1,252 @@
+#!/bin/python3
+
+import time
+import RFExplorer
+print(RFExplorer, __file__)
+from RFExplorer import RFE_Common 
+import math
+
+import socket
+import sys
+
+
+#---------------------------------------------------------
+# Helper functions
+#---------------------------------------------------------
+
+
+#---------------------------------------------------------
+# global variables and initialization
+#---------------------------------------------------------
+
+server_address = ('localhost', 10000)
+SERIALPORT = None    #serial port identifier, use None to autodetect  
+#SERIALPORT = '/dev/ttyUSB0'    #serial port identifier, use None to autodetect  
+#SERIALPORT = '/dev/ttyUSB1'    #serial port identifier, use None to autodetect  
+BAUDRATE = 500000
+
+objRFE = RFExplorer.RFECommunicator()     #Initialize object and thread
+#objRFE.AutoConfigure = False
+objRFE.AutoConfigure = True
+
+#These values can be limited by specific RF Explorer Spectrum Analyzer model. 
+#Check RFE SA Comparation chart from www.rf-explorer.com\models to know what
+#frequency setting are available for your model
+#These freq settings will be updated later in SA condition.
+SPAN_SIZE_MHZ = 50           #Initialize settings
+START_SCAN_MHZ = 50
+STOP_SCAN_MHZ = 960 
+RESET=True
+
+def waitForConnection():
+    print("waitForConnection")
+    # Create a TCP/IP socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    # Bind the socket to the port
+    print('starting up on '+ server_address[0] + ' port ' + str(server_address[1]))
+    sock.bind(server_address)
+
+    # Listen for incoming connections
+    sock.listen(1)
+
+    # Wait for a connection
+    print('waiting for a connection')
+    connection, client_address = sock.accept()
+    print( 'connection from' + str(client_address))
+        
+
+    return connection
+def connect(port, rfetype):
+    print("connect:", rfetype)
+
+    #Find and show valid serial ports
+    objRFE.GetConnectedPorts()
+
+    # for some reason when it only goes through the for loop once if it 
+    # deletes something.  So this while loop fixes that.
+    done = False
+    while (not done):
+        deleted = False
+
+        for objPort in objRFE.m_arrValidCP2102Ports:
+            if (objPort.device == "/dev/ttyAMA0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART1"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttyS4") :
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+        if deleted == False:
+            done = True
+
+    # loop through the ports to find the type passed in
+    for objPort in objRFE.m_arrValidCP2102Ports:
+        port = objPort.device
+        print("port name", port)
+
+
+        #Connect to available port
+        if (objRFE.ConnectPort(port, BAUDRATE)): 
+            if RESET:
+                print("Resetting device...")   
+                #Reset the unit to start fresh
+                objRFE.SendCommand("r")    
+                #Wait for unit to notify reset completed
+                while(objRFE.IsResetEvent):
+                    pass
+                #Wait for unit to stabilize
+                time.sleep(8)
+
+
+            #Request RF Explorer configuration
+            objRFE.SendCommand_RequestConfigData()
+
+            #Wait to receive configuration and model details
+            while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
+                objRFE.ProcessReceivedString(True)    #Process the received configuration
+
+            if(objRFE.IsGenerator() and rfetype == "GENERATOR"):
+                return "TRUE"
+            elif (objRFE.IsAnalyzer() and rfetype == "ANALYZER"):
+                return "TRUE"
+            else:
+                return "FALSE"
+
+    else:
+        return "FALSE"
+
+def startCW(frequency, power):
+    print("start CW")
+    objRFE.RFGenCWFrequencyMHZ = frequency
+    objRFE.RFGenExpansionPowerDBM = power 
+    objRFE.SendCommand_GeneratorCW()
+
+def stopCW():
+    print("stop CW ")
+    objRFE.SendCommand_GeneratorRFPowerOFF()
+
+def startSweep(startFreq, stopFreq, power, steps, stepsize, steptime):
+    print("start sweep ")
+    if(objRFE.ExpansionBoardActive):
+        objRFE.RFGenExpansionPowerDBM = power
+        sPowerDBM = " - Power:" + str(objRFE.RFGenExpansionPowerDBM) + "dBm"               
+    else:
+        objRFE.RFGenHighPowerSwitch = False
+        objRFE.RFGenPowerLevel = power 
+        sPowerDBM = " - Power1:" + str(objRFE.GetSignalGeneratorEstimatedAmplitude(objRFE.RFGenCWFrequencyMHZ)) + "dBm"
+
+    objRFE.RFGenStartFrequencyMHZ = startFreq
+    objRFE.RFGenStopFrequencyMHZ = stopFreq 
+    objRFE.RFGenSweepSteps = steps
+    objRFE.RFGenStepWaitMS = steptime
+
+    print("Frequency Sweep Settings = Start:" + str(objRFE.StartFrequencyMHZ) + "MHz" + " - Stop:" + str(objRFE.StopFrequencyMHZ) + "MHz" + 
+          " - Steps:" + str(objRFE.RFGenSweepSteps) + " - Delay:" + str(objRFE.RFGenStepWaitMS) + "ms" + sPowerDBM)
+
+    print("Frequency sweep ON")
+    objRFE.SendCommand_GeneratorSweepFreq()
+
+def stopSweep():
+    print("stop Sweep ")
+    objRFE.GeneratorRFPowerOFF()
+
+
+
+def processStartCW(cmdlist):
+    print("processStartCW")
+    frequency = int(cmdlist[0])
+    power = int(cmdlist[1])
+
+    startCW(frequency, power)
+
+
+def processStopCW(cmdlist):
+    print("processStopCW")
+    stopCW()
+
+def sendResponse(connection, response):
+    print("response", response)
+    if response:
+        connection.sendall(response)
+
+def processConnect(cmdlist):
+    print("processConnect")
+    if len(cmdlist) == 0:
+        result = connect(None, "GENERATOR")
+    else:
+        result = connect(cmdlist.pop(), "GENERATOR")
+
+    message = result.encode()
+
+    sendResponse(connection, message)
+
+def processCommand(connection):
+    print("processCommand") 
+    data = connection.recv(1024)
+
+    commandline = data.decode()
+    print('received ', commandline)
+
+    cmdlist = commandline.split()
+    length = len(cmdlist)
+
+    if length != 0:
+        cmd = cmdlist[0] 
+        print("cmd", cmd)
+
+        cmdlist.pop(0)
+
+        if cmd  == 'CONNECT':
+            processConnect(cmdlist)
+        elif cmd == 'STARTCW':
+            processStartCW(cmdlist)
+        elif cmd == 'STOPCW':
+            processStopCW(cmdlist)
+        else:
+            print("invalid command")
+        return True
+    else:
+        return False
+
+
+
+
+
+#---------------------------------------------------------
+# Main processing loop
+#---------------------------------------------------------
+
+objRFE.VerboseLevel = 0
+
+while True:
+
+    try:
+        result = True
+        connection = waitForConnection()
+        
+        while result:
+            result = processCommand(connection)
+
+    except Exception as obEx:
+        print("Error: " + str(obEx))
+
+#---------------------------------------------------------
+# Close object and release resources
+#---------------------------------------------------------
+
+# Clean up the connection
+connection.close()
+
+objRFE.Close()    #Finish the thread and close port
+objRFE = None 
