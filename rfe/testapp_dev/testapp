@@ -1,0 +1,55 @@
+#!/bin/python3
+
+import time
+import socket
+import sys
+import testapp 
+
+span = 40
+start_scan = 980
+stop_scan = 1020
+
+try:
+
+    testapp.debug_level = testapp.TRACE
+    test = testapp.TestApp()
+
+    test.connectServer()
+
+    test.setDebug(testapp.TRACE)
+
+    while True:
+        resp = test.connectRFE("BOTH")
+        test.setVerbose(0)
+
+        if (resp == "BOTH" ):
+            test.sendStartCW(1000, -60)
+            time.sleep(3)
+
+            freq, power = test.sendPeakSearch(span, start_scan, stop_scan)
+            print("Peak Search Results freq ", freq, "power", power)
+
+            test.sendStopCW()
+            time.sleep(3)
+
+            test.sendStartSweep(start_scan, stop_scan, -30, 20, 1000, 1000)
+            time.sleep(3)
+
+            freq, power = test.sendPeakSearch(span, start_scan, stop_scan)
+            print("Peak Search Results freq ", freq, "power", power)
+            time.sleep(3)
+
+            freq, power = test.sendPeakSearch(span, start_scan, stop_scan)
+            print("Peak Search Results freq ", freq, "power", power)
+            time.sleep(3)
+
+            test.sendStopSweep()
+            time.sleep(3)
+
+            test.disconnectRFE("BOTH")
+
+    test.disconnectServer()
+
+except Exception as obEx:
+        print("**Error: " + str(obEx))
+

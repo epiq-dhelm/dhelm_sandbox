@@ -129,48 +129,49 @@ def main(argv=None):
 
 
     try:
-        print(span, start_scan, stop_scan, min_peak_amp, reset)
-        #Find and show valid serial ports
-        objRFE.GetConnectedPorts()
+        while True:
+            print(span, start_scan, stop_scan, min_peak_amp, reset)
+            #Find and show valid serial ports
+            objRFE.GetConnectedPorts()
 
-        #Connect to available port
-        if (objRFE.ConnectPort(SERIALPORT, BAUDRATE)): 
-            if (reset):
-                print("Reseting device...")   
-                #Reset the unit to start fresh
-                objRFE.SendCommand("r")    
-                #Wait for unit to notify reset completed
-                while(objRFE.IsResetEvent):
-                    pass
+            #Connect to available port
+            if (objRFE.ConnectPort(SERIALPORT, BAUDRATE)): 
+                if (reset):
+                    print("Reseting device...")   
+                    #Reset the unit to start fresh
+                    objRFE.SendCommand("r")    
+                    #Wait for unit to notify reset completed
+                    while(objRFE.IsResetEvent):
+                        pass
 
-                #Wait for unit to stabilize
-                time.sleep(8)
+                    #Wait for unit to stabilize
+                    time.sleep(8)
 
 
-            #Request RF Explorer configuration
-            objRFE.SendCommand_RequestConfigData()
+                #Request RF Explorer configuration
+                objRFE.SendCommand_RequestConfigData()
 
-            #Wait to receive configuration and model details
-            while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
-                done, rcvd = objRFE.ProcessReceivedString(True)    #Process the received configuration
-            
-    #        objRFE.VerboseLevel= 5
+                #Wait to receive configuration and model details
+                while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
+                    done, rcvd = objRFE.ProcessReceivedString(True)    #Process the received configuration
+                
+        #        objRFE.VerboseLevel= 5
 
-            #If object is an analyzer, we can scan for received sweeps
-            if(objRFE.IsAnalyzer()):
-                print("---- Peak Search ----")
+                #If object is an analyzer, we can scan for received sweeps
+                if(objRFE.IsAnalyzer()):
+                    print("---- Peak Search ----")
 
-                #Control settings
-                SpanSize, StartFreq, StopFreq = ControlSettings(objRFE, span, start_scan, stop_scan)
-                if(SpanSize and StartFreq and StopFreq):
-                    nInd = 0
-                    while (True): 
-                        #Set new configuration into device
-                        objRFE.UpdateDeviceConfig(StartFreq, StopFreq)
+                    #Control settings
+                    SpanSize, StartFreq, StopFreq = ControlSettings(objRFE, span, start_scan, stop_scan)
+                    if(SpanSize and StartFreq and StopFreq):
+                        nInd = 0
+                        while (True): 
+                            #Set new configuration into device
+                            objRFE.UpdateDeviceConfig(StartFreq, StopFreq)
 
-                        objSweep=None
-                        #Wait for new configuration to arrive (as it will clean up old sweep data)
-                        while(True):
+                            objSweep=None
+                            #Wait for new configuration to arrive (as it will clean up old sweep data)
+    #                        while(True):
                             flag, objstr = objRFE.ProcessReceivedString(True);
 
                             #need to wait until we get a good rcvd string
@@ -188,19 +189,19 @@ def main(argv=None):
                                 PrintPeak(objRFE)
                             if(math.fabs(objRFE.StartFrequencyMHZ - StartFreq) <= 0.001):
                                     break
-      
-                        #set new frequency range
-                        StartFreq = StopFreq
-                        StopFreq = StartFreq + SpanSize
-                        if (StopFreq > stop_scan):
-                            StopFreq = stop_scan
+          
+                            #set new frequency range
+                            StartFreq = StopFreq
+                            StopFreq = StartFreq + SpanSize
+                            if (StopFreq > stop_scan):
+                                StopFreq = stop_scan
 
-                        if (StartFreq >= StopFreq):
-                            break
-                else:
-                    print("Error: settings are wrong.\nPlease, change and try again")
-        else:
-            print("Not Connected")
+                            if (StartFreq >= StopFreq):
+                                break
+                    else:
+                        print("Error: settings are wrong.\nPlease, change and try again")
+            else:
+                print("Not Connected")
     except Exception as obEx:
         print("Error: " + str(obEx))
 
