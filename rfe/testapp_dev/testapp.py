@@ -4,6 +4,7 @@ import socket
 import select
 import sys
 import argparse
+from argparse import RawTextHelpFormatter
 
 # debug settings
 TRACE = 0
@@ -12,14 +13,31 @@ ERROR = 2
 NONE = 3
 level_print = ("TRACE", "DEBUG", "ERROR", "NONE")
 
+
 SOCKET_TIMEOUT = 30
 
-debug_level = TRACE
+client_verbose_level = 0
+client_debug_level = TRACE
 
+HELP_DESCRIPTION = 'Call apptest server to execute a command\n\n'   +\
+        'Available Commands (case insensitive):             \n\n'   +\
+        'connectRFE         \t --rfetype ("BOTH")           \n'     +\
+        'disconnectRFE      \n'                                     +\
+        'startCW            \t --freq (1000)  --power-level (3) \n' +\
+        'stopCW             \n'                                     +\
+        'startSweep         \t --freq --power-level --steps (20) -- step-width (1000) --waitMS (10000) \n' +\
+        'stopSweep          \n'                                     +\
+        'peakSearch         \t --span (20) --start-freq (980) --stop-freq (1020)\n' +\
+        'setServerDebug     \t --debug-level ("ERROR")      \n'     +\
+        'setRFEVerbose      \t --verbose-level (5)          \n'     +\
+        'setClientVerbose   \t --verbose-level              \n' 
+
+# prints out the debug printouts based upon the value of the --debug-level args default value
+# to change it in the client, you need to change the default value in the args.
 def debug_print(level, val1, val2 = None, val3 = None, val4 = None, val5 = None, val6 = None, val7 = None):
-    global debug_level
+    global client_debug_level
 
-    if debug_level > level:
+    if client_debug_level > level:
         return
 
     out = str(val1)
@@ -36,9 +54,12 @@ def debug_print(level, val1, val2 = None, val3 = None, val4 = None, val5 = None,
     if val7 != None:
         out = out + " " + str(val7)
 
-    print("[", level_print[level], "] ", out)
+    string = "[" + level_print[level]  + "] " +  out
+
+    print(string)
 
 
+# This is the class for the testapp messages.  
 class TestApp():
 
     def sendCommand(self, message):
@@ -135,20 +156,23 @@ class TestApp():
 
         debug_print(DEBUG, "freq ", freq, " power ", power)
 
+        if client_verbose_level > 0:
+            print(" freq ", freq, " power ", power)
+
         return resp, freq, power
 
-    def setDebug(self, debug_level):
-        debug_print(TRACE, "setDebug")
+    def setServerDebug(self, new_debug_level):
+        debug_print(TRACE, "setServerDebug")
 
-        cmd = "SETDEBUG " + str(debug_level) + " "
+        cmd = "SETDEBUG " + str(new_debug_level) + " "
         self.sendCommand(cmd)
 
         # wait for a response
         resp, resplist = self.receiveResponse()
         return resp
 
-    def setVerbose(self, verbose_level):
-        debug_print(TRACE, "setVerbose")
+    def setRFEVerbose(self, verbose_level):
+        debug_print(TRACE, "setRFEVerbose")
 
         cmd = "SETVERBOSE " + str(verbose_level) + " "
         self.sendCommand(cmd)
@@ -156,6 +180,12 @@ class TestApp():
         # wait for a response
         resp, resplist = self.receiveResponse()
         return resp
+
+    def setClientVerbose(self, verbose_level):
+        debug_print(TRACE, "setClientVerbose")
+
+        client_verbose_level = verbose_level
+        return client_verbose_level
 
     def connectRFE(self, rfetype):
         debug_print(TRACE, "connectRFE")
@@ -202,52 +232,63 @@ class TestApp():
 
         self.sock.close()
 
-def processCommand(cmd):
+def processCommand(rcvd_cmd):
     global test, args
 
     debug_print(TRACE, "processCommand")
 
-    debug_print(DEBUG, "Command: ", cmd)
+    debug_print(DEBUG, "Command: ", rcvd_cmd)
+    cmd = rcvd_cmd.lower()
 
-    if cmd == "connectRFE":
+    if cmd == "connectrfe":
        resp, rfetype = test.connectRFE(args.rfetype) 
-       print("connectRFE: ", resp, " connected to: ", rfetype)
+       if client_verbose_level > 1:
+           print("connectRFE: ", resp, " connected to: ", rfetype)
 
-    elif cmd == "disconnectRFE":
+    elif cmd == "disconnectrfe":
        resp = test.disconnectRFE() 
-       print("disconnectRFE", resp)
+       if client_verbose_level > 1:
+           print("disconnectRFE", resp)
 
-    elif cmd == "StartCW":
+    elif cmd == "startcw":
        resp = test.sendStartCW(args.freq, args.power_level) 
-       print("StartCW: ", resp)
+       if client_verbose_level > 1:
+           print("StartCW: ", resp)
 
-    elif cmd == "StopCW":
+    elif cmd == "stopcw":
        resp = test.sendStopCW()
-       print("StopCW: ", resp)
+       if client_verbose_level > 1:
+           print("StopCW: ", resp)
 
-    elif cmd == "StartSweep":
+    elif cmd == "startsweep":
        resp = test.sendStartSweep(args.freq, args.power_level, args.steps, args.step_width, args.waitMS)
-       print("StartSweep: ", resp)
+       if client_verbose_level > 1:
+           print("StartSweep: ", resp)
 
-    elif cmd == "StopSweep":
+    elif cmd == "stopsweep":
        resp = test.sendStopSweep()
-       print("StopSweep: ", resp)
+       if client_verbose_level > 1:
+           print("StopSweep: ", resp)
 
-    elif cmd == "PeakSearch":
+    elif cmd == "peaksearch":
        resp, freq, power = test.sendPeakSearch(args.span, args.start_freq, args.stop_freq)
-       print("PeakSearch: Status: ", resp, "Frequency: ", freq,"Power: ", power)
+       if client_verbose_level > 1:
+           print("PeakSearch: Status: ", resp, "Frequency: ", freq,"Power: ", power)
 
-    elif cmd == "StopSweep":
-       resp = test.sendStopSweep()
-       print("StopSweep: ", resp)
+    elif cmd == "setserverdebug":
+       resp = test.setServerDebug(args.debug_level)
+       if client_verbose_level > 1:
+           print("setServerDebug: ", resp)
 
-    elif cmd == "setDebug":
-       resp = test.setDebug(debug_level)
-       print("setDebug: ", resp)
+    elif cmd == "setrfeverbose":
+       resp = test.setRFEVerbose(args.verbose_level)
+       if client_verbose_level > 1:
+           print("RFE Verbose: ", resp)
 
-    elif cmd == "setVerbose":
-       resp = test.setVerbose(args.verbose_level)
-       print("Verbose: ", resp)
+    elif cmd == "setclientverbose":
+       resp = test.setClientVerbose(args.verbose_level)
+       if client_verbose_level > 1:
+           print("Client Verbose: ", resp)
     else: 
         raise Exception("Invalid command " + str(cmd))
 
@@ -255,15 +296,15 @@ def processCommand(cmd):
 # Main processing loop
 #---------------------------------------------------------
 def main(argv=None):
-    global test, args, debug_level
+    global test, args, client_debug_level, client_verbose_level
 
     if argv is None:
         argv = sys.argv
 
-    parser = argparse.ArgumentParser(description='Call apptest server to execute a command')
+    parser = argparse.ArgumentParser(description= HELP_DESCRIPTION, formatter_class=RawTextHelpFormatter)
     parser.add_argument('--cmd', type=str, default="connectRFE", help='Which command to run')
     parser.add_argument('--rfetype', type=str, default="BOTH", help='Which RFE device to connect to GENERATOR, ANALYZER or BOTH' )
-    parser.add_argument('--freq', type=int, default=1000000000, help='center frequency')
+    parser.add_argument('--freq', type=int, default=1000, help='frequency of tone in MHz')
     parser.add_argument('--power', type=int, default=-30, help='power')
     parser.add_argument('--power-level', type=int, default=3, help='Power Level 0-7')
     parser.add_argument('--steps', type=int, default=20, help='Sweep number of steps')
@@ -272,20 +313,15 @@ def main(argv=None):
     parser.add_argument('--span', type=int, default=20, help='span of Peaksearch in Mhz')
     parser.add_argument('--start-freq', type=int, default=980, help='start freq of Peaksearch in Mhz')
     parser.add_argument('--stop-freq', type=int, default=1020, help='stop freq of Peaksearch in Mhz')
-    parser.add_argument('--debug-level', type=str, default="NONE", help='Debug level to set locally or at server')
-    parser.add_argument('--verbose-level', type=str, default=0, help='Debug level to set locally or at server')
+    parser.add_argument('--debug-level', type=int, default=0, help='Debug level to set locally or at server')
+    parser.add_argument('--verbose-level', type=int, default=5, help='Verbose level of the RFE device Drivers')
+
 
     # get the command line arguments
     args = parser.parse_args(argv[1:])
 
-    # figure out the debug level they want
-    debug_level = 999 
-    for idx, name in enumerate(level_print):
-        if name == args.debug_level:
-            debug_level = idx
-            break
-    if debug_level == 999:
-        raise Exception("Invalid debug level " + args.debug_level)
+    client_debug_level = args.debug_level
+    client_verbose_level = args.verbose_level
 
     # create the test object
     test = TestApp()

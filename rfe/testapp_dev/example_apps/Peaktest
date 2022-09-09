@@ -3,18 +3,24 @@
 PS4='Line ${LINENO}: '
 #set -x
 
+check_result()
+{
+    if [[ $? -ne 0 ]]
+    then 
+        exit 
+    fi
+}
 
-python3  ../testapp.py --cmd "setDebug"  --debug-level "TRACE"
-if [[ $? -ne 0 ]]
-then 
-    exit 
-fi
+client_debug_level=3
+
+DEBUG="--debug-level $client_debug_level"
+
+python3  ../testapp.py --cmd "setServerDebug"  --debug-level 0
+check_result
+
 echo "connecting to RFE of type BOTH"
-python3  ../testapp.py --cmd "connectRFE" --rfetype "BOTH" 
-if [[ $? -ne 0 ]]
-then 
-    exit 
-fi
+python3  ../testapp.py --cmd "connectRFE" --rfetype "BOTH" $DEBUG 
+check_result
 
 sleep 1
 while :
@@ -23,32 +29,23 @@ do
     do
         echo " "
         echo "starting test with power level at $i"
-        python3  ../testapp.py --cmd "StartCW" --freq 1000000000 --power-level $i 
-        if [[ $? -ne 0 ]]
-        then 
-            exit 
-        fi
-
+        python3  ../testapp.py --cmd "StartCW" --freq 1000 --power-level $i $DEBUG 
+        check_result 
         sleep 3
 
-        python3  ../testapp.py --cmd "PeakSearch" --span 40 --start-freq 980 --stop-freq 1020
-        if [[ $? -ne 0 ]]
-        then 
-            exit 
-        fi
+        python3  ../testapp.py --cmd "PeakSearch" --span 40 --start-freq 980 --stop-freq 1020 --verbose-level 4 $DEBUG 
+        check_result 
 
         sleep 1
 
-        python3  ../testapp.py --cmd "StopCW" 
-        if [[ $? -ne 0 ]]
-        then 
-            exit 
-        fi
+        python3  ../testapp.py --cmd "StopCW" $DEBUG 
+        check_result 
     done
 done
 
-python3  ../testapp.py --cmd "disconnectRFE"  
-if [[ $? -ne 0 ]]
-then 
-    exit 
-fi
+python3  ../testapp.py --cmd "disconnectRFE"  $DEBUG 
+check_result 
+
+
+
+

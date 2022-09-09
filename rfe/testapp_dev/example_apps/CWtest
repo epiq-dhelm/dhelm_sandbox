@@ -12,17 +12,17 @@ if [[ $? -ne 0 ]]; then exit; fi
 
 sleep 3
 
-python3  ../testapp.py --cmd "setVerbose" --verbose-level 0
+python3  ../testapp.py --cmd "setRFEVerbose" --verbose-level 0
 if [[ $? -ne 0 ]]; then exit; fi
 sleep 3
 
-python3  ../testapp.py --cmd "StartCW" --freq 1000000000 --power-level 2
+python3  ../testapp.py --cmd "StartCW" --freq 1000 --power-level 2
 if [[ $? -ne 0 ]]; then exit; fi
 
 sleep 3
 
-#python3  ../testapp.py --cmd "StopCW" 
+python3  ../testapp.py --cmd "StopCW" 
 
-#sleep 3
+sleep 3
 
-#python3  ../testapp.py --cmd "disconnectRFE"  --rfetype "GENERATOR"
+python3  ../testapp.py --cmd "disconnectRFE"  --rfetype "GENERATOR"

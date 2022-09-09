@@ -1,5 +1,6 @@
 #!/bin/python3
 
+import argparse
 import time
 import RFExplorer
 print(RFExplorer, __file__)
@@ -19,7 +20,8 @@ import sys
 # global variables and initialization
 #---------------------------------------------------------
 
-server_address = ('localhost', 10000)
+address = 'localhost'
+server_address = (address, 10000)
 SERIALPORT = None    #serial port identifier, use None to autodetect  
 BAUDRATE = 500000
 
@@ -64,7 +66,8 @@ def debug_print(level, val1, val2 = None, val3 = None, val4 = None, val5 = None,
     if val7 != None:
         out = out + " " + str(val7)
 
-    print("[", level_print[level], "] ", out)
+    string = "[" + level_print[level]  + "] " +  out
+    print(string)
 
 # Send response back to the client
 def sendResponse(response):
@@ -82,6 +85,7 @@ def sendError(resp):
     
 # Wait until a TCP session is connected
 def waitForConnection():
+    global args
     debug_print(TRACE, "waitForConnection")
 
     # Create a TCP/IP socket
@@ -146,7 +150,7 @@ def deletePorts(objRFE, passPort):
 # if it is a generator or analyzer.  Also reset if requested to.
 def connectPort(objRFE, port):
     debug_print(TRACE, "connectPort")
-
+    
     if (objRFE.ConnectPort(port, BAUDRATE)): 
         if RESET:
             debug_print(DEBUG, "Resetting device...")   
@@ -187,6 +191,7 @@ def connectRFE(rfetype):
     # will have the correct connected ports
     for index in range(2):
         objRFE = RFExplorer.RFECommunicator()     #Initialize object and thread
+        objRFE.VerboseLevel = verbose_level
 
         # get a list of all the connected ports (inside RFExplorer object)
         objRFE.GetConnectedPorts()
@@ -298,7 +303,7 @@ def connectRFE(rfetype):
 def startCW(frequency, power_level):
     debug_print(TRACE, "startCW")
     debug_print(DEBUG, "CW ", frequency, power_level, type(power_level))
-    floatfreq = float(frequency / 1000)
+    floatfreq = float(frequency * 1000)
 
     intfreq = int(floatfreq)
     debug_print(DEBUG, "intfreq ", intfreq)
@@ -333,28 +338,8 @@ def stopCW():
 def startSweep(frequency, powerLevel, steps, stepWidth, stepTime):
     debug_print(TRACE, "startSweep ")
 
-    """
-    objRFE = objRFEgen
-    if(objRFE.ExpansionBoardActive):
-        objRFE.RFGenExpansionPowerDBM = powerLevel
-        sPowerDBM = " - Power: " + str(objRFE.RFGenExpansionPowerDBM) + "dBm"               
-    else:
-        objRFE.RFGenHighPowerSwitch = False
-        objRFE.RFGenPowerLevel = powerLevel 
-        sPowerDBM = " - Power1: " + str(objRFE.GetSignalGeneratorEstimatedAmplitude(objRFE.RFGenCWFrequencyMHZ)) + "dBm"
 
-    debug_print(DEBUG, startFreq, stopFreq, powerLevel, steps, steptime)
-
-    objRFE.RFGenStartFrequencyMHZ = startFreq
-    objRFE.RFGenStopFrequencyMHZ = stopFreq 
-    objRFE.RFGenSweepSteps = steps
-    objRFE.RFGenStepWaitMS = steptime
-
-    debug_print(DEBUG, "Frequency sweep ON")
-    objRFE.SendCommand_GeneratorSweepFreq()
-    """
-
-    floatfreq = float(frequency) / 1000
+    floatfreq = float(frequency * 1000) 
 
     intfreq = int(floatfreq)
 
@@ -453,6 +438,7 @@ def processPeakSearch(cmdlist):
         
         # See if the customer's settings are valid
         SpanSize, StartFreq, StopFreq = ControlSettings(objRFE, span, start_scan, stop_scan)
+        
 
         # if they are then do it
         if(SpanSize and StartFreq and StopFreq):
@@ -461,8 +447,8 @@ def processPeakSearch(cmdlist):
 
             # Wait for new configuration to arrive (as it will clean up old sweep data)
             flag = False
-            while(not flag):
-                flag, objstr = objRFE.ProcessReceivedString(True);
+#            while(not flag):
+            flag, objstr = objRFE.ProcessReceivedString(True);
     
             # Get the peak from the analyzer
             freq, power = getPeak(objRFE)
@@ -661,25 +647,42 @@ def processCommand(connection):
 #---------------------------------------------------------
 # Main processing loop
 #---------------------------------------------------------
+def main(argv=None):
+    global debug_level, verbose_level, connection
 
-debug_level = TRACE
-verbose_level = 4
+    if argv is None:
+        argv = sys.argv
 
-while True:
-    try:
-        result = True
-        connection = waitForConnection()
+    parser = argparse.ArgumentParser(description='run the server for the RFE testapp')
+    parser.add_argument('--address', type=str, default="127.0.0.1", help='address of the server')
 
-        while result:
-            result = processCommand(connection)
+    # get the command line arguments
+    args = parser.parse_args(argv[1:])
 
-    except Exception as obEx:
-        print("Error: " + str(obEx))
+    address = args.address
+
+    debug_level = TRACE
+    verbose_level = 0
+
+    while True:
+        try:
+            result = True
+            connection = waitForConnection()
+
+            while result:
+                result = processCommand(connection)
+
+        except Exception as obEx:
+            print("Error: " + str(obEx))
+            time.sleep(5)
 
 #---------------------------------------------------------
 # Close object and release resources
 #---------------------------------------------------------
 
-# Clean up the connection
-connection.close()
+    # Clean up the connection
+    connection.close()
+
+if __name__ == '__main__':
+      sys.exit(main())
 
