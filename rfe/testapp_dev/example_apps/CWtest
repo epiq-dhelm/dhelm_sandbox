@@ -1,0 +1,28 @@
+#!/bin/bash
+
+PS4='Line ${LINENO}: '
+#set -x
+
+
+#python3  ../testapp.py --help
+
+
+python3  ../testapp.py --cmd "connectRFE" --rfetype "GENERATOR" 
+if [[ $? -ne 0 ]]; then exit; fi
+
+sleep 3
+
+python3  ../testapp.py --cmd "setVerbose" --verbose-level 0
+if [[ $? -ne 0 ]]; then exit; fi
+sleep 3
+
+python3  ../testapp.py --cmd "StartCW" --freq 1000000000 --power-level 2
+if [[ $? -ne 0 ]]; then exit; fi
+
+sleep 3
+
+#python3  ../testapp.py --cmd "StopCW" 
+
+#sleep 3
+
+#python3  ../testapp.py --cmd "disconnectRFE"  --rfetype "GENERATOR"

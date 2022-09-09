@@ -1,0 +1,86 @@
+#!/bin/python3
+
+import time
+import socket
+import sys
+import testapp 
+
+span = 40
+start_scan = 980
+stop_scan = 1020
+
+try:
+
+    debuglvl = testapp.NONE
+
+    #set the debug level in the client
+    testapp.debug_level = debuglvl
+
+    #build client object
+    test = testapp.TestApp()
+
+    # connect to the server
+    test.connectServer()
+
+    test.setVerbose(0)
+    # set the servers debug level
+    test.setDebug(debuglvl)
+
+    while True:
+        print("sending connect request to connect BOTH generator and analyzer")
+        resp, rfetype = test.connectRFE("BOTH")
+
+        if (rfetype == "BOTH" ):
+            for pwr in range(8):
+                print("start a continuous tone at 1 Gig at power level ", pwr)
+                test.sendStartCW(1000000000, pwr)
+                time.sleep(3)
+
+                print("see what the peaksearch reports")
+                resp, freq, power = test.sendPeakSearch(span, start_scan, stop_scan)
+                print("Peak Search Results: status ", resp, "freq ", freq, "power", power)
+                
+                print("stop Continuous tone")
+                test.sendStopCW()
+                time.sleep(3)
+                print(" ")
+
+            print("start a sweep")
+            test.sendStartSweep(980000000, 2, 20, 1000, 1000)
+            time.sleep(3)
+
+            print("send peaksearch")
+            resp, freq, power = test.sendPeakSearch(span, start_scan, stop_scan)
+            print("Peak Search Results: status ", resp, "freq ", freq, "power", power)
+            time.sleep(3)
+
+            print("send peaksearch again")
+            resp, freq, power = test.sendPeakSearch(span, start_scan, stop_scan)
+            print("Peak Search Results: status ", resp, "freq ", freq, "power", power)
+            time.sleep(3)
+
+            print("stop the sweep")
+            test.sendStopSweep()
+            time.sleep(3)
+
+            print(" disconnect from both RFE devices")
+            test.disconnectRFE()
+
+        elif (resp == "GENERATOR" ):
+            test.sendStartCW(1000, 2)
+            time.sleep(3)
+            test.sendStopCW()
+            time.sleep(3)
+            test.sendStartSweep(980000000, 2, 20, 1000, 1000)
+            time.sleep(3)
+            test.sendStopSweep()
+            time.sleep(3)
+            test.disconnectRFE("GENERATOR")
+
+
+
+    test.disconnectServer()
+
+except Exception as obEx:
+        print("**Error: " + str(obEx))
+

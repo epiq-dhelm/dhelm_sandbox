@@ -1,0 +1,54 @@
+#!/bin/bash
+
+PS4='Line ${LINENO}: '
+#set -x
+
+
+python3  ../testapp.py --cmd "setDebug"  --debug-level "TRACE"
+if [[ $? -ne 0 ]]
+then 
+    exit 
+fi
+echo "connecting to RFE of type BOTH"
+python3  ../testapp.py --cmd "connectRFE" --rfetype "BOTH" 
+if [[ $? -ne 0 ]]
+then 
+    exit 
+fi
+
+sleep 1
+while :
+do
+    for i in {0..7}
+    do
+        echo " "
+        echo "starting test with power level at $i"
+        python3  ../testapp.py --cmd "StartCW" --freq 1000000000 --power-level $i 
+        if [[ $? -ne 0 ]]
+        then 
+            exit 
+        fi
+
+        sleep 3
+
+        python3  ../testapp.py --cmd "PeakSearch" --span 40 --start-freq 980 --stop-freq 1020
+        if [[ $? -ne 0 ]]
+        then 
+            exit 
+        fi
+
+        sleep 1
+
+        python3  ../testapp.py --cmd "StopCW" 
+        if [[ $? -ne 0 ]]
+        then 
+            exit 
+        fi
+    done
+done
+
+python3  ../testapp.py --cmd "disconnectRFE"  
+if [[ $? -ne 0 ]]
+then 
+    exit 
+fi

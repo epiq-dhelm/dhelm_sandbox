@@ -1,0 +1,33 @@
+#!/bin/bash
+
+PS4='Line ${LINENO}: '
+set -x
+
+while :
+do
+    python3  ../testapp.py --cmd "connectRFE" --rfetype "GENERATOR"
+    if [[ $? -ne 0 ]]
+    then 
+        exit 
+    fi
+
+    sleep 1
+
+    python3  ../testapp.py --cmd "connectRFE" --rfetype "ANALYZER"
+    if [[ $? -ne 0 ]]
+    then 
+        exit 
+    fi
+
+    sleep 1
+
+    python3  ../testapp.py --cmd "connectRFE" --rfetype "BOTH"
+    if [[ $? -ne 0 ]]
+    then 
+        exit 
+    fi
+
+    sleep 1
+
+    #python3  ../testapp.py --cmd "connectRFE" --rfetype "NONE"
+done

@@ -27,7 +27,7 @@ objRFEgen = None
 objRFEann = None
 
 RESET = True
-RESET_TIME = 8
+RESET_TIME = 4
 
 NONE = 0
 TRACE = 1
@@ -35,7 +35,17 @@ DEBUG = 2
 ERROR = 3
 level_print = ("NONE", "TRACE", "DEBUG", "ERROR")
 
-def debug_print(level, val1, val2 = None, val3 = None, val4 = None):
+# sizes of the command with parameters after removal of the command
+STARTCW_SIZE = 2 
+STARTSWEEP_SIZE = 5
+CONNECTRFE_SIZE = 1
+SETDEBUG_SIZE = 1
+SETVERBOSE_SIZE = 1
+
+# print out info based upon the debug_level
+def debug_print(level, val1, val2 = None, val3 = None, val4 = None, val5 = None, val6 = None, val7 = None):
+    global debug_level
+
     if debug_level > level:
         return
 
@@ -43,20 +53,34 @@ def debug_print(level, val1, val2 = None, val3 = None, val4 = None):
 
     if val2 != None:
         out = out + " " + str(val2)
-
     if val3 != None:
         out = out + " " + str(val3)
-
     if val4 != None:
         out = out + " " + str(val4)
+    if val5 != None:
+        out = out + " " + str(val5)
+    if val6 != None:
+        out = out + " " + str(val6)
+    if val7 != None:
+        out = out + " " + str(val7)
 
     print("[", level_print[level], "] ", out)
 
+# Send response back to the client
 def sendResponse(response):
     debug_print(TRACE, "sendResponse", response)
-    if response:
-        connection.sendall(response)
 
+    if response:
+        resp = response.encode()
+        connection.sendall(resp)
+
+# Send an error to the client and then raise an exception in the server
+def sendError(resp):
+    resp = "ERROR " + resp
+    sendResponse(resp)
+    raise Exception("Error: " + resp)
+    
+# Wait until a TCP session is connected
 def waitForConnection():
     debug_print(TRACE, "waitForConnection")
 
@@ -76,9 +100,78 @@ def waitForConnection():
     connection, client_address = sock.accept()
     debug_print(DEBUG, 'connection from' + str(client_address))
         
-
     return connection
 
+# There may be many USB ports on the host, so remove any that are not USB
+def deletePorts(objRFE, passPort):
+    debug_print(TRACE, "deletePort")
+
+    # for some reason when it only goes through the for loop once if it 
+    # deletes something.  So this while loop fixes that.
+    done = False
+    while (not done):
+        deleted = False
+
+        for objPort in objRFE.m_arrValidCP2102Ports:
+            if (objPort.device == "/dev/ttyAMA0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART1"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART2"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+            
+            if (objPort.device == "/dev/ttyS4") :
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            # if we already found a port in the first pass, don't use it again
+            # so delete it
+            if (objPort == passPort[0]):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+        if deleted == False:
+            done = True
+
+# Connect to the requested port and get it's model number so we can test 
+# if it is a generator or analyzer.  Also reset if requested to.
+def connectPort(objRFE, port):
+    debug_print(TRACE, "connectPort")
+
+    if (objRFE.ConnectPort(port, BAUDRATE)): 
+        if RESET:
+            debug_print(DEBUG, "Resetting device...")   
+            #Reset the unit to start fresh
+            objRFE.SendCommand("r")    
+            #Wait for unit to notify reset completed
+            while(objRFE.IsResetEvent):
+                pass
+            #Wait for unit to stabilize
+            time.sleep(RESET_TIME)
+        
+            debug_print(DEBUG, "done with reset")
+
+        #Request RF Explorer configuration
+        objRFE.SendCommand_RequestConfigData()
+
+        #Wait to receive configuration and model details
+        debug_print(DEBUG, "about to wait for ProcessReceivedString")
+
+        while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
+            objRFE.ProcessReceivedString(True)    #Process the received configuration
+        
+        debug_print(DEBUG, "Model Detected: ", objRFE.ActiveModel)
+
+# Connect to the RFE device requested
 def connectRFE(rfetype):
     global objRFEgen, objRFEann
 
@@ -90,193 +183,209 @@ def connectRFE(rfetype):
     passType  = ["NONE", "NONE"]
     passPort = [None, None]
 
+    # loop through to find a generator or analyzer, when done the objRFEgen and objRFEann 
+    # will have the correct connected ports
     for index in range(2):
         objRFE = RFExplorer.RFECommunicator()     #Initialize object and thread
 
+        # get a list of all the connected ports (inside RFExplorer object)
         objRFE.GetConnectedPorts()
 
-        # for some reason when it only goes through the for loop once if it 
-        # deletes something.  So this while loop fixes that.
-        done = False
-        while (not done):
-            deleted = False
-
-            for objPort in objRFE.m_arrValidCP2102Ports:
-                if (objPort.device == "/dev/ttyAMA0"):
-                    deleted = True
-                    objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-                if (objPort.device == "/dev/ttySKIQ_UART0"):
-                    deleted = True
-                    objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-                if (objPort.device == "/dev/ttySKIQ_UART1"):
-                    deleted = True
-                    objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-                if (objPort.device == "/dev/ttySKIQ_UART2"):
-                    deleted = True
-                    objRFE.m_arrValidCP2102Ports.remove(objPort)
-                
-                if (objPort.device == "/dev/ttyS4") :
-                    deleted = True
-                    objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-                # if we already found a port in the first pass, don't use it again
-                # so delete it
-                if (objPort == passPort[0]):
-                    deleted = True
-                    objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if deleted == False:
-                done = True
+        # remove any ports that are not available USB ports
+        deletePorts(objRFE, passPort)
 
         # loop through the ports to find the type passed in
         for objPort in objRFE.m_arrValidCP2102Ports:
             port = objPort.device
-            debug_print(DEBUG, "port name", port)
+
+            debug_print(DEBUG, "index", index, "port name", port, " number: ", len(objRFE.m_arrValidCP2102Ports))
 
 
-            #Connect to available port
-            if (objRFE.ConnectPort(port, BAUDRATE)): 
-                if RESET:
-                    debug_print(DEBUG, "Resetting device...")   
-                    #Reset the unit to start fresh
-                    objRFE.SendCommand("r")    
-                    #Wait for unit to notify reset completed
-                    while(objRFE.IsResetEvent):
-                        pass
-                    #Wait for unit to stabilize
-                    time.sleep(RESET_TIME)
-
-                #Request RF Explorer configuration
-                objRFE.SendCommand_RequestConfigData()
-
-                #Wait to receive configuration and model details
-                while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
-                    objRFE.ProcessReceivedString(True)    #Process the received configuration
+            #Connect to the available port
+            connectPort(objRFE, port)
+            
+            if(objRFE.IsGenerator()):
+                # found generator check to see if that's what the customer wants
+                debug_print(DEBUG, "found generator index = ", index)
+                passType[index] = "GENERATOR"
+                objRFEgen = objRFE
+                passPort[index] = objPort
                 
-                debug_print(DEBUG, "Model Detected: ", objRFE.ActiveModel)
+                # the customer wants a generator or both leave loop, no need to look further
+                if (passType[index] == rfetype) or (rfetype == "BOTH"):
+                    break
 
-                if(objRFE.IsGenerator()):
-                    debug_print(DEBUG, "found generator index = ", index)
-                    passType[index] = "GENERATOR"
-                    objRFEgen = objRFE
-                    passPort[index] = objPort
-
-                    if passType[index] == rfetype:
-                        continue
-                    else:
-                        break
-
-                elif objRFE.IsAnalyzer():
-                    debug_print(DEBUG, "found analyzer index = ", index)
-                    passType[index] = "ANALYZER"
-                    objRFEann = objRFE
-                    passPort[index] = objPort
-
-                    if passType[index] == rfetype:
-                        continue
-                    else:
-                        break
-                else:
-                    debug_print(DEBUG, "No RFE Devices found")
-                    passType[index] = "NONE"
+                # found generator but the customer wants an analyzer so close this port and try the next port
+                elif rfetype == "ANALYZER":
+                    debug_print(DEBUG, "found generator but user wants an analyzer")
                     objRFE.ClosePort()
-                    objRFE = None
+                    passType[index] = "NONE"
+                    objRFEgen = None
+                    passPort[index] = None
+                    continue
+
+            elif objRFE.IsAnalyzer():
+                # found analyzer check to see if that's what the customer wants
+                debug_print(DEBUG, "found analyzer index = ", index)
+                passType[index] = "ANALYZER"
+                objRFEann = objRFE
+                passPort[index] = objPort
+
+                # the customer wants a analyzer or both leave loop, no need to look further
+                if (passType[index] == rfetype) or (rfetype == "BOTH"):
+                    break
+
+                # found analyzer but the customer wants an generator so close this port and try the next port
+                elif rfetype == "GENERATOR":
+                    debug_print(DEBUG, "found analyzer but user wants a generator")
+                    objRFE.ClosePort()
+                    passType[index] = "NONE"
+                    objRFEgen = None
+                    passPort[index] = None
+                    continue
+            # no RFE devices found at this port so close it and move on
+            else:
+                debug_print(DEBUG, "No RFE Devices found")
+                passType[index] = "NONE"
+                objRFE.ClosePort()
+                objRFE = None
+
+            debug_print(DEBUG, "index ", index)
+
+        # if we found what we want, don't continue the outer loop move on
+        debug_print(DEBUG, "index ", index, "rfetype ", rfetype, "passType[index] ", passType[index])
+        if passType[index] == rfetype:
+            break
 
     # determine what to return
-    debug_print(DEBUG, passType[0], passType[1])
+    debug_print(DEBUG, "Requested type: ", rfetype, "Detected Type", passType[0], "and ", passType[1])
 
-    if passType[0] == "NONE" and passType[1] == "NONE":
-        result = "NONE"
+    #if the first index found it leave
+    if passType[0] == rfetype:
+        #we found it so leave
+        result = rfetype
 
-    if passType[0] == "GENERATOR" and passType[1] == "ANALYZER":
+    #if the second index found it leave
+    elif passType[1] == rfetype:
+        #we found it so leave
+        result = rfetype
+
+    #if they want both, check if we got both
+    elif rfetype == "BOTH":
+        if (passType[0] == "GENERATOR" and passType[1] == "ANALYZER") or (passType[1] == "GENERATOR" and passType[0] == "ANALYZER"):
+            result = "BOTH"
+        else:
+            result = "EMPTY"
+    else:
+        result = "EMPTY"
+
+    # Update the correct objRFE object based upon what we found
+    if result == "ANALYZER":
+        objRFEann.VerboseLevel = verbose_level
+        objRFEann.AutoConfigure = True
+    elif result == "GENERATOR":
+        objRFEgen.VerboseLevel = verbose_level
+        objRFEgen.AutoConfigure = True
+    elif result == "BOTH":
         objRFEgen.VerboseLevel = verbose_level
         objRFEann.VerboseLevel = verbose_level
         objRFEgen.AutoConfigure = True
         objRFEann.AutoConfigure = True
-        result = "BOTH"
-
-    if passType[1] == "GENERATOR" and passType[0] == "ANALYZER":
-        objRFEgen.VerboseLevel = verbose_level
-        objRFEann.VerboseLevel = verbose_level
-        objRFEgen.AutoConfigure = True
-        objRFEann.AutoConfigure = True
-        result = "BOTH"
-
-    if passType[0] == "NONE" and passType[1] == "ANALYZER":
-        objRFEann.VerboseLevel = verbose_level
-        objRFEann.AutoConfigure = True
-        result = "ANALYZER"
-
-    if passType[1] == "NONE" and passType[0] == "ANALYZER":
-        objRFEann.VerboseLevel = verbose_level
-        objRFEann.AutoConfigure = True
-        result = "ANALYZER"
-
-    if passType[0] == "GENERATOR" and passType[1] == "NONE":
-        objRFEgen.VerboseLevel = verbose_level
-        objRFEgen.AutoConfigure = True
-        result = "GENERATOR"
-
-    if passType[1] == "GENERATOR" and passType[0] == "NONE":
-        objRFEgen.VerboseLevel = verbose_level
-        objRFEgen.AutoConfigure = True
-        result = "GENERATOR"
-
-    if passType[1] == "NONE" and passType[0] == "NONE":
-        result = "NONE"
-
-
 
     return result
 
-def startCW(frequency, power):
-    debug_print(TRACE, "start CW")
+# tell the generator to start the Continuous Wave at the specified frequency and power
+def startCW(frequency, power_level):
+    debug_print(TRACE, "startCW")
+    debug_print(DEBUG, "CW ", frequency, power_level, type(power_level))
+    floatfreq = float(frequency / 1000)
 
-    objRFE = objRFEgen
-    objRFE.RFGenCWFrequencyMHZ = frequency
-    objRFE.RFGenExpansionPowerDBM = power 
-    objRFE.SendCommand_GeneratorCW()
+    intfreq = int(floatfreq)
+    debug_print(DEBUG, "intfreq ", intfreq)
+    
+    if power_level > 7 or power_level < 0:
+        debug_print(DEBUG, "invalid power", power_level, "changing to 7")
+        power_level = 7
 
+    if power_level > 3:
+        config_power = power_level - 4
+        highpower = 1
+    else:
+        config_power = power_level
+        highpower = 0
+
+    if DEBUG:
+        debug_print(DEBUG, "power", power_level)
+
+
+    cmd = "C3-F:" + "{:07d}".format(intfreq) + ","+ str(highpower)+ "," + str(config_power)
+    debug_print(DEBUG, "CWcmd ", cmd)
+
+    objRFEgen.SendCommand(cmd)
+
+# tell the generator to stop the Continuous Wave
 def stopCW():
     debug_print(TRACE, "stopCW ")
     objRFE = objRFEgen
     objRFE.SendCommand_GeneratorRFPowerOFF()
 
-def startSweep(startFreq, stopFreq, power, steps, stepsize, steptime):
+# Tell the generator to start a frequency sweep
+def startSweep(frequency, powerLevel, steps, stepWidth, stepTime):
     debug_print(TRACE, "startSweep ")
 
+    """
     objRFE = objRFEgen
     if(objRFE.ExpansionBoardActive):
-        objRFE.RFGenExpansionPowerDBM = power
+        objRFE.RFGenExpansionPowerDBM = powerLevel
         sPowerDBM = " - Power: " + str(objRFE.RFGenExpansionPowerDBM) + "dBm"               
     else:
         objRFE.RFGenHighPowerSwitch = False
-        objRFE.RFGenPowerLevel = power 
+        objRFE.RFGenPowerLevel = powerLevel 
         sPowerDBM = " - Power1: " + str(objRFE.GetSignalGeneratorEstimatedAmplitude(objRFE.RFGenCWFrequencyMHZ)) + "dBm"
+
+    debug_print(DEBUG, startFreq, stopFreq, powerLevel, steps, steptime)
 
     objRFE.RFGenStartFrequencyMHZ = startFreq
     objRFE.RFGenStopFrequencyMHZ = stopFreq 
     objRFE.RFGenSweepSteps = steps
     objRFE.RFGenStepWaitMS = steptime
 
-    debug_print(DEBUG, "Frequency Sweep Settings = Start:" + str(objRFE.StartFrequencyMHZ) + "MHz" + " - Stop:" + str(objRFE.StopFrequencyMHZ) + "MHz" + 
-          " - Steps:" + str(objRFE.RFGenSweepSteps) + " - Delay:" + str(objRFE.RFGenStepWaitMS) + "ms" + sPowerDBM)
-
     debug_print(DEBUG, "Frequency sweep ON")
     objRFE.SendCommand_GeneratorSweepFreq()
+    """
 
+    floatfreq = float(frequency) / 1000
+
+    intfreq = int(floatfreq)
+
+    debug_print(DEBUG, "float freq ", floatfreq, "int freq ", intfreq)
+
+    power = powerLevel
+    if power > 7 or power < 0:
+        debug_print(DEBUG, "invalid power", power, "changing to 7")
+        power = 7
+
+    if power > 3:
+        config_power = power - 4
+        highpower = 1
+    else:
+        config_power = power
+        highpower = 0
+
+
+    cmd = "C3-F:" + "{:07d}".format(intfreq) + "," + str(highpower) + "," + str(config_power) + "," + "{:04d}".format(int(steps)) + "," + "{:07d}".format(int(stepWidth)) + "," + "{:05d}".format(int(stepTime))
+
+    objRFEgen.SendCommand(cmd)
+
+# Tell the generator to stop the frequency sweep
 def stopSweep():
     debug_print(TRACE, "stop Sweep ")
     objRFEgen.SendCommand_GeneratorRFPowerOFF()
+    debug_print(DEBUG, "Frequency sweep OFF")
 
+# Tell the analyzer to get the Peak Signal Values
 def getPeak(objAnalazyer):
     debug_print(TRACE, "getPeak")
-
-    """This function prints the amplitude and frequency peak of the latest received sweep
-    """
     nIndex = objAnalazyer.SweepData.Count-1
     objSweepTemp = objAnalazyer.SweepData.GetData(nIndex)
     nStep = objSweepTemp.GetPeakDataPoint()      #Get index of the peak
@@ -287,9 +396,8 @@ def getPeak(objAnalazyer):
 
     return fCenterFreq, fAmplitudeDBM
 
+# Check the desired settings for the Peak Search for validity.
 def ControlSettings(objAnalazyer, span, start_scan, stop_scan):
-    """This functions check user settings 
-    """
     SpanSizeTemp = None
     StartFreqTemp = None
     StopFreqTemp =  None
@@ -299,29 +407,38 @@ def ControlSettings(objAnalazyer, span, start_scan, stop_scan):
 
     #Control maximum Span size
     if(objAnalazyer.MaxSpanMHZ <= span):
-        debug_print(DEBUG, "Max Span size: " + str(objAnalazyer.MaxSpanMHZ)+"MHz")
+        error_string = "Span size (" + str(span) + ") is larger than the Max Span size: " + str(objAnalazyer.MaxSpanMHZ)+"MHz"
+        debug_print(ERROR, error_string)
+        sendError(error_string)
     else:
         objAnalazyer.SpanMHZ = span
         SpanSizeTemp = objAnalazyer.SpanMHZ
     if(SpanSizeTemp):
         #Control minimum start frequency
         if(objAnalazyer.MinFreqMHZ > start_scan):
-            debug_print(DEBUG, "Min Start freq: " + str(objAnalazyer.MinFreqMHZ)+"MHz")
+            error_string = "Start Scan (" + str(start_scan) + ") is smaller than the Min Start freq: " + str(objAnalazyer.MinFreqMHZ)+" MHz"
+            debug_print(ERROR, error_string)
+            sendError(error_string)
         else:
             objAnalazyer.StartFrequencyMHZ = start_scan
             StartFreqTemp = objAnalazyer.StartFrequencyMHZ    
         if(StartFreqTemp):
             #Control maximum stop frequency
             if(objAnalazyer.MaxFreqMHZ < stop_scan):
-                debug_print(DEBUG, "Max Stop freq: " + str(objAnalazyer.MaxFreqMHZ)+"MHz")
+                error_string = "Stop Scan (" + str(stop_scan) + ") is larger than the Max Stop freq: " + str(objAnalazyer.MaxFreqMHZ)+"MHz"
+                debug_print(ERROR, error_string)
+                sendError(error_string)
             else:
                 if((StartFreqTemp + SpanSizeTemp) > stop_scan):
-                    debug_print(DEBUG, "Max Stop freq (START_SCAN_MHZ + SPAN_SIZE_MHZ): " + str(stop_scan) +"MHz")
+                    error_string = "Stop Scan (" + str(stop_scan) + ") is larger than the Max Stop freq (START_SCAN_MHZ + SPAN_SIZE_MHZ): " + str(stop_scan) +"MHz"
+                    debug_print(ERROR, error_string)
+                    sendError(error_string)
                 else:
                     StopFreqTemp = (StartFreqTemp + SpanSizeTemp)
     
     return SpanSizeTemp, StartFreqTemp, StopFreqTemp
 
+# tell the analyzer to do the peak search
 def processPeakSearch(cmdlist):
     debug_print(TRACE, "processPeakSearch")
 
@@ -333,78 +450,79 @@ def processPeakSearch(cmdlist):
         stop_scan = int(cmdlist.pop(0))
 
         debug_print(DEBUG, span, start_scan, stop_scan)
-
+        
+        # See if the customer's settings are valid
         SpanSize, StartFreq, StopFreq = ControlSettings(objRFE, span, start_scan, stop_scan)
+
+        # if they are then do it
         if(SpanSize and StartFreq and StopFreq):
-            nInd = 0
-            #Set new configuration into device
+            # Set new configuration into device
             objRFE.UpdateDeviceConfig(StartFreq, StopFreq)
 
-            objSweep=None
-            #Wait for new configuration to arrive (as it will clean up old sweep data)
-
+            # Wait for new configuration to arrive (as it will clean up old sweep data)
             flag = False
             while(not flag):
                 flag, objstr = objRFE.ProcessReceivedString(True);
-
+    
+            # Get the peak from the analyzer
             freq, power = getPeak(objRFE)
-
+            
+            # if there was an error we would have gotten an exception so assume success
             resp = "SUCCESS " + str(freq) + " " + str(power)
-            resp = resp.encode()
-
             sendResponse(resp)
 
         else:
             resp = "ERROR Control Settings Failed"
-            resp = resp.encode()
-            sendResponse(resp)
+            sendError(resp)
 
     else:    
         resp = "ERROR Incorrect size of command"
-        resp = resp.encode()
-        sendResponse(resp)
+        sendError(resp)
 
 def processStartCW(cmdlist):
     debug_print(TRACE, "processStartCW")
+
     objRFE = objRFEgen
-    frequency = int(cmdlist[0])
-    power = int(cmdlist[1])
+
+    if (len(cmdlist) == STARTCW_SIZE):
+        frequency = int(cmdlist.pop(0))
+        power = int(cmdlist.pop(0))
+    else:
+        resp = "Incorrect size of command"
+        sendError(resp)
 
     startCW(frequency, power)
 
     resp = "SUCCESS "
-    resp = resp.encode()
     sendResponse(resp)
 
+# Process the StopCW command from the client
 def processStopCW(cmdlist):
     debug_print(TRACE, "processStopCW")
     objRFE = objRFEgen
     stopCW()
 
     resp = "SUCCESS "
-    resp = resp.encode()
     sendResponse(resp)
 
+# Process the StartSweep command from the client
 def processStartSweep(cmdlist):
     debug_print(TRACE, "processStartSweep")
 
-    if (len(cmdlist) == 6):
+    if (len(cmdlist) == STARTSWEEP_SIZE):
         start_freq = int(cmdlist.pop(0))
         stop_freq = int(cmdlist.pop(0))
-        power = int(cmdlist.pop(0))
+        power_level = int(cmdlist.pop(0))
         steps = int(cmdlist.pop(0))
-        step_size = int(cmdlist.pop(0))
         waitMS = int(cmdlist.pop(0))
 
-        startSweep(start_freq, stop_freq, power, steps, step_size, waitMS)
+        startSweep(start_freq, stop_freq, power_level, steps, waitMS)
 
         resp = "SUCCESS "
-        resp = resp.encode()
         sendResponse(resp)
     else:    
-        resp = "ERROR Incorrect size of command"
-        resp = resp.encode()
-        sendResponse(resp)
+        resp = "Incorrect size of command"
+        sendError(resp)
 
 def processStopSweep(cmdlist):
     debug_print(TRACE, "processStopSweep")
@@ -412,88 +530,91 @@ def processStopSweep(cmdlist):
     stopSweep()
 
     resp = "SUCCESS "
-    resp = resp.encode()
     sendResponse(resp)
 
 def processConnectRFE(cmdlist):
     debug_print(TRACE, "processConnectRFE")
-    rfetype = cmdlist.pop(0)
-    result = connectRFE(rfetype)
 
-    result = "SUCCESS " + result
-    message = result.encode()
-    sendResponse(message)
+    if len(cmdlist) == CONNECTRFE_SIZE:
+        rfetype = cmdlist.pop(0)
+        result = connectRFE(rfetype)
+        debug_print(DEBUG, "result ", result)
+    else:
+        resp = "Incorrect size of command"
+        sendError(resp)
 
+    if result == rfetype:
+        result = "SUCCESS " + result
+    else:
+        resp = "Could not find requested type " + rfetype
+        sendError(resp)
+
+    # send the successful response
+    sendResponse(result)
+
+def clearPorts():
+    global objRFEgen, objRFEann
+    debug_print(TRACE, "clearPorts")
+
+    if objRFEgen != None:
+        objRFEgen.ClosePort()
+        objRFEgen = None
+    
+    if objRFEann != None:
+        objRFEann.ClosePort()
+        objRFEann = None
+
+# Process the DisconnectRFE command
 def processDisconnectRFE(cmdlist):
     debug_print(TRACE, "processDisconnectRFE")
     global objRFEgen, objRFEann
 
-    rfetype = cmdlist.pop(0)
+    clearPorts()
 
+    # send the successful response
     resp = "SUCCESS "
+    sendResponse(resp)
 
-    if (rfetype == "GENERATOR" or rfetype == "BOTH") and objRFEgen != None:
-        debug_print(DEBUG, "closing generator port")
-        result = objRFEgen.ClosePort()
-        objRFEgen = None
-        if result == False:
-            resp = "ERROR: ClosePort() failed "
-            resp = resp.encode()
-            sendResponse(resp)
-            
-
-    if (rfetype == "ANALYZER" or rfetype == "BOTH") and objRFEann != None:
-        debug_print(DEBUG, "closing analyzer port")
-        result = objRFEann.ClosePort()
-        objRFEann = None
-        if result == False:
-            resp = "ERROR: ClosePort() failed "
-            resp = resp.encode()
-            sendResponse(resp)
-
-    time.sleep(2)
-    if resp == "SUCCESS ":
-        resp = resp.encode()
-        sendResponse(resp)
-
+# This sets the server's debug level
 def processSetDebug(cmdlist):
     global debug_level
     debug_print(TRACE, "processSetDebug")
 
-    if len(cmdlist) > 0:
+    if len(cmdlist) == SETDEBUG_SIZE:
         debug_level = int(cmdlist.pop(0))
         debug_print(DEBUG, "new debug level ", debug_level)
 
         resp = "SUCCESS "
-        resp = resp.encode()
         sendResponse(resp)
 
     else:
         print_debug(ERROR, "Invalid number of parameters in processSetDebug")
-
         resp = "ERROR Incorrect size of command"
-        resp = resp.encode()
-        sendResponse(resp)
+        sendError(resp)
 
+# This sets the verbose level inside the RFE device
 def processSetVerbose(cmdlist):
     global verbose_level
     debug_print(TRACE, "processSetVerbose")
 
-    if len(cmdlist) > 0:
+    if len(cmdlist) == SETVERBOSE_SIZE:
         verbose_level = int(cmdlist.pop(0))
         debug_print(DEBUG, "new verbose level ", verbose_level)
-        objRFEgen.VerboseLevel = verbose_level
-        objRFEann.VerboseLevel = verbose_level
+
+        if objRFEgen != None:
+            objRFEgen.VerboseLevel = verbose_level
+
+        if objRFEann != None:
+            objRFEann.VerboseLevel = verbose_level
 
         resp = "SUCCESS "
-        resp = resp.encode()
         sendResponse(resp)
     else:
         print_debug(ERROR, "Invalid number of parameters in processSetDebug")
         resp = "ERROR Incorrect size of command"
-        resp = resp.encode()
         sendResponse(resp)
 
+# Process the command received from the client
 def processCommand(connection):
     debug_print(TRACE, "processCommand") 
     data = connection.recv(1024)
@@ -504,6 +625,7 @@ def processCommand(connection):
     cmdlist = commandline.split()
     length = len(cmdlist)
 
+    # Every time it calls processCommand it will return nothing before it waits for a good command
     if length != 0:
         cmd = cmdlist[0] 
         debug_print(DEBUG, "cmd", cmd)
@@ -511,6 +633,7 @@ def processCommand(connection):
         cmdlist.pop(0)
 
         if cmd == 'CONNECTRFE':
+            clearPorts() 
             processConnectRFE(cmdlist)
         elif cmd == 'DISCONNECTRFE':
             processDisconnectRFE(cmdlist)
@@ -529,23 +652,11 @@ def processCommand(connection):
         elif cmd == 'SETVERBOSE':
             processSetVerbose(cmdlist)
         else:
-            debug_print(DEBUG, "invalid command")
+            debug_print(ERROR, "invalid command", cmd)
+            resp = "Invalid Command Received by Server"
+            sendError(resp)
         return True
-    else:
-        return False
 
-
-def clearPorts():
-    global objRFEgen, objRFEann
-    debug_print(TRACE, "clearPorts")
-
-    if objRFEgen != None:
-        objRFEgen.ClosePort()
-        objRFEgen = None
-    
-    if objRFEann != None:
-        objRFEann.ClosePort()
-        objRFEann = None
 
 #---------------------------------------------------------
 # Main processing loop
@@ -557,7 +668,6 @@ verbose_level = 4
 while True:
     try:
         result = True
-        clearPorts() 
         connection = waitForConnection()
 
         while result:
