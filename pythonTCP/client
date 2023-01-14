@@ -1,6 +1,6 @@
 #!/bin/python3
 
-
+import time
 import socket
 import sys
 
@@ -29,6 +29,7 @@ try:
             amount_received += len(data)
             print( 'received: ', data.decode())
         pktnum += 1
+        time.sleep(1)
 
 finally:
     print('closing socket')

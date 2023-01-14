@@ -28,7 +28,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from tkinter import Frame,Label,Entry,Button
 
-DEBUG = False
+DEBUG = True
 
 BAUDRATE = 500000
 
@@ -177,6 +177,22 @@ class SpanWindow(Toplevel):
     # the user hit enter in this window
     def get_entry(self):
         global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
+
+        new_span = int(self.spanentry.get())
+
+        center = STOP_SCAN_MHZ - (SPAN_SIZE_MHZ / 2)
+
+        START_SCAN_MHZ = center - (new_span / 2)
+        STOP_SCAN_MHZ = center + (new_span / 2)
+
+        SPAN_SIZE_MHZ = new_span
+        app.init_window(content)
+
+        self.win.destroy(self)
+    
+    """
+    def get_entry(self):
+        global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
        
         new_span = int(self.spanentry.get())
 
@@ -187,10 +203,11 @@ class SpanWindow(Toplevel):
             return 
 
         # calculate the new start and stop freq from the span
-        new_center = int(self.freqentry.get())
+        old_center = STOP_SCAN_MHZ - START_SCAN_MHZ
 
-        new_start = new_center - (new_span / 2)
-        new_stop = new_center + (new_span / 2)
+        print(old_center)
+        new_start = old_center - (new_span / 2)
+        new_stop = old_center + (new_span / 2)
 
         # validate that the new value is good
         if(objRFE.MinFreqMHZ > new_start):
@@ -209,13 +226,15 @@ class SpanWindow(Toplevel):
         STOP_SCAN_MHZ = new_stop
         SPAN_SIZE_MHZ = new_span
 
+        print(new_span)
+
         # delete this window
         self.destroy()
 
         # start all over with a new window with these parameters
         app.init_window(content)
 
-
+    """
 # this is the main window
 class Window(Frame):
     def __init__(self, master = None):
@@ -403,7 +422,7 @@ class Window(Frame):
                 print("Error: settings are wrong.\nPlease, change and try again")
         
 
-        self.ani = animation.FuncAnimation(self.fig, self.animate, None, interval=25, blit=False)
+        self.ani = animation.FuncAnimation(self.fig, self.animate, None, interval=40, blit=False)
 
 
 # if the enter is hit in the main window this gets called

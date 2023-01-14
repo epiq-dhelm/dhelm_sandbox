@@ -427,11 +427,14 @@ def GetPort():
             showinfo("Info", "Resetting Device", None)
             time.sleep(4)
 
+        top_window()
+        """
         # build the main window
         content, frame = build_window()
 
         # initialize the main window
         app.init_window(content) 
+        """
 
     else: #no valid ports
         showinfo("Error", "No Valid Ports Found", 5)

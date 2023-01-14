@@ -15,6 +15,14 @@ client_debug_level=3
 
 DEBUG="--debug-level $client_debug_level"
 
+#../testapp_server &
+
+#PID=$!
+#echo $PID
+
+#sleep 2
+
+
 python3  ../testapp.py --cmd "setServerDebug"  --debug-level 0
 check_result
 
