@@ -1,0 +1,9 @@
+#!/bin/bash
+
+PS4='Line ${LINENO}: '
+#set -x
+
+echo "address is " ${ADDR='127.0.0.1'} ${PORT=10000}
+
+python3  ../util/testapp.py --cmd "StopGen" --server-addr $ADDR  --tcp-port $PORT
+if [[ $? -ne 0 ]]; then exit; fi

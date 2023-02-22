@@ -32,10 +32,11 @@ int main(int argc, char *argv[])
     fseek(fileptr, 0, SEEK_END);
     shortslen = (ftell(fileptr) / 2); 
     rewind(fileptr);
-   
+
+    uint64_t delta = 0;   
     while (ctr < shortslen)
     {
-        printf("ctr %ld\n", ctr);
+//        printf("ctr %ld\n", ctr);
         // read a block of samples
         long shorts_read = fread( data_block, sizeof(int16_t), MAX_BLOCK, fileptr );
 
@@ -48,8 +49,6 @@ int main(int argc, char *argv[])
             exit(1);
         }
 
-        ctr += shorts_read;
-
         int16_t expected_short = data_block[0];
 
         //validate samples
@@ -57,7 +56,13 @@ int main(int argc, char *argv[])
         {
             if (data_block[i] != expected_short)
             {
-                printf("Fail: Byte # %016lX, Expected %04X, Actual %04X\n", ctr*2, expected_short, data_block[i]); 
+                uint64_t location = (ctr + i) * 2;
+
+                delta = location - delta;
+
+                printf("Fail: Byte # 0x%010lX, Expected 0x%04X, Actual 0x%04X, delta %lu (0x%08lX), samples %lu\n", 
+                        location, expected_short, data_block[i], delta, delta, delta / 4); 
+
                 exit(1);
             }
             expected_short = data_block[i] + 1;
@@ -66,8 +71,10 @@ int main(int argc, char *argv[])
                 expected_short = -(MAX_DATA + 1);
             }
         }
+        ctr += shorts_read;
     }
 
+    printf("ctr %ld\n", ctr);
     printf("Success\n");
 
 }

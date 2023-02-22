@@ -1,0 +1,25 @@
+#!/bin/bash
+
+PS4='Line ${LINENO}: '
+#set -x
+
+check_result()
+{
+    if [[ $? -ne 0 ]]
+    then 
+        exit 
+    fi
+}
+
+
+echo "address is " ${ADDR='127.0.0.1'} ${PORT=10000}
+echo "span is " ${SPAN=6}
+
+python3  ../util/testapp.py --cmd "PeakSearch" --server-addr $ADDR --tcp-port $PORT --freq 1000 --span $SPAN 
+check_result 
+
+
+
+
+
+

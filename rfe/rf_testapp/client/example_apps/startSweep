@@ -1,0 +1,13 @@
+#!/bin/bash
+
+PS4='Line ${LINENO}: '
+#set -x
+
+
+echo "address is " ${ADDR='127.0.0.1'} ${PORT=10000}
+
+
+python3  ../util/testapp.py --cmd "StartSweep" --server-addr $ADDR --tcp-port $PORT --freq 980 --power-level 8 --steps 20 --step-width 2 --waitMS 4000 --span 40
+
+if [[ $? -ne 0 ]]; then exit; fi
+

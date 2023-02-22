@@ -1,0 +1,53 @@
+#!/bin/bash
+
+PS4='Line ${LINENO}: '
+#set -x
+
+check_result()
+{
+    if [[ $? -ne 0 ]]
+    then 
+        exit 
+    fi
+}
+
+echo "address is " ${ADDR='127.0.0.1'}
+
+
+DEBUG="--debug-level 'TRACE'"
+
+#python3  ../util/testapp.py --cmd "setServerDebug" --server-addr $ADDR $DEBUG
+#check_result 
+
+CENTER_FREQ=500
+
+while [ $CENTER_FREQ -lt 6000 ]
+do
+    ((TX_FREQ=CENTER_FREQ+4))
+    echo " "
+    echo "TX freq = $TX_FREQ"
+
+    for i in {0..9}
+    do
+        echo " "
+        echo "    starting test with power level at $i"
+        python3  ../util/testapp.py --cmd "StartCW" --server-addr $ADDR --freq $TX_FREQ --power-level $i  --span 20 $DEBUG
+        check_result 
+        sleep 3
+
+        python3  ../util/testapp.py --cmd "PeakSearch" --server-addr $ADDR  --freq $CENTER_FREQ --span 20 $DEBUG 
+        check_result 
+
+
+        python3  ../util/testapp.py --cmd "stopGen" --server-addr $ADDR $DEBUG 
+        check_result 
+
+    done
+    sleep 1
+
+    ((CENTER_FREQ=CENTER_FREQ+500))
+done
+
+
+
+

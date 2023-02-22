@@ -1,0 +1,14 @@
+#!/bin/bash
+
+PS4='Line ${LINENO}: '
+#set -x
+
+echo "address is " ${ADDR='127.0.0.1'} ${PORT=10000}
+
+FREQ="${1:-1000}"
+SPAN="${2:-20}"
+POWERLEVEL="${3:-5}"
+echo $FREQ $SPAN $POWERLEVEL
+
+python3  ../util/testapp.py --cmd "StartCW" --server-address $ADDR --tcp-port $PORT --freq $FREQ --span $SPAN --power-level $POWERLEVEL
+if [[ $? -ne 0 ]]; then exit; fi
