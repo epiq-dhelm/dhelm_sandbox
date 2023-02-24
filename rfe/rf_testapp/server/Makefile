@@ -1,5 +1,7 @@
 # include tools and build rules
-export PROJECT_ROOT:= ../../../
+export PROJECT_ROOT:= ../../../../sidekiq_example_apps
+
+#export PROJECT_ROOT:= ~/sidekiq_example_apps 
 BUILD_ROOT?= $(PROJECT_ROOT)/build
 
 V=enabled

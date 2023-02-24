@@ -182,7 +182,7 @@ class TestApp():
                 power_array.append(float(item))
 
             ctr += 1
-        print("ctr", ctr, "array_len", array_len)
+        #print("ctr", ctr, "array_len", array_len)
 
         return resp, freq_array, power_array
 

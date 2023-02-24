@@ -322,7 +322,7 @@ def main(argv=None):
     test = testapp.TestApp()
 
     # connect to the server
-    test.connectServer()
+    test.connectServer("127.0.0.1", 47479)
 
     top_window()
 

@@ -37,7 +37,7 @@ Power Table:
 # List of field labels
 labels = [
     "Start Freq MHz:",
-    "Power Level (0 - 7):",
+    "Power Level (0 - 3):",
     "Number of Steps:",
     "Freq Step in KHz:",
     "Step Time in ms:",
@@ -45,9 +45,9 @@ labels = [
 
 init_vals = [
     "997.0",
-    "2",
+    "0",
     "10",
-    "1000",
+    "1002",
     "1000",
 ]
 
@@ -113,9 +113,9 @@ def continuous_power_on():
 
     power = int(cw_power.get())
 
-    if power > 7 or power < 0:
-        print("invalid power", power, "changing to 7")
-        power = 7
+    if power > 3 or power < 0:
+        showinfo("Error", "invalid power level", 3)
+        power = 0
     
     if power > 3:
         config_power = power - 4
@@ -151,10 +151,10 @@ def continuous_wave():
     cw_freq.focus_set()
     cw_freq.grid(row = 0, column = 1, padx = 20, pady = 10)
 
-    label2 = Label(master=current_frame, text="Power (0-7) : ", font=("Arial", 16))
+    label2 = Label(master=current_frame, text="Power (0-3) : ", font=("Arial", 16))
     label2.grid(row = 1, column = 0, padx = 20, pady = 10)
     cw_power = Entry(master=current_frame, width = 10, font=("Ariel", 16))
-    cw_power.insert(0, "2")
+    cw_power.insert(0, "0")
     cw_power.grid(row = 1, column = 1, padx = 20, pady = 10)
 
     on_button = Button(current_frame, text = 'Power On') 
@@ -259,7 +259,13 @@ def frequency_sweep():
 
 def top_window():
     global current_frame, root
-    
+  
+    """
+    #If object is an analyzer, we can scan for received sweeps
+    if(not objRFE.IsGenerator()):
+        showinfo("Error", "Not a generator, exiting...", 2)
+        cleanup()
+    """
     current_state = ""
     current_frame.destroy()
     root.geometry('650x100')
@@ -275,8 +281,7 @@ def exit_program():
     global port
     if DEBUG:
         print("exit program")
-    port.close()
-    exit()
+    cleanup() 
 
 # The user hit enter after picking a port
 def go():

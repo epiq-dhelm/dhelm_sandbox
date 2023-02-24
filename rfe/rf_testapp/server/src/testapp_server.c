@@ -609,7 +609,7 @@ int process_command(int client_sock)
     else
     {
         // print buffer which contains the client contents
-        log_info("cmd rcvd: socket %d, len %d, %s", client_sock, len, buff);
+        log_debug("cmd rcvd: socket %d, len %d, %s", client_sock, len, buff);
 
         cmd_str = strdup(buff);
 
