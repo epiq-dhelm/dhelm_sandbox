@@ -506,11 +506,23 @@ def GetPort():
                 deleted = True
                 objRFE.m_arrValidCP2102Ports.remove(objPort)
 
+            if (objPort.device == "/dev/ttyACM0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
             if (objPort.device == "/dev/ttySKIQ_UART0"):
                 deleted = True
                 objRFE.m_arrValidCP2102Ports.remove(objPort)
 
             if (objPort.device == "/dev/ttySKIQ_UART1"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART2"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART3"):
                 deleted = True
                 objRFE.m_arrValidCP2102Ports.remove(objPort)
 
