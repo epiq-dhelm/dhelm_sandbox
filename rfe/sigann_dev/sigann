@@ -447,6 +447,7 @@ def go():
         PortName = objRFE.m_arrValidCP2102Ports[portno].device
         if DEBUG:
             print("Selected name", PortName)
+        root.wm_title('RFE Signal Analyzer ' + PortName)
 
     #Connect to available port
     objRFE.ConnectPort(PortName, BAUDRATE)
@@ -570,7 +571,8 @@ def GetPort():
         PortName = objRFE.m_arrValidCP2102Ports[0].device
         if DEBUG:
             print("Selected name", PortName)
-
+       
+        root.wm_title('RFE Signal Analyzer ' + PortName)
         #Connect to available port
         objRFE.ConnectPort(PortName, BAUDRATE)
         if DEBUG:
@@ -611,7 +613,7 @@ def GetPort():
         # leave
         cleanup()
     
-    return PortName
+    return True
 
 # used to display a message box describing the info
 def showinfo(msgtitle, text, waittime):
@@ -705,9 +707,7 @@ current_frame = Frame(root)
 app = Window(root)
 
 # go get the USB port the user wants
-portname = GetPort()
-
-root.wm_title('RFE Signal Analyzer' + portname)
+GetPort()
 
 # spin on the tkinter mainloop
 tk.mainloop()

@@ -299,6 +299,7 @@ def go():
         PortName = objRFE.m_arrValidCP2102Ports[portno].device
         if DEBUG:
             print("Selected name", PortName)
+        root.wm_title('RFE Signal Generator ' + PortName)
 
     #Connect to available port
     objRFE.ConnectPort(PortName, BAUDRATE)
@@ -386,7 +387,6 @@ def GetPort():
     # see if we have more than one valid port, if so we need to display a window with the
     # choices
     if len(objRFE.m_arrValidCP2102Ports) > 1:
-
         # print the title of the window
         title = Label(current_frame, text= "Available Ports:", font=("Arial", 16))
         title.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
@@ -421,6 +421,7 @@ def GetPort():
         if DEBUG:
             print("Selected name", PortName)
 
+        root.wm_title('RFE Signal Generator ' + PortName)
         #Connect to available port
         objRFE.ConnectPort(PortName, BAUDRATE)
         if DEBUG:
@@ -464,7 +465,7 @@ def GetPort():
         # leave
         cleanup()
     
-    return PortName
+    return True
 
 # used to display a message box describing the info
 def showinfo(msgtitle, text, waittime):
@@ -510,9 +511,9 @@ objRFE = RFExplorer.RFECommunicator()
 objRFE.GetConnectedPorts()
 
 objRFE.VerboseLevel = 10
+PortName = " "
 
-portname = GetPort()
-root.wm_title('RFE Signal Generator' + portname)
+GetPort()
 
 root.mainloop()
 
