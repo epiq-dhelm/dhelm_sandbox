@@ -65,7 +65,6 @@ RESET = True
 DEBUG = TRUE
 
 root = Tk(className='HappyName')
-root.wm_title('RFE Signal Generator')
 current_frame = Frame(root)
 
 def enterhandler(e):
@@ -259,13 +258,16 @@ def frequency_sweep():
 
 def top_window():
     global current_frame, root
-  
-    """
+ 
+    #Wait to receive COFF:02
+    while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
+        objRFE.ProcessReceivedString(True)    #Process the received configuration
+
     #If object is an analyzer, we can scan for received sweeps
     if(not objRFE.IsGenerator()):
         showinfo("Error", "Not a generator, exiting...", 2)
         cleanup()
-    """
+
     current_state = ""
     current_frame.destroy()
     root.geometry('650x100')
@@ -462,7 +464,7 @@ def GetPort():
         # leave
         cleanup()
     
-    return True
+    return PortName
 
 # used to display a message box describing the info
 def showinfo(msgtitle, text, waittime):
@@ -509,7 +511,8 @@ objRFE.GetConnectedPorts()
 
 objRFE.VerboseLevel = 10
 
-GetPort()
+portname = GetPort()
+root.wm_title('RFE Signal Generator' + portname)
 
 root.mainloop()
 

@@ -356,7 +356,7 @@ class Window(Frame):
         #Request RF Explorer configuration
         objRFE.SendCommand_RequestConfigData()
 
-        #Wait to receive COFF:02
+        #Wait to receive Model type COFF:02
         while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
             objRFE.ProcessReceivedString(True)    #Process the received configuration
 
@@ -611,7 +611,7 @@ def GetPort():
         # leave
         cleanup()
     
-    return True
+    return PortName
 
 # used to display a message box describing the info
 def showinfo(msgtitle, text, waittime):
@@ -695,7 +695,6 @@ objRFE.VerboseLevel = 0
 root = Tk(className='annName')
 
 # main window title and location
-root.wm_title('RFE Signal Analyzer')
 root.geometry('550x350+100+200')
 
 # bind the enterhandler to the Return key in the main window.
@@ -706,7 +705,9 @@ current_frame = Frame(root)
 app = Window(root)
 
 # go get the USB port the user wants
-GetPort()
+portname = GetPort()
+
+root.wm_title('RFE Signal Analyzer' + portname)
 
 # spin on the tkinter mainloop
 tk.mainloop()
