@@ -1,0 +1,1598 @@
+Started by upstream project "Sidekiq/sidekiq_sw" build number 1778
+originally caused by:
+ Started by an SCM change
+[EnvInject] - Loading node environment variables.
+Building remotely on Dell 7510 Windows Node (windows windows-02) in workspace d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows
+[WS-CLEANUP] Deleting project workspace...
+[WS-CLEANUP] Done
+Disk space threshold is set to :5Gb
+Checking disk space Now 
+Total Disk Space Available is: 599Gb
+ Node Name: Dell 7510 Windows Node
+Running Prebuild steps
+Wiping out workspace first.
+Cloning the remote Git repository
+Cloning repository git@bitbucket.org:epiq_solutions/sidekiq_sw.git
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe init d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows # timeout=10
+Fetching upstream changes from git@bitbucket.org:epiq_solutions/sidekiq_sw.git
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe --version # timeout=10
+using GIT_SSH to set credentials Key from .ssh file
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe fetch --tags --progress git@bitbucket.org:epiq_solutions/sidekiq_sw.git +refs/heads/*:refs/remotes/origin/*
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config remote.origin.url git@bitbucket.org:epiq_solutions/sidekiq_sw.git # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config remote.origin.url git@bitbucket.org:epiq_solutions/sidekiq_sw.git # timeout=10
+Fetching upstream changes from git@bitbucket.org:epiq_solutions/sidekiq_sw.git
+using GIT_SSH to set credentials Key from .ssh file
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe fetch --tags --progress git@bitbucket.org:epiq_solutions/sidekiq_sw.git +refs/heads/*:refs/remotes/origin/*
+Checking out Revision 41049b080c1e19d455d0a6f1deb96eb51dc4ce9d (origin/hotfix/v4.17.2)
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config core.sparsecheckout # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe checkout -f 41049b080c1e19d455d0a6f1deb96eb51dc4ce9d
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe rev-list 534e174aec0531375ac5ed609d4c2e58c4fdd724 # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe remote # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule init # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule sync # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get remote.origin.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule init # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get-regexp ^submodule\.(.*)\.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.build.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.build.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive build
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/ad9361_driver.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/ad9361_driver.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/ad9361_driver
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/nw_logic_dma.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/nw_logic_dma.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/nw_logic_dma
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/pci_manager.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/pci_manager.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/pci_manager
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/libusb.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/libusb.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/libusb
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/sidekiq_fw.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/sidekiq_fw.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/sidekiq_fw
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/dropkiq.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/dropkiq.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/dropkiq
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/ad9371_driver.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/ad9371_driver.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/ad9371_driver
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/ad9528_driver.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/ad9528_driver.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/ad9528_driver
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/librffc5071a.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/librffc5071a.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/librffc5071a
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/libiio.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/libiio.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/libiio
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/ad9379_driver.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/ad9379_driver.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/ad9379_driver
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.sidekiq_fpga_bitstreams.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.sidekiq_fpga_bitstreams.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive sidekiq_fpga_bitstreams
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config --get submodule.libraries/adrv9002_driver.url # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe config -f .gitmodules --get submodule.libraries/adrv9002_driver.path # timeout=10
+ > C:\Users\epiqbot\AppData\Local\Programs\Git\cmd\git.exe submodule update --init --recursive libraries/adrv9002_driver
+Run condition [Strings match] enabling prebuild for step [Execute shell]
+Run condition [Execution node ] enabling prebuild for step [BuilderChain]
+Run condition [Execution node ] enabling prebuild for step [BuilderChain]
+Run condition [Strings match] enabling prebuild for step [Trigger/call builds on other projects]
+Run condition [Strings match] enabling prebuild for step [Trigger/call builds on other projects]
+Run condition [Strings match] enabling prebuild for step [Trigger/call builds on other projects]
+Run condition [Strings match] enabling prebuild for step [Trigger/call builds on other projects]
+Run condition [Strings match] enabling prebuild for step [Trigger/call builds on other projects]
+[EnvInject] - Executing scripts and injecting environment variables after the SCM step.
+Set build name.
+New build name is '#1778: origin/hotfix/v4.17.2 - 41049b08'
+Strings match run condition: string 1=[mingw64], string 2=[mingw64]
+Run condition [Strings match] enabling perform for step [Execute shell]
+[windows] $ sh -xe C:\Users\epiqbot\AppData\Local\Temp\hudson6467922541053548745.sh
++ echo 'hello!'
+hello!
++ env
++ grep -E '(PLATFORM|BUILD_CONFIG)'
+RUN_DISPLAY_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/1778/display/redirect
+RUN_CHANGES_DISPLAY_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/1778/display/redirect?page=changes
+JOB_BASE_NAME=BUILD_CONFIG=mingw64,label=windows
+WORKSPACE=d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows
+PWD=/d/Jenkins/workspace/Sidekiq/sidekiq_sw/BUILD_CONFIG/mingw64/label/windows
+JOB_NAME=Sidekiq/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows
+JOB_DISPLAY_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/display/redirect
+BUILD_CONFIG=mingw64
+BUILD_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/1778/
+JOB_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/
+BUILD_TAG=jenkins-Sidekiq-sidekiq_sw-BUILD_CONFIG=mingw64,label=windows-1778
+[windows] $ sh -xe C:\Users\epiqbot\AppData\Local\Temp\hudson6741859307892987884.sh
++ env
+USERDOMAIN=JENKINS-WIN7-01
+OS=Windows_NT
+COMMONPROGRAMFILES=C:\Program Files\Common Files
+GIT_COMMITTER_NAME=epiqbot
+PROCESSOR_LEVEL=6
+GIT_COMMIT=41049b080c1e19d455d0a6f1deb96eb51dc4ce9d
+RUN_DISPLAY_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/1778/display/redirect
+PSModulePath=C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
+JENKINS_URL=https://jenkins.epiq.rocks/
+CommonProgramW6432=C:\Program Files\Common Files
+EXECUTOR_NUMBER=0
+CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files
+FP_NO_HOST_CHECK=NO
+BUILD_ID=1778
+BUILD_CAUSE=UPSTREAMTRIGGER
+label=windows
+PUBLIC=C:\Users\Public
+RUN_CHANGES_DISPLAY_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/1778/display/redirect?page=changes
+USERNAME=epiqbot
+LOGONSERVER=\\JENKINS-WIN7-01
+PROCESSOR_ARCHITECTURE=AMD64
+JOB_BASE_NAME=BUILD_CONFIG=mingw64,label=windows
+CLIENTNAME=flynn
+LOCALAPPDATA=C:\Users\epiqbot\AppData\Local
+GIT_URL=git@bitbucket.org:epiq_solutions/sidekiq_sw.git
+HUDSON_COOKIE=bc7c199e-fb0f-4281-8158-31b48e55395d
+COMPUTERNAME=JENKINS-WIN7-01
+!::=::\
+SYSTEMDRIVE=C:
+USERPROFILE=C:\Users\epiqbot
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+SYSTEMROOT=C:\Windows
+BUILD_NUMBER=1778
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 94 Stepping 3, GenuineIntel
+WORKSPACE=d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows
+PWD=/d/Jenkins/workspace/Sidekiq/sidekiq_sw/BUILD_CONFIG/mingw64/label/windows
+HUDSON_URL=https://jenkins.epiq.rocks/
+HOME=/home/epiqbot
+TMP=/c/Users/epiqbot/AppData/Local/Temp
+NODE_NAME=Dell 7510 Windows Node
+HUDSON_SERVER_COOKIE=ae4f85adbbb69679
+windows_tracing_logfile=C:\BVTBin\Tests\installpackage\csilogfile.log
+JENKINS_HOME=/var/jenkins_home
+JOB_NAME=Sidekiq/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows
+GIT_PREVIOUS_COMMIT=534e174aec0531375ac5ed609d4c2e58c4fdd724
+ROOT_BUILD_CAUSE_SCMTRIGGER=true
+VS120COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Tools\
+PROCESSOR_REVISION=5e03
+HUDSON_HOME=/var/jenkins_home
+JOB_DISPLAY_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/display/redirect
+NUMBER_OF_PROCESSORS=8
+ProgramW6432=C:\Program Files
+BUILD_CONFIG=mingw64
+windows_tracing_flags=3
+GIT_AUTHOR_NAME=epiqbot
+COMSPEC=C:\Windows\system32\cmd.exe
+APPDATA=C:\Users\epiqbot\AppData\Roaming
+BUILD_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/1778/
+TERM=cygwin
+JOB_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/
+GIT_REVISION=origin/sidekiq_develop
+BUILD_DISPLAY_NAME=#1778: origin/hotfix/v4.17.2 - 41049b08
+WINDIR=C:\Windows
+ROOT_BUILD_CAUSE=SCMTRIGGER
+ProgramData=C:\ProgramData
+SHLVL=1
+GIT_BRANCH=origin/hotfix/v4.17.2
+PROGRAMFILES=C:\Program Files
+BUILD_TAG=jenkins-Sidekiq-sidekiq_sw-BUILD_CONFIG=mingw64,label=windows-1778
+ALLUSERSPROFILE=C:\ProgramData
+TEMP=/c/Users/epiqbot/AppData/Local/Temp
+NODE_LABELS=Dell 7510 Windows Node windows windows-02
+SESSIONNAME=RDP-Tcp#0
+BUILD_CAUSE_UPSTREAMTRIGGER=true
+ProgramFiles(x86)=C:\Program Files (x86)
+PATH=/c/Program Files (x86)/Common Files/Oracle/Java/javapath:/usr/bin:/mingw64/bin:/c/ProgramData/Oracle/Java/javapath:/c/Program Files (x86)/Intel/iCLS Client:/c/Program Files/Intel/iCLS Client:/c/Windows/system32:/c/Windows:/c/Windows/System32/Wbem:/c/Windows/System32/WindowsPowerShell/v1.0:/c/Program Files (x86)/Intel/Intel(R) Management Engine Components/DAL:/c/Program Files/Intel/Intel(R) Management Engine Components/DAL:/c/Program Files (x86)/Intel/Intel(R) Management Engine Components/IPT:/c/Program Files/Intel/Intel(R) Management Engine Components/IPT:/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/c/Program Files/Intel/WiFi/bin:/c/Program Files/Common Files/Intel/WirelessCommon:/c/Program Files/Microsoft SQL Server/110/Tools/Binn:/c/Program Files (x86)/Microsoft SDKs/TypeScript/1.0:/c/Program Files/OpenVPN/bin:/c/Program Files/PuTTY:/c/Windows/SysWOW64/WindowsPowerShell/v1.0/Modules/TShell/TShell:/c/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit:/c/Program Files/nodejs:/c/Program Files/Intel/WiFi/bin:/c/Program Files/Common Files/Intel/WirelessCommon:/c/Users/epiqbot/AppData/Roaming/npm
+GIT_PREVIOUS_SUCCESSFUL_COMMIT=534e174aec0531375ac5ed609d4c2e58c4fdd724
+HOMEDRIVE=C:
+HOMEPATH=\Users\epiqbot
+UOIPME_REG_PATH=C:\Program Files\Intel Corporation\USB over IP
+JENKINS_SERVER_COOKIE=ae4f85adbbb69679
+VS140COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\
+VS110COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\Tools\
+_=/usr/bin/env
+[Execution node] check if [Dell 7510 Windows Node] is in [[server03-linux-01]]
+Run condition [Execution node ] preventing perform for step [BuilderChain]
+[Execution node] check if [Dell 7510 Windows Node] is in [[Dell 7510 Windows Node]]
+Run condition [Execution node ] enabling perform for step [BuilderChain]
+[windows] $ sh -xe C:\Users\epiqbot\AppData\Local\Temp\hudson2470597325296137285.sh
++ env
+USERDOMAIN=JENKINS-WIN7-01
+OS=Windows_NT
+COMMONPROGRAMFILES=C:\Program Files\Common Files
+GIT_COMMITTER_NAME=epiqbot
+PROCESSOR_LEVEL=6
+GIT_COMMIT=41049b080c1e19d455d0a6f1deb96eb51dc4ce9d
+RUN_DISPLAY_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/1778/display/redirect
+PSModulePath=C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
+JENKINS_URL=https://jenkins.epiq.rocks/
+CommonProgramW6432=C:\Program Files\Common Files
+EXECUTOR_NUMBER=0
+CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files
+FP_NO_HOST_CHECK=NO
+BUILD_ID=1778
+BUILD_CAUSE=UPSTREAMTRIGGER
+label=windows
+PUBLIC=C:\Users\Public
+RUN_CHANGES_DISPLAY_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/1778/display/redirect?page=changes
+USERNAME=epiqbot
+LOGONSERVER=\\JENKINS-WIN7-01
+PROCESSOR_ARCHITECTURE=AMD64
+JOB_BASE_NAME=BUILD_CONFIG=mingw64,label=windows
+CLIENTNAME=flynn
+LOCALAPPDATA=C:\Users\epiqbot\AppData\Local
+GIT_URL=git@bitbucket.org:epiq_solutions/sidekiq_sw.git
+HUDSON_COOKIE=5e0d20c2-d500-4e29-89f7-3219fbd4252b
+COMPUTERNAME=JENKINS-WIN7-01
+!::=::\
+SYSTEMDRIVE=C:
+USERPROFILE=C:\Users\epiqbot
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+SYSTEMROOT=C:\Windows
+BUILD_NUMBER=1778
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 94 Stepping 3, GenuineIntel
+WORKSPACE=d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows
+PWD=/d/Jenkins/workspace/Sidekiq/sidekiq_sw/BUILD_CONFIG/mingw64/label/windows
+HUDSON_URL=https://jenkins.epiq.rocks/
+HOME=/home/epiqbot
+TMP=/c/Users/epiqbot/AppData/Local/Temp
+NODE_NAME=Dell 7510 Windows Node
+HUDSON_SERVER_COOKIE=ae4f85adbbb69679
+windows_tracing_logfile=C:\BVTBin\Tests\installpackage\csilogfile.log
+JENKINS_HOME=/var/jenkins_home
+JOB_NAME=Sidekiq/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows
+GIT_PREVIOUS_COMMIT=534e174aec0531375ac5ed609d4c2e58c4fdd724
+ROOT_BUILD_CAUSE_SCMTRIGGER=true
+VS120COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Tools\
+PROCESSOR_REVISION=5e03
+HUDSON_HOME=/var/jenkins_home
+JOB_DISPLAY_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/display/redirect
+NUMBER_OF_PROCESSORS=8
+ProgramW6432=C:\Program Files
+BUILD_CONFIG=mingw64
+windows_tracing_flags=3
+GIT_AUTHOR_NAME=epiqbot
+COMSPEC=C:\Windows\system32\cmd.exe
+APPDATA=C:\Users\epiqbot\AppData\Roaming
+BUILD_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/1778/
+TERM=cygwin
+JOB_URL=https://jenkins.epiq.rocks/job/Sidekiq/job/sidekiq_sw/BUILD_CONFIG=mingw64,label=windows/
+GIT_REVISION=origin/sidekiq_develop
+BUILD_DISPLAY_NAME=#1778: origin/hotfix/v4.17.2 - 41049b08
+WINDIR=C:\Windows
+ROOT_BUILD_CAUSE=SCMTRIGGER
+ProgramData=C:\ProgramData
+SHLVL=1
+GIT_BRANCH=origin/hotfix/v4.17.2
+PROGRAMFILES=C:\Program Files
+BUILD_TAG=jenkins-Sidekiq-sidekiq_sw-BUILD_CONFIG=mingw64,label=windows-1778
+ALLUSERSPROFILE=C:\ProgramData
+TEMP=/c/Users/epiqbot/AppData/Local/Temp
+NODE_LABELS=Dell 7510 Windows Node windows windows-02
+SESSIONNAME=RDP-Tcp#0
+BUILD_CAUSE_UPSTREAMTRIGGER=true
+ProgramFiles(x86)=C:\Program Files (x86)
+PATH=/c/Program Files (x86)/Common Files/Oracle/Java/javapath:/usr/bin:/mingw64/bin:/c/ProgramData/Oracle/Java/javapath:/c/Program Files (x86)/Intel/iCLS Client:/c/Program Files/Intel/iCLS Client:/c/Windows/system32:/c/Windows:/c/Windows/System32/Wbem:/c/Windows/System32/WindowsPowerShell/v1.0:/c/Program Files (x86)/Intel/Intel(R) Management Engine Components/DAL:/c/Program Files/Intel/Intel(R) Management Engine Components/DAL:/c/Program Files (x86)/Intel/Intel(R) Management Engine Components/IPT:/c/Program Files/Intel/Intel(R) Management Engine Components/IPT:/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/c/Program Files/Intel/WiFi/bin:/c/Program Files/Common Files/Intel/WirelessCommon:/c/Program Files/Microsoft SQL Server/110/Tools/Binn:/c/Program Files (x86)/Microsoft SDKs/TypeScript/1.0:/c/Program Files/OpenVPN/bin:/c/Program Files/PuTTY:/c/Windows/SysWOW64/WindowsPowerShell/v1.0/Modules/TShell/TShell:/c/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit:/c/Program Files/nodejs:/c/Program Files/Intel/WiFi/bin:/c/Program Files/Common Files/Intel/WirelessCommon:/c/Users/epiqbot/AppData/Roaming/npm
+GIT_PREVIOUS_SUCCESSFUL_COMMIT=534e174aec0531375ac5ed609d4c2e58c4fdd724
+HOMEDRIVE=C:
+HOMEPATH=\Users\epiqbot
+UOIPME_REG_PATH=C:\Program Files\Intel Corporation\USB over IP
+JENKINS_SERVER_COOKIE=ae4f85adbbb69679
+VS140COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\
+VS110COMNTOOLS=C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\Tools\
+_=/usr/bin/env
+[windows] $ cmd /c call C:\Users\epiqbot\AppData\Local\Temp\hudson1874602371937454843.bat
+
+d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows>REM This is a Windows CMD shell 
+
+d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows>cd .\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\ 
+
+d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015>make_driver_win10.bat
+
+d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015>"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" /tv:Current /p:Configuration="Win10 Release" /p:Platform="x64" /t:Build 
+Microsoft (R) Build Engine version 16.9.0+5e4b48a27 for .NET Framework
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Building the projects in this solution one at a time. To enable parallel build, please add the "-m" switch.
+Build started 2/15/2022 10:29:32 AM.
+Project "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015.sln" on node 1 (Build target(s)).
+ValidateSolutionConfiguration:
+  Building solution configuration "Win10 Release|x64".
+Project "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015.sln" (1) is building "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj" (2) on node 1 (default targets).
+DriverBuildNotifications:
+  Building 'DMADriver' with toolset 'WindowsKernelModeDriver10.0' and the 'Universal' target platform.
+  Using KMDF 1.15.
+PrepareForBuild:
+  Creating directory "x64\Release\".
+  Creating directory "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\".
+  Creating directory "x64\Release\DMADriver.tlog\".
+InitializeBuildStatus:
+  Creating "x64\Release\DMADriver.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+StampInf:
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\stampinf.exe -d "*" -a "amd64" -v "*" -k "1.15" -n  -x -f x64\Release\DMADriver-2015.inf 
+  Copying "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver-2015.inx" to "x64\Release\DMADriver-2015.inf" for stamping
+  Stamping x64\Release\DMADriver-2015.inf
+  Stamping [Version] section with DriverVer=02/15/2022,10.29.32.524
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: In Version section
+     stampinf: updating existing DriverVer=
+     stampinf: REPLACE       Line 15: DriverVer=
+  
+     stampinf: WITH          Line 15: DriverVer = 02/15/2022,10.29.32.524
+  
+     stampinf: changed file size by 25
+     stampinf: looking for [Manufacturer] section...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 25: [Manufacturer]
+  
+     stampinf: In Manufacturer section
+     stampinf: Line 26: %NWL%=NWL,NTx86.6.0,NTamd64.6.0,NTx86.5.1,NTamd64.5.1
+  
+     stampinf: found Section-Line 28: [SourceDisksFiles]
+  
+     stampinf: found end of [Manufacturer] section
+     stampinf: looking for decorated section names...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 25: [Manufacturer]
+  
+     stampinf: found Section-Line 28: [SourceDisksFiles]
+  
+     stampinf: found Section-Line 32: [SourceDisksNames]
+  
+     stampinf: found Section-Line 35: [NWL.NTx86.5.1]
+  
+     stampinf: found Section-Line 42: [NWL.NTamd64.5.1]
+  
+     stampinf: found Section-Line 49: [NWL.NTx86.6.0]
+  
+     stampinf: found Section-Line 56: [NWL.NTamd64.6.0]
+  
+     stampinf: found Section-Line 67: [DMABackendXP_DDI.NT]
+  
+     stampinf: found Section-Line 70: [DMABackendXP_DDI.NT.Services]
+  
+     stampinf: found Section-Line 74: [DMABackendXP_DDI.NT.HW]
+  
+     stampinf: found Section-Line 77: [DMABackendNoMSI_AddReg]
+  
+     stampinf: found Section-Line 86: [DMABackend_DDI.NT]
+  
+     stampinf: found Section-Line 89: [DMABackend_DDI.NT.Services]
+  
+     stampinf: found Section-Line 92: [DMABackend_AddService]
+  
+     stampinf: found Section-Line 100: [DMABackend_Parameters_AddReg]
+  
+     stampinf: found Section-Line 107: [DMABackend_DDI.NT.HW]
+  
+     stampinf: found Section-Line 110: [DMABackendMSI_AddReg]
+  
+     stampinf: found Section-Line 118: [DMABackend_Files_Driver]
+  
+     stampinf: found Section-Line 123: [DMABackendXP_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 127: [DMABackend_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 131: [CoInstaller_CopyFiles]
+  
+     stampinf: found Section-Line 134: [CoInstaller_AddReg]
+  
+     stampinf: found Section-Line 137: [DMABackendXP_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 140: [DMABackend_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 143: [DMABackend_wdfsect]
+  
+     stampinf: found Section-Line 149: [Strings]
+  
+     stampinf: looking for WDF version strings
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 132: WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+  
+     stampinf: WITH          Line 132: ;
+  
+  
+     stampinf: changed file size by -40
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 135: HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+  
+     stampinf: WITH          Line 135: ;
+  
+  
+     stampinf: changed file size by -89
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\stampinf.exe -d "*" -a "amd64" -v "*" -k "1.15" -n  -x -f x64\Release\DMADriver.inf 
+  Copying "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver.inx" to "x64\Release\DMADriver.inf" for stamping
+  Stamping x64\Release\DMADriver.inf
+  Stamping [Version] section with DriverVer=02/15/2022,10.29.32.558
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: In Version section
+     stampinf: updating existing DriverVer=
+     stampinf: REPLACE       Line 17: DriverVer=01/01/2017,5.1.5.0000
+  
+     stampinf: WITH          Line 17: DriverVer = 02/15/2022,10.29.32.558
+  
+     stampinf: changed file size by 4
+     stampinf: looking for [Manufacturer] section...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 26: [Manufacturer]
+  
+     stampinf: In Manufacturer section
+     stampinf: Line 27: %NWL%=NWL,NTx86.6.0,NTamd64.6.0,NTx86.5.1,NTamd64.5.1
+  
+     stampinf: found Section-Line 29: [SourceDisksFiles]
+  
+     stampinf: found end of [Manufacturer] section
+     stampinf: looking for decorated section names...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 26: [Manufacturer]
+  
+     stampinf: found Section-Line 29: [SourceDisksFiles]
+  
+     stampinf: found Section-Line 33: [SourceDisksNames]
+  
+     stampinf: found Section-Line 36: [NWL.NTx86.5.1]
+  
+     stampinf: found Section-Line 43: [NWL.NTamd64.5.1]
+  
+     stampinf: found Section-Line 50: [NWL.NTx86.6.0]
+  
+     stampinf: found Section-Line 57: [NWL.NTamd64.6.0]
+  
+     stampinf: found Section-Line 68: [DMADriverXP_DDI.NT]
+  
+     stampinf: found Section-Line 71: [DMADriverXP_DDI.NT.Services]
+  
+     stampinf: found Section-Line 75: [DMADriverXP_DDI.NT.HW]
+  
+     stampinf: found Section-Line 78: [DMADriverNoMSI_AddReg]
+  
+     stampinf: found Section-Line 89: [DMADriver_DDI.NT]
+  
+     stampinf: found Section-Line 92: [DMADriver_DDI.NT.Services]
+  
+     stampinf: found Section-Line 95: [DMADriver_AddService]
+  
+     stampinf: found Section-Line 103: [DMADriver_Parameters_AddReg]
+  
+     stampinf: found Section-Line 110: [DMADriver_DDI.NT.HW]
+  
+     stampinf: found Section-Line 113: [DMADriverMSI_AddReg]
+  
+     stampinf: found Section-Line 125: [DMADriver_Files_Driver]
+  
+     stampinf: found Section-Line 133: [DMADriverXP_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 137: [DMADriver_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 141: [CoInstaller_CopyFiles]
+  
+     stampinf: found Section-Line 147: [CoInstaller_AddReg]
+  
+     stampinf: found Section-Line 150: [DMADriverXP_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 153: [DMADriver_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 156: [DMADriver_wdfsect]
+  
+     stampinf: found Section-Line 162: [Strings]
+  
+     stampinf: looking for WDF version strings
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 142: WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+  
+     stampinf: WITH          Line 142: ;
+  
+  
+     stampinf: changed file size by -40
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 148: HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+  
+     stampinf: WITH          Line 148: ;
+  
+  
+     stampinf: changed file size by -89
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\stampinf.exe -d "*" -a "amd64" -v "*" -k "1.15" -n  -x -f x64\Release\DMADriver.m2-2280.inf 
+  Copying "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver.m2-2280.inx" to "x64\Release\DMADriver.m2-2280.inf" for stamping
+  Stamping x64\Release\DMADriver.m2-2280.inf
+  Stamping [Version] section with DriverVer=02/15/2022,10.29.32.575
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: In Version section
+     stampinf: updating existing DriverVer=
+     stampinf: REPLACE       Line 17: DriverVer=01/01/2017,5.1.5.0000
+  
+     stampinf: WITH          Line 17: DriverVer = 02/15/2022,10.29.32.575
+  
+     stampinf: changed file size by 4
+     stampinf: looking for [Manufacturer] section...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 26: [Manufacturer]
+  
+     stampinf: In Manufacturer section
+     stampinf: Line 27: %NWL%=NWL,NTx86.6.0,NTamd64.6.0,NTx86.5.1,NTamd64.5.1
+  
+     stampinf: found Section-Line 29: [SourceDisksFiles]
+  
+     stampinf: found end of [Manufacturer] section
+     stampinf: looking for decorated section names...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 26: [Manufacturer]
+  
+     stampinf: found Section-Line 29: [SourceDisksFiles]
+  
+     stampinf: found Section-Line 33: [SourceDisksNames]
+  
+     stampinf: found Section-Line 36: [NWL.NTx86.5.1]
+  
+     stampinf: found Section-Line 43: [NWL.NTamd64.5.1]
+  
+     stampinf: found Section-Line 50: [NWL.NTx86.6.0]
+  
+     stampinf: found Section-Line 57: [NWL.NTamd64.6.0]
+  
+     stampinf: found Section-Line 68: [DMADriverXP_DDI.NT]
+  
+     stampinf: found Section-Line 71: [DMADriverXP_DDI.NT.Services]
+  
+     stampinf: found Section-Line 75: [DMADriverXP_DDI.NT.HW]
+  
+     stampinf: found Section-Line 78: [DMADriverNoMSI_AddReg]
+  
+     stampinf: found Section-Line 89: [DMADriver_DDI.NT]
+  
+     stampinf: found Section-Line 92: [DMADriver_DDI.NT.Services]
+  
+     stampinf: found Section-Line 95: [DMADriver_AddService]
+  
+     stampinf: found Section-Line 103: [DMADriver_Parameters_AddReg]
+  
+     stampinf: found Section-Line 110: [DMADriver_DDI.NT.HW]
+  
+     stampinf: found Section-Line 113: [DMADriverMSI_AddReg]
+  
+     stampinf: found Section-Line 125: [DMADriver_Files_Driver]
+  
+     stampinf: found Section-Line 133: [DMADriverXP_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 137: [DMADriver_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 141: [CoInstaller_CopyFiles]
+  
+     stampinf: found Section-Line 147: [CoInstaller_AddReg]
+  
+     stampinf: found Section-Line 150: [DMADriverXP_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 153: [DMADriver_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 156: [DMADriver_wdfsect]
+  
+     stampinf: found Section-Line 162: [Strings]
+  
+     stampinf: looking for WDF version strings
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 142: WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+  
+     stampinf: WITH          Line 142: ;
+  
+  
+     stampinf: changed file size by -40
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 148: HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+  
+     stampinf: WITH          Line 148: ;
+  
+  
+     stampinf: changed file size by -89
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\stampinf.exe -d "*" -a "amd64" -v "*" -k "1.15" -n  -x -f x64\Release\DMADriver.m2.inf 
+  Copying "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver.m2.inx" to "x64\Release\DMADriver.m2.inf" for stamping
+  Stamping x64\Release\DMADriver.m2.inf
+  Stamping [Version] section with DriverVer=02/15/2022,10.29.32.591
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: In Version section
+     stampinf: updating existing DriverVer=
+     stampinf: REPLACE       Line 17: DriverVer=01/01/2017,5.1.5.0000
+  
+     stampinf: WITH          Line 17: DriverVer = 02/15/2022,10.29.32.591
+  
+     stampinf: changed file size by 4
+     stampinf: looking for [Manufacturer] section...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 26: [Manufacturer]
+  
+     stampinf: In Manufacturer section
+     stampinf: Line 27: %NWL%=NWL,NTx86.6.0,NTamd64.6.0,NTx86.5.1,NTamd64.5.1
+  
+     stampinf: found Section-Line 29: [SourceDisksFiles]
+  
+     stampinf: found end of [Manufacturer] section
+     stampinf: looking for decorated section names...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 26: [Manufacturer]
+  
+     stampinf: found Section-Line 29: [SourceDisksFiles]
+  
+     stampinf: found Section-Line 33: [SourceDisksNames]
+  
+     stampinf: found Section-Line 36: [NWL.NTx86.5.1]
+  
+     stampinf: found Section-Line 43: [NWL.NTamd64.5.1]
+  
+     stampinf: found Section-Line 50: [NWL.NTx86.6.0]
+  
+     stampinf: found Section-Line 57: [NWL.NTamd64.6.0]
+  
+     stampinf: found Section-Line 68: [DMADriverXP_DDI.NT]
+  
+     stampinf: found Section-Line 71: [DMADriverXP_DDI.NT.Services]
+  
+     stampinf: found Section-Line 75: [DMADriverXP_DDI.NT.HW]
+  
+     stampinf: found Section-Line 78: [DMADriverNoMSI_AddReg]
+  
+     stampinf: found Section-Line 89: [DMADriver_DDI.NT]
+  
+     stampinf: found Section-Line 92: [DMADriver_DDI.NT.Services]
+  
+     stampinf: found Section-Line 95: [DMADriver_AddService]
+  
+     stampinf: found Section-Line 103: [DMADriver_Parameters_AddReg]
+  
+     stampinf: found Section-Line 110: [DMADriver_DDI.NT.HW]
+  
+     stampinf: found Section-Line 113: [DMADriverMSI_AddReg]
+  
+     stampinf: found Section-Line 125: [DMADriver_Files_Driver]
+  
+     stampinf: found Section-Line 133: [DMADriverXP_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 137: [DMADriver_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 141: [CoInstaller_CopyFiles]
+  
+     stampinf: found Section-Line 147: [CoInstaller_AddReg]
+  
+     stampinf: found Section-Line 150: [DMADriverXP_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 153: [DMADriver_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 156: [DMADriver_wdfsect]
+  
+     stampinf: found Section-Line 162: [Strings]
+  
+     stampinf: looking for WDF version strings
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 142: WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+  
+     stampinf: WITH          Line 142: ;
+  
+  
+     stampinf: changed file size by -40
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 148: HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+  
+     stampinf: WITH          Line 148: ;
+  
+  
+     stampinf: changed file size by -89
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\stampinf.exe -d "*" -a "amd64" -v "*" -k "1.15" -n  -x -f x64\Release\DMADriver.x2.inf 
+  Copying "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver.x2.inx" to "x64\Release\DMADriver.x2.inf" for stamping
+  Stamping x64\Release\DMADriver.x2.inf
+  Stamping [Version] section with DriverVer=02/15/2022,10.29.32.624
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: In Version section
+     stampinf: updating existing DriverVer=
+     stampinf: REPLACE       Line 17: DriverVer=01/01/2017,5.1.5.0000
+  
+     stampinf: WITH          Line 17: DriverVer = 02/15/2022,10.29.32.624
+  
+     stampinf: changed file size by 4
+     stampinf: looking for [Manufacturer] section...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 26: [Manufacturer]
+  
+     stampinf: In Manufacturer section
+     stampinf: Line 27: %NWL%=NWL,NTx86.6.0,NTamd64.6.0,NTx86.5.1,NTamd64.5.1
+  
+     stampinf: found Section-Line 29: [SourceDisksFiles]
+  
+     stampinf: found end of [Manufacturer] section
+     stampinf: looking for decorated section names...
+     stampinf: found Section-Line 10: [Version]
+  
+     stampinf: found Section-Line 21: [DestinationDirs]
+  
+     stampinf: found Section-Line 26: [Manufacturer]
+  
+     stampinf: found Section-Line 29: [SourceDisksFiles]
+  
+     stampinf: found Section-Line 33: [SourceDisksNames]
+  
+     stampinf: found Section-Line 36: [NWL.NTx86.5.1]
+  
+     stampinf: found Section-Line 43: [NWL.NTamd64.5.1]
+  
+     stampinf: found Section-Line 50: [NWL.NTx86.6.0]
+  
+     stampinf: found Section-Line 57: [NWL.NTamd64.6.0]
+  
+     stampinf: found Section-Line 68: [DMADriverXP_DDI.NT]
+  
+     stampinf: found Section-Line 71: [DMADriverXP_DDI.NT.Services]
+  
+     stampinf: found Section-Line 75: [DMADriverXP_DDI.NT.HW]
+  
+     stampinf: found Section-Line 78: [DMADriverNoMSI_AddReg]
+  
+     stampinf: found Section-Line 89: [DMADriver_DDI.NT]
+  
+     stampinf: found Section-Line 92: [DMADriver_DDI.NT.Services]
+  
+     stampinf: found Section-Line 95: [DMADriver_AddService]
+  
+     stampinf: found Section-Line 103: [DMADriver_Parameters_AddReg]
+  
+     stampinf: found Section-Line 110: [DMADriver_DDI.NT.HW]
+  
+     stampinf: found Section-Line 113: [DMADriverMSI_AddReg]
+  
+     stampinf: found Section-Line 125: [DMADriver_Files_Driver]
+  
+     stampinf: found Section-Line 133: [DMADriverXP_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 137: [DMADriver_DDI.NT.CoInstallers]
+  
+     stampinf: found Section-Line 141: [CoInstaller_CopyFiles]
+  
+     stampinf: found Section-Line 147: [CoInstaller_AddReg]
+  
+     stampinf: found Section-Line 150: [DMADriverXP_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 153: [DMADriver_DDI.NT.Wdf]
+  
+     stampinf: found Section-Line 156: [DMADriver_wdfsect]
+  
+     stampinf: found Section-Line 162: [Strings]
+  
+     stampinf: looking for WDF version strings
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 142: WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+  
+     stampinf: WITH          Line 142: ;
+  
+  
+     stampinf: changed file size by -40
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+     stampinf: Removing coinstaller references
+     stampinf: REPLACE       Line 148: HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+  
+     stampinf: WITH          Line 148: ;
+  
+  
+     stampinf: changed file size by -89
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+               $KMDFVERSION$ = 1.15 $KMDFCOINSTALLERVERSION$ = 01015
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver.x2.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.x2.inf".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver-2015.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver-2015.inf".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.inf".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver.m2-2280.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.m2-2280.inf".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver.m2.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.m2.inf".
+d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver-2015.inx(10-10): warning 1324: [Version] section should specify PnpLockdown=1. [d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj]
+d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver.inx(10-10): warning 1324: [Version] section should specify PnpLockdown=1. [d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj]
+d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver.m2-2280.inx(10-10): warning 1324: [Version] section should specify PnpLockdown=1. [d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj]
+d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver.m2.inx(10-10): warning 1324: [Version] section should specify PnpLockdown=1. [d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj]
+d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\Windows\Src\DMADriver.x2.inx(10-10): warning 1324: [Version] section should specify PnpLockdown=1. [d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj]
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\bin\HostX86\x64\CL.exe /c /Ix64\Release\ /Zi /nologo /W4 /WX /diagnostics:column /Ox /Os /Oy- /D _WIN64 /D _AMD64_ /D AMD64 /D _WIN32_WINNT=0x0A00 /D WINVER=0x0A00 /D WINNT=1 /D NTDDI_VERSION=0x0A000007 /D KMDF_VERSION_MAJOR=1 /D KMDF_VERSION_MINOR=15 /GF /Gm- /Zp8 /GS /guard:cf /Gy /fp:precise /Qspectre /Zc:wchar_t- /Zc:forScope /Zc:inline /GR- /Fo"x64\Release\\" /Fd"x64\Release\vc142.pdb" /Gz /wd4603 /wd4627 /wd4986 /wd4987 /FI"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\shared\warning.h" /FC /errorReport:queue /kernel -cbstring -d2epilogunwind /d1import_no_registry /d2AllowCompatibleILVersions /d2Zi+ Windows\Src\BoardConfigHandling.c Windows\Src\DMADriver.c Windows\Src\Init.c Windows\Src\IoctlHandling.c Windows\Src\IrqHandling.c Windows\Src\PacketDMA.c Windows\Src\PacketInit.c Windows\Src\PacketIOCtl.c Windows\Src\ReadWriteHandling.c Windows\Src\UsrIntReqTimer.c Windows\Src\WatchdogTimerHandling.c
+  BoardConfigHandling.c
+  DMADriver.c
+  Init.c
+  IoctlHandling.c
+  IrqHandling.c
+  PacketDMA.c
+  PacketInit.c
+  PacketIOCtl.c
+  ReadWriteHandling.c
+  UsrIntReqTimer.c
+  WatchdogTimerHandling.c
+  Generating Code...
+ResourceCompile:
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\rc.exe /D _WIN64 /D _AMD64_=1 /D AMD64 /D _WIN32_WINNT=0x0A00 /D WINVER=0x0A00 /D WINNT=1 /D NTDDI_VERSION=0x0A000007 /D "SMP_ID=\\\"{1bc93793-694f-48fe-9372-81e2b05556fd}\\\"" /l"0x0409" /I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um" /Ix64\Release\ /I"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc\include" /nologo /fo"x64\Release\DMADriver.res" Windows\Src\DMADriver.rc 
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\bin\HostX86\x64\link.exe /ERRORREPORT:QUEUE /OUT:"d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.sys" /VERBOSE /VERSION:"10.0" /INCREMENTAL:NO /NOLOGO /WX /SECTION:"INIT,d" "C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\BufferOverflowFastFailK.lib" "C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\ntoskrnl.lib" "C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\hal.lib" "C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\wmilib.lib" "C:\Program Files (x86)\Windows Kits\10\lib\wdf\kmdf\x64\1.15\WdfLdr.lib" "C:\Program Files (x86)\Windows Kits\10\lib\wdf\kmdf\x64\1.15\WdfDriverEntry.lib" /NODEFAULTLIB /MANIFEST:NO /DEBUG /PDB:"d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.pdb" /SUBSYSTEM:NATIVE,"10.00" /Driver /OPT:REF /OPT:ICF /ENTRY:"FxDriverEntry" /RELEASE /IMPLIB:"d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.lib" /MERGE:"_TEXT=.text;_PAGE=PAGE" /MACHINE:X64 /PROFILE /guard:cf /kernel /IGNORE:4198,4010,4037,4039,4065,4070,4078,4087,4089,4221,4108,4088,4218,4218,4235 /osversion:10.0 /pdbcompress /debugtype:pdata x64\Release\DMADriver.res
+  x64\Release\BoardConfigHandling.obj
+  x64\Release\DMADriver.obj
+  x64\Release\Init.obj
+  x64\Release\IoctlHandling.obj
+  x64\Release\IrqHandling.obj
+  x64\Release\PacketDMA.obj
+  x64\Release\PacketInit.obj
+  x64\Release\PacketIOCtl.obj
+  x64\Release\ReadWriteHandling.obj
+  x64\Release\UsrIntReqTimer.obj
+  x64\Release\WatchdogTimerHandling.obj
+  Processed /NODEFAULTLIB (suppressing all default libs)
+  
+  Starting pass 1
+  
+  Searching libraries
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\BufferOverflowFastFailK.lib:
+        Found __guard_dispatch_icall_fptr
+          Referenced in ReadWriteHandling.obj
+          Referenced in WatchdogTimerHandling.obj
+          Referenced in IrqHandling.obj
+          Referenced in PacketDMA.obj
+          Referenced in PacketInit.obj
+          Referenced in PacketIOCtl.obj
+          Referenced in BoardConfigHandling.obj
+          Referenced in DMADriver.obj
+          Referenced in Init.obj
+          Referenced in IoctlHandling.obj
+          Loaded BufferOverflowFastFailK.lib(guard_support.obj)
+        Found __security_check_cookie
+          Referenced in DMADriver.obj
+          Referenced in IoctlHandling.obj
+          Referenced in PacketDMA.obj
+          Loaded BufferOverflowFastFailK.lib(amdsecgs.obj)
+        Found __security_cookie
+          Referenced in DMADriver.obj
+          Referenced in IoctlHandling.obj
+          Referenced in PacketDMA.obj
+          Referenced in BufferOverflowFastFailK.lib(amdsecgs.obj)
+          Loaded BufferOverflowFastFailK.lib(gs_support.obj)
+        Found _guard_dispatch_icall_nop
+          Referenced in BufferOverflowFastFailK.lib(guard_support.obj)
+          Loaded BufferOverflowFastFailK.lib(guard_dispatch.obj)
+        Found __report_gsfailure
+          Referenced in BufferOverflowFastFailK.lib(amdsecgs.obj)
+          Loaded BufferOverflowFastFailK.lib(gs_report.obj)
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\ntoskrnl.lib:
+        Found __imp_DbgPrintEx
+          Referenced in ReadWriteHandling.obj
+          Referenced in IrqHandling.obj
+          Referenced in PacketDMA.obj
+          Referenced in PacketInit.obj
+          Referenced in PacketIOCtl.obj
+          Referenced in BoardConfigHandling.obj
+          Referenced in DMADriver.obj
+          Referenced in Init.obj
+          Referenced in IoctlHandling.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_RtlGetVersion
+          Referenced in DMADriver.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_KeInitializeMutex
+          Referenced in DMADriver.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_KeReleaseMutex
+          Referenced in DMADriver.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_KeWaitForSingleObject
+          Referenced in DMADriver.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_ExFreePoolWithTag
+          Referenced in DMADriver.obj
+          Referenced in Init.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_MmUnmapIoSpace
+          Referenced in DMADriver.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __GSHandlerCheck
+          Referenced in DMADriver.obj
+          Referenced in PacketDMA.obj
+          Loaded ntoskrnl.lib(gshandler.obj)
+        Found memset
+          Referenced in DMADriver.obj
+          Referenced in Init.obj
+          Referenced in IrqHandling.obj
+          Loaded ntoskrnl.lib(memset.obj)
+        Found __imp_ExAllocatePoolWithTag
+          Referenced in Init.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_MmMapIoSpace
+          Referenced in Init.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_MmProbeAndLockPages
+          Referenced in IoctlHandling.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_MmUnlockPages
+          Referenced in IoctlHandling.obj
+          Referenced in PacketDMA.obj
+          Referenced in PacketInit.obj
+          Referenced in PacketIOCtl.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_IoAllocateMdl
+          Referenced in IoctlHandling.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_IoFreeMdl
+          Referenced in IoctlHandling.obj
+          Referenced in PacketDMA.obj
+          Referenced in PacketInit.obj
+          Referenced in PacketIOCtl.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __GSHandlerCheck_SEH
+          Referenced in IoctlHandling.obj
+          Loaded ntoskrnl.lib(gshandlerseh.obj)
+        Found KeFlushIoBuffers
+          Referenced in PacketDMA.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_KeInitializeDpc
+          Referenced in UsrIntReqTimer.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_KeInitializeTimer
+          Referenced in UsrIntReqTimer.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_KeCancelTimer
+          Referenced in UsrIntReqTimer.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __imp_KeSetTimer
+          Referenced in UsrIntReqTimer.obj
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __IMPORT_DESCRIPTOR_ntoskrnl
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __C_specific_handler
+          Referenced in ntoskrnl.lib(gshandlerseh.obj)
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found __NULL_IMPORT_DESCRIPTOR
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+        Found ntoskrnl_NULL_THUNK_DATA
+          Referenced in ntoskrnl.lib(ntoskrnl.exe)
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\hal.lib:
+        Found __imp_KeQueryPerformanceCounter
+          Referenced in PacketInit.obj
+          Loaded hal.lib(HAL.dll)
+        Found __IMPORT_DESCRIPTOR_HAL
+          Referenced in hal.lib(HAL.dll)
+          Loaded hal.lib(HAL.dll)
+        Found HAL_NULL_THUNK_DATA
+          Referenced in hal.lib(HAL.dll)
+          Loaded hal.lib(HAL.dll)
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\wmilib.lib:
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\wdf\kmdf\x64\1.15\WdfLdr.lib:
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\wdf\kmdf\x64\1.15\WdfDriverEntry.lib:
+        Found FxDriverEntry
+          Loaded WdfDriverEntry.lib(stub.obj)
+        Found "long __cdecl FxStubInitTypes(void)" (?FxStubInitTypes@@YAJXZ)
+          Referenced in WdfDriverEntry.lib(stub.obj)
+          Loaded WdfDriverEntry.lib(inittypes.obj)
+        Found "void __cdecl FxStubUnbindClasses(struct _WDF_BIND_INFO *)" (?FxStubUnbindClasses@@YAXPEAU_WDF_BIND_INFO@@@Z)
+          Referenced in WdfDriverEntry.lib(stub.obj)
+          Loaded WdfDriverEntry.lib(classbind.obj)
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\BufferOverflowFastFailK.lib:
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\ntoskrnl.lib:
+        Found __imp_RtlCopyUnicodeString
+          Referenced in WdfDriverEntry.lib(stub.obj)
+          Loaded ntoskrnl.lib(ntoskrnl.exe)
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\hal.lib:
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\wmilib.lib:
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\wdf\kmdf\x64\1.15\WdfLdr.lib:
+        Found WdfVersionBind
+          Referenced in WdfDriverEntry.lib(stub.obj)
+          Loaded WdfLdr.lib(WDFLDR.SYS)
+        Found WdfVersionUnbind
+          Referenced in WdfDriverEntry.lib(stub.obj)
+          Loaded WdfLdr.lib(WDFLDR.SYS)
+        Found WdfVersionBindClass
+          Referenced in WdfDriverEntry.lib(classbind.obj)
+          Loaded WdfLdr.lib(WDFLDR.SYS)
+        Found WdfVersionUnbindClass
+          Referenced in WdfDriverEntry.lib(classbind.obj)
+          Loaded WdfLdr.lib(WDFLDR.SYS)
+        Found __IMPORT_DESCRIPTOR_WDFLDR
+          Referenced in WdfLdr.lib(WDFLDR.SYS)
+          Referenced in WdfLdr.lib(WDFLDR.SYS)
+          Referenced in WdfLdr.lib(WDFLDR.SYS)
+          Referenced in WdfLdr.lib(WDFLDR.SYS)
+          Loaded WdfLdr.lib(WDFLDR.SYS)
+        Found WDFLDR_NULL_THUNK_DATA
+          Referenced in WdfLdr.lib(WDFLDR.SYS)
+          Loaded WdfLdr.lib(WDFLDR.SYS)
+  
+  Finished searching libraries
+  
+  Finished pass 1
+  
+  
+  Searching libraries
+      Searching C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\BufferOverflowFastFailK.lib:
+        Found _load_config_used
+          Loaded BufferOverflowFastFailK.lib(loadcfg.obj)
+  
+  Finished searching libraries
+  
+  Invoking cvtres.exe:
+   /machine:amd64
+   /verbose
+   /out:"C:\Users\epiqbot\AppData\Local\Temp\lnk{0B42AD13-403B-4FB4-AED3-EAA86E82F8F2}.tmp"
+   /readonly
+   "x64\Release\DMADriver.res"
+  Microsoft (R) Windows Resource To Object Converter Version 14.28.29914.0
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  adding resource. type:VERSION, name:1, language:0x0409, flags:0x30, size:896
+  
+  
+  Unused libraries:
+    C:\Program Files (x86)\Windows Kits\10\lib\10.0.18362.0\km\x64\wmilib.lib
+  
+      Discarded GUID_HWPROFILE_QUERY_CHANGE from BoardConfigHandling.obj
+      Discarded GUID_HWPROFILE_CHANGE_CANCELLED from BoardConfigHandling.obj
+      Discarded GUID_HWPROFILE_CHANGE_COMPLETE from BoardConfigHandling.obj
+      Discarded GUID_DEVICE_INTERFACE_ARRIVAL from BoardConfigHandling.obj
+      Discarded GUID_DEVICE_INTERFACE_REMOVAL from BoardConfigHandling.obj
+      Discarded GUID_TARGET_DEVICE_QUERY_REMOVE from BoardConfigHandling.obj
+      Discarded GUID_TARGET_DEVICE_REMOVE_CANCELLED from BoardConfigHandling.obj
+      Discarded GUID_TARGET_DEVICE_REMOVE_COMPLETE from BoardConfigHandling.obj
+      Discarded GUID_PNP_CUSTOM_NOTIFICATION from BoardConfigHandling.obj
+      Discarded GUID_PNP_POWER_NOTIFICATION from BoardConfigHandling.obj
+      Discarded GUID_PNP_POWER_SETTING_CHANGE from BoardConfigHandling.obj
+      Discarded GUID_TARGET_DEVICE_TRANSPORT_RELATIONS_CHANGED from BoardConfigHandling.obj
+      Discarded GUID_KERNEL_SOFT_RESTART_PREPARE from BoardConfigHandling.obj
+      Discarded GUID_KERNEL_SOFT_RESTART_CANCEL from BoardConfigHandling.obj
+      Discarded GUID_PCI_BUS_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_PCI_BUS_INTERFACE_STANDARD2 from BoardConfigHandling.obj
+      Discarded GUID_ARBITER_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_TRANSLATOR_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_ACPI_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_INT_ROUTE_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_PCMCIA_BUS_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_ACPI_REGS_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_LEGACY_DEVICE_DETECTION_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_PCI_DEVICE_PRESENT_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_MF_ENUMERATION_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_REENUMERATE_SELF_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_AGP_TARGET_BUS_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_ACPI_CMOS_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_ACPI_PORT_RANGES_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_ACPI_INTERFACE_STANDARD2 from BoardConfigHandling.obj
+      Discarded GUID_PNP_LOCATION_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_PCI_EXPRESS_LINK_QUIESCENT_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_PCI_EXPRESS_ROOT_PORT_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_MSIX_TABLE_CONFIG_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_D3COLD_SUPPORT_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_PROCESSOR_PCC_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_PCI_VIRTUALIZATION_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_PCC_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_PCC_INTERFACE_INTERNAL from BoardConfigHandling.obj
+      Discarded GUID_THERMAL_COOLING_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_DMA_CACHE_COHERENCY_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_DEVICE_RESET_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_IOMMU_BUS_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_PCI_SECURITY_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_SCM_BUS_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_SECURE_DRIVER_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_SDEV_IDENTIFIER_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_SCM_BUS_NVD_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_SCM_BUS_LD_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_SCM_PHYSICAL_NVDIMM_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_PNP_EXTENDED_ADDRESS_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_D3COLD_AUX_POWER_AND_TIMING_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_PCI_FPGA_CONTROL_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_PCI_PTM_CONTROL_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_BUS_RESOURCE_UPDATE_INTERFACE from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_INTERNAL from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_PCMCIA from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_PCI from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_ISAPNP from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_EISA from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_MCA from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_SERENUM from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_USB from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_LPTENUM from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_USBPRINT from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_DOT4PRT from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_1394 from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_HID from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_AVC from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_IRDA from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_SD from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_ACPI from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_SW_DEVICE from BoardConfigHandling.obj
+      Discarded GUID_BUS_TYPE_SCM from BoardConfigHandling.obj
+      Discarded GUID_POWER_DEVICE_ENABLE from BoardConfigHandling.obj
+      Discarded GUID_POWER_DEVICE_TIMEOUTS from BoardConfigHandling.obj
+      Discarded GUID_POWER_DEVICE_WAKE_ENABLE from BoardConfigHandling.obj
+      Discarded GUID_WUDF_DEVICE_HOST_PROBLEM from BoardConfigHandling.obj
+      Discarded GUID_PARTITION_UNIT_INTERFACE_STANDARD from BoardConfigHandling.obj
+      Discarded GUID_QUERY_CRASHDUMP_FUNCTIONS from BoardConfigHandling.obj
+      Discarded WdfDumpGuid2 from WdfDriverEntry.lib(stub.obj)
+      Discarded WdfDumpGuid from WdfDriverEntry.lib(stub.obj)
+      Discarded GUID_WDF_LOADER_INTERFACE_DIAGNOSTIC from WdfDriverEntry.lib(stub.obj)
+      Discarded GUID_WDF_LOADER_INTERFACE_STANDARD from WdfDriverEntry.lib(stub.obj)
+      Discarded WdfTraceGuid from WdfDriverEntry.lib(stub.obj)
+      Discarded GUID_WDF_LOADER_INTERFACE_CLASS_BIND from WdfDriverEntry.lib(stub.obj)
+      Discarded $unwind$PacketReadRequestCancel from PacketDMA.obj
+      Discarded ExDefaultMdlProtection from WdfDriverEntry.lib(stub.obj)
+      Discarded ExPoolZeroingNativelySupported from WdfDriverEntry.lib(stub.obj)
+      Discarded ExDefaultNonPagedPoolType from WdfDriverEntry.lib(stub.obj)
+      Discarded $pdata$PacketReadRequestCancel from PacketDMA.obj
+      Discarded PacketReadRequestCancel from PacketDMA.obj
+      Discarded ReadNoFence64 from BufferOverflowFastFailK.lib(guard_support.obj)
+      Discarded ReadPointerNoFence from BufferOverflowFastFailK.lib(guard_support.obj)
+      Discarded _guard_icall_checks_enforced from BufferOverflowFastFailK.lib(guard_support.obj)
+      Discarded _guard_rf_checks_enforced from BufferOverflowFastFailK.lib(guard_support.obj)
+      Discarded RtlFailFast from BufferOverflowFastFailK.lib(gs_support.obj)
+      Discarded __report_rangecheckfailure from BufferOverflowFastFailK.lib(gs_report.obj)
+      Discarded __report_securityfailure from BufferOverflowFastFailK.lib(gs_report.obj)
+      Discarded DbgPrintEx from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded RtlGetVersion from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded KeInitializeMutex from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded KeReleaseMutex from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded KeWaitForSingleObject from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded ExFreePoolWithTag from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded MmUnmapIoSpace from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded ExAllocatePoolWithTag from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded MmMapIoSpace from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded MmProbeAndLockPages from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded MmUnlockPages from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded IoAllocateMdl from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded IoFreeMdl from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded KeInitializeDpc from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded KeInitializeTimer from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded KeCancelTimer from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded KeSetTimer from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded KeQueryPerformanceCounter from hal.lib(HAL.dll)
+      Discarded RtlCopyUnicodeString from ntoskrnl.lib(ntoskrnl.exe)
+      Discarded " ?? ?? ::FNODOBFM::`string'" (??_C@_0BI@OBMAJEJ@PacketReadRequestCancel@FNODOBFM@) from PacketDMA.obj
+      Discarded " ?? ?? ::FNODOBFM::`string'" (??_C@_0CF@EIFIFOIF@PacketReadRequestCancel?3?5pMDL?5?$DN@FNODOBFM@) from PacketDMA.obj
+  
+      Selected symbol:
+          DMADriverEvtDriverContextCleanup from DMADriver.obj
+      Replaced symbol(s):
+          _guard_check_icall_nop from BufferOverflowFastFailK.lib(guard_support.obj)
+  
+      Selected symbol:
+          DMADriverUsrIntReqTimerDelete from UsrIntReqTimer.obj
+      Replaced symbol(s):
+          DMADriverUsrIntReqTimerStop from UsrIntReqTimer.obj
+  
+      Selected symbol:
+          $unwind$PacketStartSend from PacketDMA.obj
+      Replaced symbol(s):
+          $unwind$PacketStartWrite from PacketDMA.obj
+          $unwind$PacketStartRead from PacketDMA.obj
+  
+      Selected symbol:
+          $unwind$DMADriverEvtFileClose from DMADriver.obj
+      Replaced symbol(s):
+          $unwind$DMADriverEvtDeviceSelfManagedIoRestart from DMADriver.obj
+          $unwind$DMADriverWatchdogTimerStart from WatchdogTimerHandling.obj
+          $unwind$DMADriverWatchdogTimerStop from WatchdogTimerHandling.obj
+          $unwind$__GSHandlerCheck from ntoskrnl.lib(gshandler.obj)
+          $unwind$__GSHandlerCheckCommon from ntoskrnl.lib(gshandler.obj)
+          $unwind$DMADriverWatchdogTimerDelete from WatchdogTimerHandling.obj
+          $unwind$CheckForUserInterrupt from IrqHandling.obj
+  
+      Selected symbol:
+          $unwind$FxStubDriverMiniportUnload from WdfDriverEntry.lib(stub.obj)
+      Replaced symbol(s):
+          $unwind$?FxStubDriverUnloadCommon@@YAXXZ from WdfDriverEntry.lib(stub.obj)
+          $unwind$FxStubDriverUnload from WdfDriverEntry.lib(stub.obj)
+  
+      Selected symbol:
+          $unwind$DMADriverEvtDevicePrepareHardware from DMADriver.obj
+      Replaced symbol(s):
+          $unwind$UserIRQDpc from IrqHandling.obj
+  
+      Selected symbol:
+          $unwind$DMADriverEvtDeviceD0Exit from DMADriver.obj
+      Replaced symbol(s):
+          $unwind$DMADriverUsrIntReqTimerInit from UsrIntReqTimer.obj
+          $unwind$DMADriverInterruptDisable from IrqHandling.obj
+          $unwind$GetDMAEngineContext from IoctlHandling.obj
+          $unwind$FreeReqCtx from IoctlHandling.obj
+          $unwind$DMADriverInterruptEnable from IrqHandling.obj
+  
+      Selected symbol:
+          $unwind$DMADriverEvtDeviceSelfManagedIoCleanup from DMADriver.obj
+      Replaced symbol(s):
+          $unwind$PacketBufferReleaseDMA from PacketIOCtl.obj
+          $unwind$DMADriverPrepareHardware from Init.obj
+          $unwind$ShutdownDMAEngine from PacketInit.obj
+  
+      Selected symbol:
+          $unwind$DMADriverBoardConfigInit from Init.obj
+      Replaced symbol(s):
+          $unwind$DMADriverHandleMsiInterrupt from IrqHandling.obj
+          $unwind$ResetDMAEngineIoctlHandler from PacketIOCtl.obj
+          $unwind$PacketBufferRelease from PacketIOCtl.obj
+          $unwind$DMADriverGetRegistryInfo from Init.obj
+  
+      Selected symbol:
+          $unwind$GetBoardConfigDeviceControl from BoardConfigHandling.obj
+      Replaced symbol(s):
+          $unwind$InitializeAddressablePacketDescriptors from PacketInit.obj
+  
+      Selected symbol:
+          $unwind$UserIrqComplete from IrqHandling.obj
+      Replaced symbol(s):
+          $unwind$PacketC2SDpc from PacketDMA.obj
+  
+      Selected symbol:
+          $unwind$DMADriverEvtDeviceReleaseHardware from DMADriver.obj
+      Replaced symbol(s):
+          $unwind$DMADriverWatchdogTimerCall from WatchdogTimerHandling.obj
+          $unwind$PacketRxGetReadSgListComplete from PacketInit.obj
+          $unwind$DMADriverInterruptIsr from IrqHandling.obj
+          $unwind$DmaDriverBoardDmaRelease from Init.obj
+  
+      Selected symbol:
+          $unwind$PacketS2CDpc from PacketDMA.obj
+      Replaced symbol(s):
+          $unwind$FreeRxDescriptors from PacketInit.obj
+  
+      Selected symbol:
+          $unwind$DMADriverEvtDeviceD0Entry from DMADriver.obj
+      Replaced symbol(s):
+          $unwind$__GSHandlerCheck_SEH from ntoskrnl.lib(gshandlerseh.obj)
+  
+      Selected symbol:
+          $unwind$PacketProgramS2CDmaCallback from PacketDMA.obj
+      Replaced symbol(s):
+          $unwind$PacketProgramC2SDmaCallback from PacketDMA.obj
+  
+      Selected symbol:
+          $unwind$DMADriverEvtIoRead from ReadWriteHandling.obj
+      Replaced symbol(s):
+          $unwind$DMADriverEvtIoWrite from ReadWriteHandling.obj
+  
+      ICF total savings: 565 bytes
+  
+  Starting pass 2
+       DMADriver.res
+       WatchdogTimerHandling.obj
+       UsrIntReqTimer.obj
+       ReadWriteHandling.obj
+       PacketIOCtl.obj
+       PacketInit.obj
+       PacketDMA.obj
+       IrqHandling.obj
+       IoctlHandling.obj
+       Init.obj
+       DMADriver.obj
+       BoardConfigHandling.obj
+       BufferOverflowFastFailK.lib(loadcfg.obj)
+       BufferOverflowFastFailK.lib(guard_support.obj)
+       BufferOverflowFastFailK.lib(guard_dispatch.obj)
+       BufferOverflowFastFailK.lib(gs_report.obj)
+       BufferOverflowFastFailK.lib(gs_support.obj)
+       BufferOverflowFastFailK.lib(amdsecgs.obj)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(ntoskrnl.exe)
+       ntoskrnl.lib(gshandlerseh.obj)
+       ntoskrnl.lib(gshandler.obj)
+       ntoskrnl.lib(memset.obj)
+       hal.lib(HAL.dll)
+       hal.lib(HAL.dll)
+       hal.lib(HAL.dll)
+       WdfLdr.lib(WDFLDR.SYS)
+       WdfLdr.lib(WDFLDR.SYS)
+       WdfLdr.lib(WDFLDR.SYS)
+       WdfLdr.lib(WDFLDR.SYS)
+       WdfLdr.lib(WDFLDR.SYS)
+       WdfLdr.lib(WDFLDR.SYS)
+       WdfDriverEntry.lib(stub.obj)
+       WdfDriverEntry.lib(classbind.obj)
+       WdfDriverEntry.lib(inittypes.obj)
+  Finished pass 2
+  DMADriver-2015.vcxproj -> d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.sys
+Project "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj" (2) is building "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj" (2:2) on node 1 (TestSign target(s)).
+TestSign:
+  The driver will be test-signed. Driver signing options can be changed from the project properties.
+  Sign Inputs: d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.sys
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\signtool.exe sign /ph /fd "sha256" /sha1 "55854C6CEFD2A47C41833BD4CA2E58C2698F8B07" 
+  Done Adding Additional Store
+  Successfully signed: d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.sys
+  
+  Certificate used for signing: issued to = WDKTestCert epiqbot,131371974252400014 and thumbprint = 55854C6CEFD2A47C41833BD4CA2E58C2698F8B07
+  Exported Certificate: d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.cer
+Done Building Project "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj" (TestSign target(s)).
+DriverPackageTarget:
+  Packaging up the following projects for the following configurations:
+  
+   Configuration='' Platform=''
+  
+  
+  The following files will be packaged:
+  
+  File to package:      d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.sys.
+  Location in Package:  \DMADriver.sys.
+  Requested by project: 
+  
+  
+  File to package:      x64\Release\DMADriver-2015.inf.
+  Location in Package:  \DMADriver-2015.inf.
+  Requested by project: 
+  
+  
+  File to package:      x64\Release\DMADriver.inf.
+  Location in Package:  \DMADriver.inf.
+  Requested by project: 
+  
+  
+  File to package:      x64\Release\DMADriver.m2-2280.inf.
+  Location in Package:  \DMADriver.m2-2280.inf.
+  Requested by project: 
+  
+  
+  File to package:      x64\Release\DMADriver.m2.inf.
+  Location in Package:  \DMADriver.m2.inf.
+  Requested by project: 
+  
+  
+  File to package:      x64\Release\DMADriver.x2.inf.
+  Location in Package:  \DMADriver.x2.inf.
+  Requested by project: 
+  
+  
+  Creating directory "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver".
+  Creating directory "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver".
+  Creating directory "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver".
+  Creating directory "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver".
+  Creating directory "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver.m2.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\DMADriver.m2.inf".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver-2015.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\DMADriver-2015.inf".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\DMADriver.inf".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.sys" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\DMADriver.sys".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver.m2-2280.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\DMADriver.m2-2280.inf".
+  Creating directory "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver".
+  Copying file from "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\x64\Release\DMADriver.x2.inf" to "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\DMADriver.x2.inf".
+Inf2Cat:
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\inf2cat.exe /os:10_x64 /driver:d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\ 
+  ................................................................................
+  Signability test complete.
+  
+  Errors:
+  None
+  
+  Warnings:
+  None
+  
+  Catalog generation complete.
+  d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\dmadx86.cat
+Project "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj" (2) is building "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj" (2:3) on node 1 (TestSign target(s)).
+TestSign:
+  The driver package will be test-signed. Driver signing options can be changed from the project properties.
+  Sign Inputs: d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\dmadx86.cat
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x86\signtool.exe sign /ph /fd "sha256" /sha1 "55854C6CEFD2A47C41833BD4CA2E58C2698F8B07" 
+  Done Adding Additional Store
+  Successfully signed: d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver\dmadx86.cat
+  
+  Certificate used for signing: issued to = WDKTestCert epiqbot,131371974252400014 and thumbprint = 55854C6CEFD2A47C41833BD4CA2E58C2698F8B07
+  Exported Certificate: d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\x64\Release\DMADriver.cer
+Done Building Project "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj" (TestSign target(s)).
+FinalizeBuildStatus:
+  Deleting file "x64\Release\DMADriver.tlog\unsuccessfulbuild".
+  Touching "x64\Release\DMADriver.tlog\DMADriver.lastbuildstate".
+Done Building Project "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\DMADriver-2015.vcxproj" (default targets).
+Project "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015.sln" (1) is building "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\TestCli\DmaDriverDLL\DmaDriverDll.vcxproj.metaproj" (3) on node 1 (default targets).
+Project "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\TestCli\DmaDriverDLL\DmaDriverDll.vcxproj.metaproj" (3) is building "d:\Jenkins\workspace\Sidekiq\sidekiq_sw\BUILD_CONFIG\mingw64\label\windows\libraries\nw_logic_dma\dma_driver\DMADriver_2019_02_15\DMADriver-2015\DMADriver-2015\TestCli\DmaDriverDLL\DmaDriverDll.vcxproj" (4) on node 1 (default targets).
+PrepareForBuild:
+  Creating directory "x64\Release\".
+  Creating directory "x64\Release\DmaDriverDll.tlog\".
+InitializeBuildStatus:
+  Creating "x64\Release\DmaDriverDll.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\bin\HostX86\x64\CL.exe /c /Zi /nologo /W4 /WX /diagnostics:column /O2 /Oi /GL /D __WINNT__ /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D DMADRIVERDLL_EXPORTS /D PLATFORM_X64 /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Qspectre /Zc:wchar_t /Zc:forScope /Zc:inline /Yc"stdafx.h" /Fp"x64\Release\DmaDriverDllx64.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc142.pdb" /Gd /TP /FC /errorReport:queue stdafx.cpp
+  stdafx.cpp
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\bin\HostX86\x64\CL.exe /c /Zi /nologo /W4 /WX /diagnostics:column /O2 /Oi /GL /D __WINNT__ /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D DMADRIVERDLL_EXPORTS /D PLATFORM_X64 /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Qspectre /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Release\\" /Fd"x64\Release\vc142.pdb" /Gd /TP /FC /errorReport:queue dllmain.cpp
+  dllmain.cpp
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\bin\HostX86\x64\CL.exe /c /Zi /nologo /W4 /WX /diagnostics:column /O2 /Oi /GL /D __WINNT__ /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D DMADRIVERDLL_EXPORTS /D PLATFORM_X64 /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Qspectre /Zc:wchar_t /Zc:forScope /Zc:inline /Yu"stdafx.h" /Fp"x64\Release\DmaDriverDllx64.pch" /Fo"x64\Release\\" /Fd"x64\Release\vc142.pdb" /Gd /TP /FC /errorReport:queue DmaDriverDll.cpp
+  DmaDriverDll.cpp
+ResourceCompile:
+  C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\rc.exe /D _UNICODE /D UNICODE /l"0x0409" /nologo /fo"x64\Release\DmaDriverDll.res" DmaDriverDll.rc 
+Link:
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\bin\HostX86\x64\link.exe /ERRORREPORT:QUEUE /OUT:"x64\Release\DmaDriverDllx64.dll" /INCREMENTAL:NO /NOLOGO setupapi.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"x64\Release\DmaDriverDllx64.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG:incremental /LTCGOUT:"x64\Release\DmaDriverDllx64.iobj" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"x64\Release\DmaDriverDllx64.lib" /MACHINE:X64 /DLL x64\Release\DmaDriverDll.res
+  x64\Release\dllmain.obj
+  x64\Release\DmaDriverDll.obj
+  x64\Release\stdafx.obj
+     Creating library x64\Release\DmaDriverDllx64.lib and object x64\Release\DmaDriverDllx64.exp
+

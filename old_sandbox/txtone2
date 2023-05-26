@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+
+"""
+Transmits a tone out of the AIR-T. The script will create a tone segment that
+is infinity repeatable without a phase discontinuity and with 8 samples per
+period. The TX LO of the AIR-T is set such that the baseband frequency of the
+generated tone plus the LO frequency will transmit at the desired RF.
+"""
+
+import math
+import signal
+import time
+
+import sys
+import numpy as np
+import argparse
+import SoapySDR
+from SoapySDR import *
+#from SoapySDR import SOAPY_SDR_TX, SOAPY_SDR_CS16, errToStr
+
+
+def makeComplexWaveform(f,A,Fs,N,SNR=None):
+    """
+        generates a complex baseband waveform at a given frequency
+        
+        f = frequency,
+        A = amplitude, if A < 0, make I and Q each of amplitude abs(A)
+        Fs = sampling rate (same units as f),
+        N = number of samples to return,
+        SNR = add noise if provided
+        returns np.array, dtype=complex, length N
+    """
+    k = np.arange(0,N)
+    if A<0:
+        A = -A * np.sqrt(2.0)
+    x = A/np.sqrt(2.0) * (np.cos(2*np.pi*f*k/Fs) + complex(0,1)*np.sin(2*np.pi*f*k/Fs))
+    if SNR is not None:
+        npwr = 10**(-SNR/20.0) * A / 2.0
+        n = np.random.randn(N)*npwr + complex(0,1)* \
+            np.random.randn(N)*npwr
+        x = x + n
+    return x
+ 
+def complex_to_int16(dat):
+    int_dat = np.rint(dat)
+    i = np.real(int_dat)
+    q = np.imag(int_dat)
+    return np.array([q, i]).T.reshape(-1).astype('int16')
+ 
+
+def transmit_tone(freq, chan=0, fs=31.25, attenuation=20, buff_len=16384):
+
+
+    # Setup Radio
+    sdr = SoapySDR.Device()  # Create AIR-T instance
+    sdr.setSampleRate(SOAPY_SDR_TX, chan, fs)  # Set sample rate
+    sdr.setFrequency(SOAPY_SDR_TX, chan, freq)  # Tune the LO
+    sdr.setGain(SOAPY_SDR_TX, chan, attenuation)
+
+    tx_stream = sdr.setupStream(SOAPY_SDR_TX, SOAPY_SDR_CS16, [chan])
+    sdr.activateStream(tx_stream)  # this turns the radio on
+
+    stream_mtu = sdr.getStreamMTU(tx_stream)
+    print("MTU", stream_mtu)
+
+
+    # Generate tone buffer that can be repeated without phase discontunity
+    bb_freq = fs / 8  # baseband frequency of tone
+    print("bbfreq", bb_freq)
+    
+    tx_cbuff = makeComplexWaveform(bb_freq, ((2**12)/2), fs, stream_mtu)
+    tx_buff = complex_to_int16(tx_cbuff)
+
+    print("freq", freq, "bbfreq ", bb_freq, "buff_len", buff_len, "fs", fs, )
+
+    time_last_print = time.time()
+    total_samps = 0
+
+    # Transmit
+    print('Now Transmitting')
+    while True:
+        try:
+            rc = sdr.writeStream(tx_stream, [tx_buff], tx_buff.size)
+            if rc.ret != tx_buff.size:
+                print('TX Error {}: {}'.format(rc.ret, errToStr(rc.ret)))
+        except KeyboardInterrupt:
+            break
+        total_samps += buff_len
+
+        if time.time() > time_last_print + 5.0:
+            rate = total_samps / (time.time() - time_last_print) / 1e6
+            print("Python siggen rate: %f Msps" % rate)
+            print("tx_buff.size", tx_buff.size)
+            print(tx_buff)
+            print(tx_cbuff)
+            total_samps = 0                        
+            time_last_print = time.time()      
+
+    print("Stop streaming")
+    sdr.deactivateStream(tx_stream)
+    sdr.closeStream(tx_stream)
+
+
+def parse_command_line_arguments():
+    """ Create command line options for transmit function """
+    help_formatter = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(description='Transmit a tone on the AIR-T',
+                                     formatter_class=help_formatter)
+    parser.add_argument('-f', type=float, required=False, dest='freq',
+                        default=100e6, help='Lo Frequency')
+    parser.add_argument('-c', type=int, required=False, dest='chan',
+                        default=0, help='TX Channel Number [0 or 1]')
+    parser.add_argument('-s', type=float, required=False, dest='fs',
+                        default=16e6, help='TX Sample Rate')
+    parser.add_argument('-a', type=float, required=False, dest='attenuation',
+                        default=0, help='TX attenuation')
+    parser.add_argument('-n', type=int, required=False, dest='buff_len',
+                        default=16384, help='TX Buffer Size')
+    return parser.parse_args(sys.argv[1:])
+
+
+if __name__ == '__main__':
+    SoapySDR.setLogLevel(SOAPY_SDR_DEBUG)
+    pars = parse_command_line_arguments()
+    transmit_tone(pars.freq, pars.chan, pars.fs, pars.attenuation, pars.buff_len)
