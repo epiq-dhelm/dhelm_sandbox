@@ -78,7 +78,6 @@ def ControlSettings(objAnalazyer):
                 else:
                     StopFreqTemp = (StartFreqTemp + SpanSizeTemp)
 
-    print("RBW KHZ ", objRFE.RBW_KHZ);
 
     return SpanSizeTemp, StartFreqTemp, StopFreqTemp
 
@@ -192,60 +191,110 @@ class SpanWindow(Toplevel):
 
         self.win.destroy(self)
     
-    """
+# This class creates the window to display data
+class DataWindow(Toplevel):
+
+    def __init__(self, master = None):
+        self.win = Toplevel
+
+    # called when a user hits enter
+    def enterhandler(self, e):
+        if DEBUG:
+            print("DataWindow enterhandler")
+
+        app.datawindow.get_entry()
+
+   
+    # draw the window
+    def draw_window(self):
+        super().__init__(master = None)
+        print("result", sorted_result[:4])
+
+        self.title("Data")
+        self.geometry("600x400")
+
+        self.grid_columnconfigure(0, weight=1, uniform="TAG")
+        self.grid_columnconfigure(1, weight=1, uniform="TAG")
+        self.grid_columnconfigure(2, weight=1, uniform="TAG")
+        self.grid_rowconfigure(0, weight=1, uniform="TAG")
+        self.grid_rowconfigure(1, weight=1, uniform="TAG")
+        self.grid_rowconfigure(3, weight=1, uniform="TAG")
+        self.grid_rowconfigure(4, weight=1, uniform="TAG")
+        self.grid_rowconfigure(5, weight=1, uniform="TAG")
+        self.grid_rowconfigure(6, weight=1, uniform="TAG")
+        self.grid_rowconfigure(7, weight=1, uniform="TAG")
+        self.grid_rowconfigure(8, weight=1, uniform="TAG")
+        self.grid_rowconfigure(9, weight=1, uniform="TAG")
+        self.grid_rowconfigure(10, weight=1, uniform="TAG")
+
+        # print out the Basic Data
+        text_str = "Start: " + '{:.3f}'.format(objRFE.StartFrequencyMHZ) + " MHz" 
+        label = Label(self, text = text_str, font=("Arial", 12));
+        label.grid(row=0, column=0, sticky=W)
+        text_str = "Center: " + '{:.3f}'.format(objRFE.StopFrequencyMHZ + (SPAN_SIZE_MHZ / 2)) + " MHz" 
+        label = Label(self, text = text_str, font=("Arial", 12));
+        label.grid(row=0, column=1, sticky=W)
+        text_str = "Stop: " + '{:.3f}'.format(objRFE.StopFrequencyMHZ) + " MHz" 
+        label = Label(self, text = text_str, font=("Arial", 12));
+        label.grid(row=0, column=2, sticky=W)
+
+        text_str = "RBW: " + '{:.1f}'.format(objRFE.RBW_KHZ) + " kHz" 
+        label = Label(self, text = text_str, font=("Arial", 12));
+        label.grid(row=1, column=0, sticky=W)
+        text_str = "Span: " + '{:.3f}'.format(SPAN_SIZE_MHZ) + " MHz"
+        label = Label(self, text = text_str, font=("Arial", 12));
+        label.grid(row=1, column=2, sticky=W)
+
+
+
+        label = Label(self, text ="Item # ", font=("Arial", 12));
+        label.grid(row=4, column=0, sticky=W)
+        spanlabel = Label(self, text ="Frequency ", font=("Arial", 12));
+        spanlabel.grid(row=4, column=1, sticky=W)
+        spanlabel = Label(self, text ="Amplitude ", font=("Arial", 12));
+        spanlabel.grid(row=4, column=2, sticky=W)
+
+        row_idx = 5
+        for idx in range(5):
+            text_str = "  " + str(idx)
+            label = Label(self, text = text_str, font=("Arial", 12));
+            label.grid(row=row_idx, column=0, sticky=W)
+            result = sorted_result[idx]
+            text_str = '{:.3f}'.format(result[1])
+            label = Label(self, text = text_str, font=("Arial", 12));
+            label.grid(row=row_idx, column=1, sticky=W)
+            text_str = '{:.2f}'.format(result[0])
+            label = Label(self, text = text_str, font=("Arial", 12));
+            label.grid(row=row_idx, column=2, sticky=W)
+
+            row_idx += 1
+        
+    # the user hit enter in this window
     def get_entry(self):
         global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
-       
+
         new_span = int(self.spanentry.get())
 
-        # Validate the span
-        if(objRFE.MaxSpanMHZ <= new_span):
-            showinfo("Error", "Invalid span size, Max is " + str(objRFE.MaxSpanMHZ)+"MHz", 4)
-            self.destroy()
-            return 
+        center = STOP_SCAN_MHZ - (SPAN_SIZE_MHZ / 2)
 
-        # calculate the new start and stop freq from the span
-        old_center = STOP_SCAN_MHZ - START_SCAN_MHZ
+        START_SCAN_MHZ = center - (new_span / 2)
+        STOP_SCAN_MHZ = center + (new_span / 2)
 
-        print(old_center)
-        new_start = old_center - (new_span / 2)
-        new_stop = old_center + (new_span / 2)
-
-        # validate that the new value is good
-        if(objRFE.MinFreqMHZ > new_start):
-            msg = "Incorrect Start Frequency " + str(new_start) + " Min Start freq: " + str(objRFE.MinFreqMHZ)+"MHz"
-            showinfo("Error", msg, 4) 
-            self.destroy()
-            return 
-
-        if(objRFE.MaxFreqMHZ < new_stop):
-            msg = "Incorrect Stop Frequency " + str(new_stop) + " Max Stop freq: " + str(objRFE.MaxFreqMHZ)+"MHz"
-            showinfo("Error", msg, 4) 
-            self.destroy()
-            return 
-        
-        START_SCAN_MHZ = new_start
-        STOP_SCAN_MHZ = new_stop
         SPAN_SIZE_MHZ = new_span
-
-        print(new_span)
-
-        # delete this window
-        self.destroy()
-
-        # start all over with a new window with these parameters
         app.init_window(content)
 
-    """
+        self.win.destroy(self)
+
 # this is the main window
 class Window(Frame):
     def __init__(self, master = None):
         Frame.__init__(self, master)
         self.master = master
 
-        #get and store the two windows that update things
+        #get and store the three windows 
         self.freqwindow = FreqWindow(self.master)
         self.spanwindow = SpanWindow(self.master)
+        self.datawindow = DataWindow(self.master)
 
     # RFExplorer contains the received sweep data and that object knows 
     # the amplitude and frequency for each data point
@@ -263,6 +312,7 @@ class Window(Frame):
     # this is called by matplotlib's animate loop animate.FuncAnimation()
     # it is called every 40ms
     def animate(self,i):
+        global sorted_result
         self.objSweep=None
 
         # wait till we get a new sweepdata msg
@@ -277,6 +327,9 @@ class Window(Frame):
                 objSweep=objRFE.SweepData.GetData(self.numitems-1)
                 tot=objSweep.TotalDataPoints
 
+                zipped = zip(self.amp,self.freq)
+                sorted_result = sorted(zipped, reverse=True)
+
                 # extract the freq and amp arrays from the data
                 self.freq, self.amp = self.GetData(objSweep, tot)
                 if DEBUG:
@@ -285,8 +338,10 @@ class Window(Frame):
                         print("config start", objRFE.StartFrequencyMHZ, "config stop ", objRFE.StopFrequencyMHZ )
                         print("Freq min ", min(self.freq), " max ", max(self.freq))
                         print("Amp min ", min(self.amp), " max ", max(self.amp))
+                       
 
-                 
+                        print("sorted ", sorted_result[:3])
+
                 self.line.set_ydata(self.amp)  # update the data
                 self.line.set_xdata(self.freq)  # update the data
 
@@ -328,6 +383,7 @@ class Window(Frame):
         # store the freq and span window
         self.freqwindow = FreqWindow(self.master)
         self.spanwindow = SpanWindow(self.master)
+        self.datawindow = DataWindow(self.master)
         
         self.buttonFreq = Button(content,text="Frequency")
         # Following line will bind click event
@@ -342,9 +398,18 @@ class Window(Frame):
                  lambda e: self.spanwindow.draw_window())
         self.buttonSpan.grid(row=1,column=3, sticky='nsew')
 
+        self.buttonData = Button(content,text="Data")
+        self.buttonData.bind("<Button>",
+                 lambda e: self.datawindow.draw_window())
+        self.buttonData.grid(row=2,column=3, sticky='nsew')
+
         # create the inner canvas to display plot to
         self.fig = plt.Figure()
         self.ax = self.fig.add_subplot(111)
+        self.ax.grid(which="major", linewidth = 1)
+        self.ax.grid(which="minor", linewidth = 0.2)
+        self.ax.minorticks_on()
+#        self.ax.tick_params(which = "minor", bottom = False, left = False)
         self.canvas = FigureCanvasTkAgg(self.fig, master=frame)
         self.canvas.get_tk_widget().grid(column=0,row=0, sticky = 'nsew')
 
@@ -437,7 +502,7 @@ def enterhandler(e):
 
 # The user hit enter after picking a port
 def go():
-    global app, user_entry
+    global app, user_entry, user_label
     portno = int(user_entry.get())
 
     # verify the entered number
@@ -458,6 +523,8 @@ def go():
 
     # remove the labels for the various ports so we can display that we are resetting 
     # the device
+    user_label.after(10, user_label.destroy())
+    user_entry.after(10, user_entry.destroy())
     for obj in label:
         obj.after(10, obj.destroy())
     
@@ -491,7 +558,7 @@ def go():
 
 # Display the window to let the user select the port desired and pick one
 def GetPort():
-    global app, current_frame, user_entry
+    global app, current_frame, user_entry, label, user_label, user_entry
 
     # delete one if it exists
     current_frame.destroy()
@@ -654,19 +721,19 @@ def build_window():
     frame = ttk.Frame(content, borderwidth=5, relief="ridge", width=200, height=100)
 
     content.grid(column=0, row=0, sticky='nsew')
-    frame.grid(column=0, row=0, columnspan=3, rowspan=2, sticky='nsew')
+    frame.grid(column=0, row=0, columnspan=3, rowspan=3, sticky='nsew')
 
     # setup all the configuration of the rows and columns
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
     frame.columnconfigure(0, weight=1)
-    frame.rowconfigure(0, weight=1)
     content.columnconfigure(0, weight=3)
     content.columnconfigure(1, weight=3)
     content.columnconfigure(2, weight=3)
-    content.columnconfigure(3, weight=1)
+    content.columnconfigure(3, weight=3)
     content.rowconfigure(0, weight=1)
     content.rowconfigure(1, weight=1)
+    content.rowconfigure(2, weight=1)
 
    
     return content, frame
@@ -684,6 +751,9 @@ def cleanup():
 
 # list of port labels
 label = []
+
+
+sorted_result = []
 
 # create the RFE object
 objRFE = RFExplorer.RFECommunicator()
