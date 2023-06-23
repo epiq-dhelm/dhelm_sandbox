@@ -727,6 +727,7 @@ def build_window():
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
     frame.columnconfigure(0, weight=1)
+    frame.rowconfigure(0, weight=1)
     content.columnconfigure(0, weight=3)
     content.columnconfigure(1, weight=3)
     content.columnconfigure(2, weight=3)
