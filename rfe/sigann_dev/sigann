@@ -7,7 +7,7 @@ import math
 import array as arr
 
 import RFExplorer
-#print(RFExplorer.__file__)
+print(RFExplorer.__file__)
 from RFExplorer import RFE_Common
 
 
@@ -40,6 +40,7 @@ SWEEPPOINTS = 256 # power of 2
 
 SWEEPDATA = (SWEEPPOINTS + 1) * 16
 RESET = True
+num_markers = 1
 
 # test settings to make sure they are valid
 def ControlSettings(objAnalazyer):
@@ -55,11 +56,20 @@ def ControlSettings(objAnalazyer):
         print("User settings:" + "Span: " + str(SPAN_SIZE_MHZ) +"MHz"+  " - " + "Start freq: " + str(START_SCAN_MHZ) +"MHz"+" - " + "Stop freq: " + str(STOP_SCAN_MHZ) + "MHz")
 
     #Control maximum Span size
-    if(objAnalazyer.MaxSpanMHZ <= SPAN_SIZE_MHZ):
-        showinfo("Error", "Invalid span size, Max is " + str(objAnalazyer.MaxSpanMHZ)+"MHz", 4)
+    over = (objAnalazyer.MaxSpanMHZ <= SPAN_SIZE_MHZ) 
+    under = (objAnalazyer.MinSpanMHZ * .001 > SPAN_SIZE_MHZ) 
+
+    if (over or under):
+        if (over):
+            showinfo("Error", "Invalid span size, Max is " + str(objAnalazyer.MaxSpanMHZ)+"MHz", 4)
+        else:
+            showinfo("Error", "Invalid span size, Min is " + str(objAnalazyer.MinSpanMHZ *.001)+"MHz", 4)
+            print("MinSpanSize", objAnalazyer.MinSpanMHZ)
     else:
         objAnalazyer.SpanMHZ = SPAN_SIZE_MHZ
         SpanSizeTemp = objAnalazyer.SpanMHZ
+
+
     if(SpanSizeTemp):
         #Control minimum start frequency
         if(objAnalazyer.MinFreqMHZ > START_SCAN_MHZ):
@@ -72,14 +82,18 @@ def ControlSettings(objAnalazyer):
             #Control maximum stop frequency
             if(objAnalazyer.MaxFreqMHZ < STOP_SCAN_MHZ):
                 if DEBUG:
-                    print("Max Start freq: " + str(objAnalazyer.MaxFreqMHZ)+"MHz")
+                    print("Error: Max Start freq: " + str(objAnalazyer.MaxFreqMHZ)+"MHz")
             else:
-                if((StartFreqTemp + SpanSizeTemp) > STOP_SCAN_MHZ):
+                if(round(StartFreqTemp + SpanSizeTemp, 3) > STOP_SCAN_MHZ):
                     if DEBUG:
-                        print("Max Stop freq (START_SCAN_MHZ + SPAN_SIZE_MHZ): " + str(STOP_SCAN_MHZ) +"MHz")
+                        print("Error: STOP_SCAN_MHZ too large: " + str(STOP_SCAN_MHZ) +"MHz")
+                        print(StartFreqTemp, SpanSizeTemp, StartFreqTemp + SpanSizeTemp)
                 else:
-                    StopFreqTemp = (StartFreqTemp + SpanSizeTemp)
+                    StopFreqTemp = round(StartFreqTemp + SpanSizeTemp, 3)
 
+
+    if DEBUG:
+        print(SpanSizeTemp, StartFreqTemp, StopFreqTemp)
 
     return SpanSizeTemp, StartFreqTemp, StopFreqTemp
 
@@ -180,7 +194,7 @@ class SpanWindow(Toplevel):
     def get_entry(self):
         global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
 
-        new_span = int(self.spanentry.get())
+        new_span = float(self.spanentry.get())
 
         center = STOP_SCAN_MHZ - (SPAN_SIZE_MHZ / 2)
 
@@ -295,6 +309,43 @@ class Window(Frame):
         return freq, amp
 
 
+    def DispMarkers(self, tot):
+        if (num_markers == 1):
+            # display the peak value arrow
+            self.ann.remove()
+            ymax = max(self.amp)
+
+            # get the position in the array of the xmax value
+            xpos = np.argmax(self.amp)
+            xmax = self.freq[xpos]
+
+            # get the frequency with 3 decimal places
+            xmax_int = int(xmax * 1000)
+            xmax = xmax_int / 1000 
+
+            # The number of pixels from the xmax, and ymax location to place the text
+            xtextpos = 20
+            ytextpos = 20
+
+            display_text = "x = " + str((xmax)) + " y = " + str(ymax)
+           
+            # The number of pixels to move left if we are putting the text on the left size.
+            # assume fontsize of 10
+            text_pixel_size = 10 * len(display_text)
+            text_data_size  = int(len(display_text) * (tot / 60))
+            
+            # make sure the text goes on the left side when it is pointing 
+            # near the right side of the plot
+            print(len(display_text), text_data_size, text_pixel_size, xpos)
+            if xpos > (tot - text_data_size):
+                xtextpos -=  text_pixel_size
+            
+           
+            # display the peak text and arrow
+            self.ann = self.ax.annotate(display_text, xy=(xmax, ymax), 
+                    textcoords='offset pixels', xytext=(xtextpos, ytextpos), 
+                    arrowprops=dict(arrowstyle="->", facecolor='black'),fontsize=10)
+
     # this is called by matplotlib's animate loop animate.FuncAnimation()
     # it is called every 40ms
     def animate(self,i):
@@ -328,34 +379,9 @@ class Window(Frame):
 
                 self.line.set_ydata(self.amp)  # update the data
                 self.line.set_xdata(self.freq)  # update the data
-
-                # display the peak value arrow
-                self.ann.remove()
-                ymax = max(self.amp)
-
-                # get the position in the array of the ymax value
-                xpos = np.argmax(self.amp)
-                xmax = self.freq[xpos]
-
-                xtextpos = 20
-                ytextpos = 20
                 
-                # make sure the text goes on the left side when it is pointing 
-                # near the right side of the plot
-                greater_textsize = 200
-                if xpos > SWEEPPOINTS - 10:
-                    xtextpos = - greater_textsize
-                
-               
-                # get the frequency with 3 decimal places
-                xmax_int = int(xmax * 1000)
-                xmax = xmax_int / 1000 
-               
-                # display the peak text and arrow
-                display_text = "x = " + str((xmax)) + " y = " + str(ymax)
-                self.ann = self.ax.annotate(display_text, xy=(xmax, ymax), 
-                        textcoords='offset pixels', xytext=(xtextpos, ytextpos), 
-                        arrowprops=dict(arrowstyle="->", facecolor='black'),)
+                self.DispMarkers(tot)
+
                 objRFE.CleanSweepData()
 
 
@@ -403,6 +429,10 @@ class Window(Frame):
         # create the inner canvas to display plot to
         self.fig = plt.Figure()
         self.ax = self.fig.add_subplot(111)
+        print("Dot per inch(DPI) for the figure is: ", self.fig.dpi)
+        bbox = self.ax.get_window_extent().transformed(self.fig.dpi_scale_trans.inverted())
+        width, height = bbox.width, bbox.height
+        print("Axis sizes are(in pixels):", width, height)
         self.ax.grid(which="major", linewidth = 1)
         self.ax.grid(which="minor", linewidth = 0.2)
         self.ax.minorticks_on()
@@ -481,7 +511,7 @@ class Window(Frame):
 
                 # build the plot
                 self.line, = self.ax.plot(self.freq, self.amp)        
-                self.ax.axis([StartFreq, StopFreq, min(self.amp) - 10, 0 ])
+                self.ax.axis([StartFreq, StopFreq, -110, 0 ])
 
                 # create the annotation
                 ymax = max(self.amp)
