@@ -40,7 +40,8 @@ SWEEPPOINTS = 256 # power of 2
 
 SWEEPDATA = (SWEEPPOINTS + 1) * 16
 RESET = True
-num_markers = 1
+num_markers = 0
+MAX_MARKERS = 5
 
 # test settings to make sure they are valid
 def ControlSettings(objAnalazyer):
@@ -102,6 +103,13 @@ class FreqWindow(Toplevel):
 
     def __init__(self, master = None):
         self.win = Toplevel
+        self.created = False
+        self.master = master
+
+    def on_closing(self):
+        print("on closing")
+        self.created = False
+        self.win.destroy()
 
     #if the user hits enter while inside this window
     def enterhandler(self, e):
@@ -113,14 +121,26 @@ class FreqWindow(Toplevel):
 
     # draw the new window
     def draw_window(self):
-        super().__init__(master = None)
-        self.title("Frequency")
-        self.geometry("300x50+910+200")
-        self.columnconfigure(3, weight=2)
-        freqlabel = Label(self, text ="Frequency (MHz): ", font=("Arial", 16));
+        if DEBUG:
+            print("FreqWindow enterhandler")
+
+        # if the window is already created destroy the old one
+        if self.created == True:
+            self.destroy()
+
+        # create a new window as a child of the toplevel window
+        self.win = Toplevel(self.master)
+        self.win.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.created = True
+
+        self.win.title("Frequency")
+        self.win.geometry("300x50+910+200")
+        self.win.columnconfigure(3, weight=2)
+        freqlabel = Label(self.win, text ="Frequency (MHz): ", font=("Arial", 16));
         freqlabel.grid(row=0, column=0)
-        
-        self.freqentry = Entry(self, width = 6, font=("Arial", 16))
+       
+        # create the Entry widget
+        self.freqentry = Entry(self.win, width = 6, font=("Arial", 16))
         self.freqentry.bind('<Return>', self.enterhandler)
 
         # put the cursor inside the entry
@@ -143,13 +163,13 @@ class FreqWindow(Toplevel):
         if(objRFE.MinFreqMHZ > new_start):
             msg = "Incorrect Start Frequency " + str(new_start) + " Min Start freq: " + str(objRFE.MinFreqMHZ)+"MHz"
             showinfo("Error", msg, 4) 
-            self.destroy()
+            self.win.destroy()
             return 
 
         if(objRFE.MaxFreqMHZ < new_stop):
             msg = "Incorrect Stop Frequency " + str(new_stop) + " Max Stop freq: " + str(objRFE.MaxFreqMHZ)+"MHz"
             showinfo("Error", msg, 4) 
-            self.destroy()
+            self.win.destroy()
             return 
         
         START_SCAN_MHZ = new_start
@@ -159,13 +179,21 @@ class FreqWindow(Toplevel):
         app.init_window(content)
 
         # delete the freq window
-        self.destroy()
+        self.win.destroy()
+        self.created = False
 
 # This class creates the window to modify the span
 class SpanWindow(Toplevel):
 
     def __init__(self, master = None):
         self.win = Toplevel
+        self.created = False
+        self.master = master
+
+    def on_closing(self):
+        print("on closing")
+        self.created = False
+        self.win.destroy()
 
     # called when a user hits enter
     def enterhandler(self, e):
@@ -174,16 +202,22 @@ class SpanWindow(Toplevel):
 
         app.spanwindow.get_entry()
 
-   
     # draw the window
     def draw_window(self):
-        super().__init__(master = None)
-        self.title("Span")
-        self.geometry("300x50+910+300")
-        spanlabel = Label(self, text ="Span (Mhz): ", font=("Arial", 16));
+        # if the window is already created destroy the old one
+        if self.created == True:
+            self.win.destroy()
+        self.created = True
+
+        # create a new window as a child of the toplevel window
+        self.win = Toplevel(self.master)
+        self.win.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.win.title("Span")
+        self.win.geometry("300x50+910+300")
+        spanlabel = Label(self.win, text ="Span (Mhz): ", font=("Arial", 16));
         spanlabel.grid(row=0, column=0)
         
-        self.spanentry = Entry(self, width = 4, font=("Arial", 16))
+        self.spanentry = Entry(self.win, width = 4, font=("Arial", 16))
         self.spanentry.bind('<Return>', self.enterhandler)
         self.spanentry.focus_set()
         span = SPAN_SIZE_MHZ 
@@ -204,86 +238,118 @@ class SpanWindow(Toplevel):
         SPAN_SIZE_MHZ = new_span
         app.init_window(content)
 
-        self.win.destroy(self)
+        # close the window
+        self.win.destroy()
+        self.created = False
     
-# This class creates the window to display data
-class DataWindow(Toplevel):
+# This class creates the window to display Marker data
+class MarkerWindow(Toplevel):
 
     def __init__(self, master = None):
-        self.win = Toplevel
+        self.master = master
+        self.created = False
+        self.idlabel = [None] * MAX_MARKERS
+        self.freqlabel = [None] * MAX_MARKERS
+        self.powerlabel = [None] * MAX_MARKERS
+
+    def on_closing(self):
+        print("on closing")
+        self.created = False
+        self.win.destroy()
 
     # called when a user hits enter
     def enterhandler(self, e):
         if DEBUG:
-            print("DataWindow enterhandler")
+            print("MarkerWindow enterhandler")
 
-        app.datawindow.get_entry()
-
+        app.markerwindow.get_entry()
    
     # draw the window
     def draw_window(self):
-        super().__init__(master = None)
-        print("result", sorted_result[:4])
+        # if the window was created destroy it
+        if self.created == True:
+            self.win.destroy()
 
-        self.title("Data")
-        self.geometry("600x400+910+400")
+        # create a new window as a child of the toplevel window
+        self.win = Toplevel(self.master)
+        self.win.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.created = True    
 
-        self.grid_columnconfigure(0, weight=1, uniform="TAG")
-        self.grid_columnconfigure(1, weight=1, uniform="TAG")
-        self.grid_columnconfigure(2, weight=1, uniform="TAG")
-        self.grid_rowconfigure(0, weight=1, uniform="TAG")
-        self.grid_rowconfigure(1, weight=1, uniform="TAG")
-        self.grid_rowconfigure(3, weight=1, uniform="TAG")
-        self.grid_rowconfigure(4, weight=1, uniform="TAG")
-        self.grid_rowconfigure(5, weight=1, uniform="TAG")
-        self.grid_rowconfigure(6, weight=1, uniform="TAG")
-        self.grid_rowconfigure(7, weight=1, uniform="TAG")
-        self.grid_rowconfigure(8, weight=1, uniform="TAG")
-        self.grid_rowconfigure(9, weight=1, uniform="TAG")
-        self.grid_rowconfigure(10, weight=1, uniform="TAG")
+        self.win.title("Markers")
+        self.win.geometry("600x300+910+400")
 
-        # print out the Basic Data
-        text_str = "Start: " + '{:.3f}'.format(objRFE.StartFrequencyMHZ) + " MHz" 
-        label = Label(self, text = text_str, font=("Arial", 12));
-        label.grid(row=0, column=0, sticky=W)
-        text_str = "Center: " + '{:.3f}'.format(objRFE.StartFrequencyMHZ + (SPAN_SIZE_MHZ / 2)) + " MHz" 
-        label = Label(self, text = text_str, font=("Arial", 12));
-        label.grid(row=0, column=1, sticky=W)
-        text_str = "Stop: " + '{:.3f}'.format(objRFE.StopFrequencyMHZ) + " MHz" 
-        label = Label(self, text = text_str, font=("Arial", 12));
-        label.grid(row=0, column=2, sticky=W)
-
-        text_str = "RBW: " + '{:.1f}'.format(objRFE.RBW_KHZ) + " kHz" 
-        label = Label(self, text = text_str, font=("Arial", 12));
-        label.grid(row=1, column=0, sticky=W)
-        text_str = "Span: " + '{:.3f}'.format(SPAN_SIZE_MHZ) + " MHz"
-        label = Label(self, text = text_str, font=("Arial", 12));
-        label.grid(row=1, column=2, sticky=W)
+        # create the entry widget
+        row_idx = 0
+        self.markerentry = Entry(self.win, width = 1, font=("Arial", 16))
+        self.markerentry.bind('<Return>', self.enterhandler)
+        self.markerentry.focus_set()
+        markernum = num_markers
+        self.markerentry.insert(1, str(markernum))
+        self.markerentry.grid(row=row_idx, column=1)
+        row_idx += 1
 
 
+        # configure the window
+        self.win.grid_columnconfigure(0, weight=1, uniform="TAG")
+        self.win.grid_columnconfigure(1, weight=1, uniform="TAG")
+        self.win.grid_columnconfigure(2, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(0, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(1, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(3, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(4, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(5, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(6, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(7, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(8, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(9, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(10, weight=1, uniform="TAG")
 
-        label = Label(self, text ="Item # ", font=("Arial", 12));
-        label.grid(row=4, column=0, sticky=W)
-        spanlabel = Label(self, text ="Frequency ", font=("Arial", 12));
-        spanlabel.grid(row=4, column=1, sticky=W)
-        spanlabel = Label(self, text ="Amplitude ", font=("Arial", 12));
-        spanlabel.grid(row=4, column=2, sticky=W)
 
-        row_idx = 5
-        for idx in range(5):
-            text_str = "  " + str(idx)
-            label = Label(self, text = text_str, font=("Arial", 12));
-            label.grid(row=row_idx, column=0, sticky=W)
-            result = sorted_result[idx]
-            text_str = '{:.3f}'.format(result[1])
-            label = Label(self, text = text_str, font=("Arial", 12));
-            label.grid(row=row_idx, column=1, sticky=W)
-            text_str = '{:.2f}'.format(result[0])
-            label = Label(self, text = text_str, font=("Arial", 12));
-            label.grid(row=row_idx, column=2, sticky=W)
+        # print the headers so we don't need to do it over all the time
+        self.label = Label(self.win, text ="Marker # ", font=("Arial", 12));
+        self.label.grid(row=row_idx, column=0, sticky=W)
+        self.markerlabel = Label(self.win, text ="Frequency ", font=("Arial", 12));
+        self.markerlabel.grid(row=row_idx, column=1, sticky=W)
+        self.markerlabel = Label(self.win, text ="Amplitude ", font=("Arial", 12));
+        self.markerlabel.grid(row=row_idx, column=2, sticky=W)
 
-            row_idx += 1
-        
+    # print the marker info
+    def redraw_markerinfo(self):
+        if self.created == True:
+            # if marker info exists delete it 
+            for idx in range(MAX_MARKERS):
+                if self.idlabel[idx] != None:
+                    self.idlabel[idx].destroy()
+                    self.idlabel[idx] = None
+                    self.freqlabel[idx].destroy()
+                    self.powerlabel[idx].destroy()
+
+            # print out the new marker info
+            if num_markers > 0:
+                row_idx = 2
+                for idx in range(num_markers):
+                    text_str = "  " + str(idx)
+                    self.idlabel[idx] = Label(self.win, text = text_str, font=("Arial", 12));
+                    self.idlabel[idx].grid(row=row_idx, column=0, sticky=W)
+                    result = sorted_result[idx]
+                    text_str = '{:.3f}'.format(result[1])
+                    self.freqlabel[idx] = Label(self.win, text = text_str, font=("Arial", 12));
+                    self.freqlabel[idx].grid(row=row_idx, column=1, sticky=W)
+                    text_str = '{:.2f}'.format(result[0])
+                    self.powerlabel[idx] = Label(self.win, text = text_str, font=("Arial", 12));
+                    self.powerlabel[idx].grid(row=row_idx, column=2, sticky=W)
+                    row_idx += 1
+
+    # the user hit enter in this window
+    def get_entry(self):
+        global num_markers
+
+        num_markers = int(self.markerentry.get())
+
+        # if they entered 0 delete the window
+        if num_markers == 0:
+            self.win.destroy()
+            self.created == False
 
 # this is the main window
 class Window(Frame):
@@ -291,10 +357,14 @@ class Window(Frame):
         Frame.__init__(self, master)
         self.master = master
 
+        # annotation widgets
+        self.anno = [None] * MAX_MARKERS
+        self.ann = [None]
+
         #get and store the three windows 
         self.freqwindow = FreqWindow(self.master)
         self.spanwindow = SpanWindow(self.master)
-        self.datawindow = DataWindow(self.master)
+        self.markerwindow = MarkerWindow(self.master)
 
     # RFExplorer contains the received sweep data and that object knows 
     # the amplitude and frequency for each data point
@@ -310,9 +380,17 @@ class Window(Frame):
 
 
     def DispMarkers(self, tot):
-        if (num_markers == 1):
+        for idx in range(MAX_MARKERS):
+            if self.anno[idx] != None:
+                self.anno[idx].remove()
+                self.anno[idx] = None
+                
+        if (num_markers == 0):
+            if self.ann != None:
+                self.ann.remove()
+                self.ann = None
+
             # display the peak value arrow
-            self.ann.remove()
             ymax = max(self.amp)
 
             # get the position in the array of the xmax value
@@ -336,15 +414,42 @@ class Window(Frame):
             
             # make sure the text goes on the left side when it is pointing 
             # near the right side of the plot
-            print(len(display_text), text_data_size, text_pixel_size, xpos)
             if xpos > (tot - text_data_size):
                 xtextpos -=  text_pixel_size
-            
            
             # display the peak text and arrow
             self.ann = self.ax.annotate(display_text, xy=(xmax, ymax), 
                     textcoords='offset pixels', xytext=(xtextpos, ytextpos), 
                     arrowprops=dict(arrowstyle="->", facecolor='black'),fontsize=10)
+        else:
+            if self.ann != None:
+                self.ann.remove()
+                self.ann = None
+
+            for idx in range(num_markers):
+                if self.anno[idx] != None:
+                    self.anno[idx].remove()
+
+                result = sorted_result[idx]
+
+                xval = result[1]
+                yval = result[0]
+
+                # get the frequency with 3 decimal places
+                xval_int = int(xval * 1000)
+                xval = xval_int / 1000 
+
+                # The number of pixels from the xmax, and ymax location to place the text
+                xtextpos = 20
+                ytextpos = 40
+
+                display_text = "M" + str(idx)
+                
+                # display the marker text and arrow
+                self.anno[idx] = self.ax.annotate(display_text, xy=(xval, yval), 
+                        textcoords='offset pixels', xytext=(xtextpos, ytextpos), 
+                        arrowprops=dict(arrowstyle="->", facecolor='black'),fontsize=10)
+
 
     # this is called by matplotlib's animate loop animate.FuncAnimation()
     # it is called every 40ms
@@ -364,11 +469,12 @@ class Window(Frame):
                 objSweep=objRFE.SweepData.GetData(self.numitems-1)
                 tot=objSweep.TotalDataPoints
 
+                # extract the freq and amp arrays from the data
+                self.freq, self.amp = self.GetData(objSweep, tot)
+
                 zipped = zip(self.amp,self.freq)
                 sorted_result = sorted(zipped, reverse=True)
 
-                # extract the freq and amp arrays from the data
-                self.freq, self.amp = self.GetData(objSweep, tot)
                 if DEBUG:
                     if i % 10 == 0:
                         print("in animate")
@@ -381,6 +487,9 @@ class Window(Frame):
                 self.line.set_xdata(self.freq)  # update the data
                 
                 self.DispMarkers(tot)
+
+                if num_markers > 0:
+                    self.markerwindow.redraw_markerinfo()
 
                 objRFE.CleanSweepData()
 
@@ -402,11 +511,6 @@ class Window(Frame):
     # initialize the main window
     def init_window(self, content):
         self.objSweep=None
-        # store the freq and span window
-        self.freqwindow = FreqWindow(self.master)
-        self.spanwindow = SpanWindow(self.master)
-        self.datawindow = DataWindow(self.master)
-       
 
         self.buttonFreq = Button(content,text="Frequency")
         # Following line will bind click event
@@ -421,9 +525,9 @@ class Window(Frame):
                  lambda e: self.spanwindow.draw_window())
         self.buttonSpan.grid(row=1,column=3, sticky='nsew')
 
-        self.buttonData = Button(content,text="Data")
+        self.buttonData = Button(content,text="Marker")
         self.buttonData.bind("<Button>",
-                 lambda e: self.datawindow.draw_window())
+                 lambda e: self.markerwindow.draw_window())
         self.buttonData.grid(row=2,column=3, sticky='nsew')
 
         # create the inner canvas to display plot to
@@ -537,7 +641,7 @@ class Window(Frame):
         self.line.set_ydata(self.amp)  # update the data
         self.line.set_xdata(self.freq)  # update the data
 
-        self.ani = animation.FuncAnimation(self.fig, self.animate, None, interval=40, blit=False)
+        self.ani = animation.FuncAnimation(self.fig, self.animate, None, interval=100, blit=False)
 
 
 # if the enter is hit in the main window this gets called
