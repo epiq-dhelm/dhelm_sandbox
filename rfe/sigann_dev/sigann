@@ -1,0 +1,943 @@
+#!/bin/python3
+
+#---------Imports
+
+import time
+import math
+import array as arr
+
+import RFExplorer
+print(RFExplorer.__file__)
+from RFExplorer import RFE_Common
+
+
+import tkinter as tk
+from tkinter import ttk
+from tkinter import *
+from tkinter.messagebox import Message
+
+import numpy as np
+
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+#---------End of imports
+
+
+
+from tkinter import Frame,Label,Entry,Button
+
+DEBUG = True
+
+BAUDRATE = 500000
+
+SPAN_SIZE_MHZ = 50           #Initialize settings
+START_SCAN_MHZ = 975
+STOP_SCAN_MHZ = START_SCAN_MHZ + SPAN_SIZE_MHZ
+#SWEEPPOINTS = 112 # power of 2
+SWEEPPOINTS = 256 # power of 2
+
+SWEEPDATA = (SWEEPPOINTS + 1) * 16
+RESET = True
+num_markers = 0
+MAX_MARKERS = 5
+
+# test settings to make sure they are valid
+def ControlSettings(objAnalazyer):
+    global SPAN_SIZE_MHZ
+    """This functions check user settings
+    """
+    SpanSizeTemp = None
+    StartFreqTemp = None
+    StopFreqTemp =  None
+
+    #print user settings
+    if DEBUG:
+        print("User settings:" + "Span: " + str(SPAN_SIZE_MHZ) +"MHz"+  " - " + "Start freq: " + str(START_SCAN_MHZ) +"MHz"+" - " + "Stop freq: " + str(STOP_SCAN_MHZ) + "MHz")
+
+    #Control maximum Span size
+    over = (objAnalazyer.MaxSpanMHZ <= SPAN_SIZE_MHZ) 
+    under = (objAnalazyer.MinSpanMHZ * .001 > SPAN_SIZE_MHZ) 
+
+    if (over or under):
+        if (over):
+            showinfo("Error", "Invalid span size, Max is " + str(objAnalazyer.MaxSpanMHZ)+"MHz", 4)
+        else:
+            showinfo("Error", "Invalid span size, Min is " + str(objAnalazyer.MinSpanMHZ *.001)+"MHz", 4)
+            print("MinSpanSize", objAnalazyer.MinSpanMHZ)
+    else:
+        objAnalazyer.SpanMHZ = SPAN_SIZE_MHZ
+        SpanSizeTemp = objAnalazyer.SpanMHZ
+
+
+    if(SpanSizeTemp):
+        #Control minimum start frequency
+        if(objAnalazyer.MinFreqMHZ > START_SCAN_MHZ):
+            if DEBUG:
+                print("Min Start freq: " + str(objAnalazyer.MinFreqMHZ)+"MHz")
+        else:
+            objAnalazyer.StartFrequencyMHZ = START_SCAN_MHZ
+            StartFreqTemp = objAnalazyer.StartFrequencyMHZ
+        if(StartFreqTemp):
+            #Control maximum stop frequency
+            if(objAnalazyer.MaxFreqMHZ < STOP_SCAN_MHZ):
+                if DEBUG:
+                    print("Error: Max Start freq: " + str(objAnalazyer.MaxFreqMHZ)+"MHz")
+            else:
+                if(round(StartFreqTemp + SpanSizeTemp, 3) > STOP_SCAN_MHZ):
+                    if DEBUG:
+                        print("Error: STOP_SCAN_MHZ too large: " + str(STOP_SCAN_MHZ) +"MHz")
+                        print(StartFreqTemp, SpanSizeTemp, StartFreqTemp + SpanSizeTemp)
+                else:
+                    StopFreqTemp = round(StartFreqTemp + SpanSizeTemp, 3)
+
+
+    if DEBUG:
+        print(SpanSizeTemp, StartFreqTemp, StopFreqTemp)
+
+    return SpanSizeTemp, StartFreqTemp, StopFreqTemp
+
+#This class creates the window to modify the frequency
+class FreqWindow(Toplevel):
+
+    def __init__(self, master = None):
+        self.win = Toplevel
+        self.created = False
+        self.master = master
+
+    def on_closing(self):
+        print("on closing")
+        self.created = False
+        self.win.destroy()
+
+    #if the user hits enter while inside this window
+    def enterhandler(self, e):
+        if DEBUG:
+            print("FreqWindow enterhandler")
+
+        app.freqwindow.get_entry()
+
+
+    # draw the new window
+    def draw_window(self):
+        if DEBUG:
+            print("FreqWindow enterhandler")
+
+        # if the window is already created destroy the old one
+        if self.created == True:
+            self.destroy()
+
+        # create a new window as a child of the toplevel window
+        self.win = Toplevel(self.master)
+        self.win.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.created = True
+
+        self.win.title("Frequency")
+        self.win.geometry("300x50+910+200")
+        self.win.columnconfigure(3, weight=2)
+        freqlabel = Label(self.win, text ="Frequency (MHz): ", font=("Arial", 16));
+        freqlabel.grid(row=0, column=0)
+       
+        # create the Entry widget
+        self.freqentry = Entry(self.win, width = 6, font=("Arial", 16))
+        self.freqentry.bind('<Return>', self.enterhandler)
+
+        # put the cursor inside the entry
+        self.freqentry.focus_set()
+        center_freq = int(((START_SCAN_MHZ) + (SPAN_SIZE_MHZ / 2)) ) 
+        self.freqentry.insert(1, str(center_freq))
+        self.freqentry.grid(row=0, column=1)
+
+
+    #The user hit enter
+    def get_entry(self):
+        global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
+       
+        new_center = int(self.freqentry.get())
+
+        new_start = new_center - (SPAN_SIZE_MHZ / 2)
+        new_stop = new_center + (SPAN_SIZE_MHZ / 2)
+
+        # validate that the new value is good
+        if(objRFE.MinFreqMHZ > new_start):
+            msg = "Incorrect Start Frequency " + str(new_start) + " Min Start freq: " + str(objRFE.MinFreqMHZ)+"MHz"
+            showinfo("Error", msg, 4) 
+            self.win.destroy()
+            return 
+
+        if(objRFE.MaxFreqMHZ < new_stop):
+            msg = "Incorrect Stop Frequency " + str(new_stop) + " Max Stop freq: " + str(objRFE.MaxFreqMHZ)+"MHz"
+            showinfo("Error", msg, 4) 
+            self.win.destroy()
+            return 
+        
+        START_SCAN_MHZ = new_start
+        STOP_SCAN_MHZ = new_stop
+
+        #start all over with a new window
+        app.init_window(content)
+
+        # delete the freq window
+        self.win.destroy()
+        self.created = False
+
+# This class creates the window to modify the span
+class SpanWindow(Toplevel):
+
+    def __init__(self, master = None):
+        self.win = Toplevel
+        self.created = False
+        self.master = master
+
+    def on_closing(self):
+        print("on closing")
+        self.created = False
+        self.win.destroy()
+
+    # called when a user hits enter
+    def enterhandler(self, e):
+        if DEBUG:
+            print("SpanWindow enterhandler")
+
+        app.spanwindow.get_entry()
+
+    # draw the window
+    def draw_window(self):
+        # if the window is already created destroy the old one
+        if self.created == True:
+            self.win.destroy()
+        self.created = True
+
+        # create a new window as a child of the toplevel window
+        self.win = Toplevel(self.master)
+        self.win.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.win.title("Span")
+        self.win.geometry("300x50+910+300")
+        spanlabel = Label(self.win, text ="Span (Mhz): ", font=("Arial", 16));
+        spanlabel.grid(row=0, column=0)
+        
+        self.spanentry = Entry(self.win, width = 4, font=("Arial", 16))
+        self.spanentry.bind('<Return>', self.enterhandler)
+        self.spanentry.focus_set()
+        span = SPAN_SIZE_MHZ 
+        self.spanentry.insert(1, str(span))
+        self.spanentry.grid(row=0, column=1)
+
+    # the user hit enter in this window
+    def get_entry(self):
+        global START_SCAN_MHZ, STOP_SCAN_MHZ, SPAN_SIZE_MHZ
+
+        new_span = float(self.spanentry.get())
+
+        center = STOP_SCAN_MHZ - (SPAN_SIZE_MHZ / 2)
+
+        START_SCAN_MHZ = center - (new_span / 2)
+        STOP_SCAN_MHZ = center + (new_span / 2)
+
+        SPAN_SIZE_MHZ = new_span
+        app.init_window(content)
+
+        # close the window
+        self.win.destroy()
+        self.created = False
+    
+# This class creates the window to display Marker data
+class MarkerWindow(Toplevel):
+
+    def __init__(self, master = None):
+        self.master = master
+        self.created = False
+        self.idlabel = [None] * MAX_MARKERS
+        self.freqlabel = [None] * MAX_MARKERS
+        self.powerlabel = [None] * MAX_MARKERS
+
+    def on_closing(self):
+        print("on closing")
+        self.created = False
+        self.win.destroy()
+
+    # called when a user hits enter
+    def enterhandler(self, e):
+        if DEBUG:
+            print("MarkerWindow enterhandler")
+
+        app.markerwindow.get_entry()
+   
+    # draw the window
+    def draw_window(self):
+        # if the window was created destroy it
+        if self.created == True:
+            self.win.destroy()
+
+        # create a new window as a child of the toplevel window
+        self.win = Toplevel(self.master)
+        self.win.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.created = True    
+
+        self.win.title("Markers")
+        self.win.geometry("600x300+910+400")
+
+        # create the entry widget
+        row_idx = 0
+        self.markerentry = Entry(self.win, width = 1, font=("Arial", 16))
+        self.markerentry.bind('<Return>', self.enterhandler)
+        self.markerentry.focus_set()
+        markernum = num_markers
+        self.markerentry.insert(1, str(markernum))
+        self.markerentry.grid(row=row_idx, column=1)
+        row_idx += 1
+
+
+        # configure the window
+        self.win.grid_columnconfigure(0, weight=1, uniform="TAG")
+        self.win.grid_columnconfigure(1, weight=1, uniform="TAG")
+        self.win.grid_columnconfigure(2, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(0, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(1, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(3, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(4, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(5, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(6, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(7, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(8, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(9, weight=1, uniform="TAG")
+        self.win.grid_rowconfigure(10, weight=1, uniform="TAG")
+
+
+        # print the headers so we don't need to do it over all the time
+        self.label = Label(self.win, text ="Marker # ", font=("Arial", 12));
+        self.label.grid(row=row_idx, column=0, sticky=W)
+        self.markerlabel = Label(self.win, text ="Frequency ", font=("Arial", 12));
+        self.markerlabel.grid(row=row_idx, column=1, sticky=W)
+        self.markerlabel = Label(self.win, text ="Amplitude ", font=("Arial", 12));
+        self.markerlabel.grid(row=row_idx, column=2, sticky=W)
+
+    # print the marker info
+    def redraw_markerinfo(self):
+        if self.created == True:
+            # if marker info exists delete it 
+            for idx in range(MAX_MARKERS):
+                if self.idlabel[idx] != None:
+                    self.idlabel[idx].destroy()
+                    self.idlabel[idx] = None
+                    self.freqlabel[idx].destroy()
+                    self.powerlabel[idx].destroy()
+
+            # print out the new marker info
+            if num_markers > 0:
+                row_idx = 2
+                for idx in range(num_markers):
+                    text_str = "  " + str(idx)
+                    self.idlabel[idx] = Label(self.win, text = text_str, font=("Arial", 12));
+                    self.idlabel[idx].grid(row=row_idx, column=0, sticky=W)
+                    result = sorted_result[idx]
+                    text_str = '{:.3f}'.format(result[1])
+                    self.freqlabel[idx] = Label(self.win, text = text_str, font=("Arial", 12));
+                    self.freqlabel[idx].grid(row=row_idx, column=1, sticky=W)
+                    text_str = '{:.2f}'.format(result[0])
+                    self.powerlabel[idx] = Label(self.win, text = text_str, font=("Arial", 12));
+                    self.powerlabel[idx].grid(row=row_idx, column=2, sticky=W)
+                    row_idx += 1
+
+    # the user hit enter in this window
+    def get_entry(self):
+        global num_markers
+
+        num_markers = int(self.markerentry.get())
+
+        # if they entered 0 delete the window
+        if num_markers == 0:
+            self.win.destroy()
+            self.created == False
+
+# this is the main window
+class Window(Frame):
+    def __init__(self, master = None):
+        Frame.__init__(self, master)
+        self.master = master
+
+        # annotation widgets
+        self.anno = [None] * MAX_MARKERS
+        self.ann = [None]
+
+        #get and store the three windows 
+        self.freqwindow = FreqWindow(self.master)
+        self.spanwindow = SpanWindow(self.master)
+        self.markerwindow = MarkerWindow(self.master)
+
+    # RFExplorer contains the received sweep data and that object knows 
+    # the amplitude and frequency for each data point
+    def GetData(self, sweepdata, tot):
+        amp = arr.array('f',[])
+        freq = arr.array('f',[])
+        for nDataPoint in range(tot):
+            val = sweepdata.GetAmplitudeDBM(nDataPoint, None, False)
+            amp.append(val)
+            freq.append(sweepdata.GetFrequencyMHZ(nDataPoint))
+
+        return freq, amp
+
+
+    def DispMarkers(self, tot):
+        for idx in range(MAX_MARKERS):
+            if self.anno[idx] != None:
+                self.anno[idx].remove()
+                self.anno[idx] = None
+                
+        if (num_markers == 0):
+            if self.ann != None:
+                self.ann.remove()
+                self.ann = None
+
+            # display the peak value arrow
+            ymax = max(self.amp)
+
+            # get the position in the array of the xmax value
+            xpos = np.argmax(self.amp)
+            xmax = self.freq[xpos]
+
+            # get the frequency with 3 decimal places
+            xmax_int = int(xmax * 1000)
+            xmax = xmax_int / 1000 
+
+            # The number of pixels from the xmax, and ymax location to place the text
+            xtextpos = 20
+            ytextpos = 20
+
+            display_text = "x = " + str((xmax)) + " y = " + str(ymax)
+           
+            # The number of pixels to move left if we are putting the text on the left size.
+            # assume fontsize of 10
+            text_pixel_size = 10 * len(display_text)
+            text_data_size  = int(len(display_text) * (tot / 60))
+            
+            # make sure the text goes on the left side when it is pointing 
+            # near the right side of the plot
+            if xpos > (tot - text_data_size):
+                xtextpos -=  text_pixel_size
+           
+            # display the peak text and arrow
+            self.ann = self.ax.annotate(display_text, xy=(xmax, ymax), 
+                    textcoords='offset pixels', xytext=(xtextpos, ytextpos), 
+                    arrowprops=dict(arrowstyle="->", facecolor='black'),fontsize=10)
+        else:
+            if self.ann != None:
+                self.ann.remove()
+                self.ann = None
+
+            for idx in range(num_markers):
+                if self.anno[idx] != None:
+                    self.anno[idx].remove()
+
+                result = sorted_result[idx]
+
+                xval = result[1]
+                yval = result[0]
+
+                # get the frequency with 3 decimal places
+                xval_int = int(xval * 1000)
+                xval = xval_int / 1000 
+
+                # The number of pixels from the xmax, and ymax location to place the text
+                xtextpos = 20
+                ytextpos = 40
+
+                display_text = "M" + str(idx)
+                
+                # display the marker text and arrow
+                self.anno[idx] = self.ax.annotate(display_text, xy=(xval, yval), 
+                        textcoords='offset pixels', xytext=(xtextpos, ytextpos), 
+                        arrowprops=dict(arrowstyle="->", facecolor='black'),fontsize=10)
+
+
+    # this is called by matplotlib's animate loop animate.FuncAnimation()
+    # it is called every 40ms
+    def animate(self,i):
+        global sorted_result
+        self.objSweep=None
+
+        # wait till we get a new sweepdata msg
+        objRFE.ProcessReceivedString(True);
+
+        # see if we actually got a new one
+        num = objRFE.SweepData.Count 
+        if self.numitems != num:
+            self.numitems = num
+            if (self.numitems > 0):
+                # get the object with the latest msg
+                objSweep=objRFE.SweepData.GetData(self.numitems-1)
+                tot=objSweep.TotalDataPoints
+
+                # extract the freq and amp arrays from the data
+                self.freq, self.amp = self.GetData(objSweep, tot)
+
+                zipped = zip(self.amp,self.freq)
+                sorted_result = sorted(zipped, reverse=True)
+
+                if DEBUG:
+                    if i % 10 == 0:
+                        print("in animate")
+                        print("config start", objRFE.StartFrequencyMHZ, "config stop ", objRFE.StopFrequencyMHZ )
+                        print("Freq min ", min(self.freq), " max ", max(self.freq))
+                        print("Amp min ", min(self.amp), " max ", max(self.amp))
+                        print("total data points", tot);                      
+
+                self.line.set_ydata(self.amp)  # update the data
+                self.line.set_xdata(self.freq)  # update the data
+                
+                self.DispMarkers(tot)
+
+                if num_markers > 0:
+                    self.markerwindow.redraw_markerinfo()
+
+                objRFE.CleanSweepData()
+
+
+        return self.line,
+
+    def getDataLine(self, line):
+        if (line == 1):
+            text_str = "Start: " + '{:.3f}'.format(objRFE.StartFrequencyMHZ) + " MHz\t\t\t"
+            text_str += "Center: " + '{:.3f}'.format(objRFE.StartFrequencyMHZ + (SPAN_SIZE_MHZ / 2)) + " MHz\t\t\t"
+            text_str += "Stop: " + '{:.3f}'.format(objRFE.StopFrequencyMHZ) + " MHz\n"
+
+        if (line==2):
+            text_str = "RBW: " + '{:.1f}'.format(objRFE.RBW_KHZ) + " kHz\t\t\t\t\t\t"
+            text_str += "Span: " + '{:.3f}'.format(SPAN_SIZE_MHZ) + " MHz\n"
+
+        return text_str
+
+    # initialize the main window
+    def init_window(self, content):
+        self.objSweep=None
+
+        self.buttonFreq = Button(content,text="Frequency")
+        # Following line will bind click event
+        # On any click left / right button
+        # of mouse a new window will be opened
+        self.buttonFreq.bind("<Button>",
+                 lambda e: self.freqwindow.draw_window())
+        self.buttonFreq.grid(row=0,column=3, sticky= 'nsew')
+
+        self.buttonSpan = Button(content,text="Span")
+        self.buttonSpan.bind("<Button>",
+                 lambda e: self.spanwindow.draw_window())
+        self.buttonSpan.grid(row=1,column=3, sticky='nsew')
+
+        self.buttonData = Button(content,text="Marker")
+        self.buttonData.bind("<Button>",
+                 lambda e: self.markerwindow.draw_window())
+        self.buttonData.grid(row=2,column=3, sticky='nsew')
+
+        # create the inner canvas to display plot to
+        self.fig = plt.Figure()
+        self.ax = self.fig.add_subplot(111)
+        print("Dot per inch(DPI) for the figure is: ", self.fig.dpi)
+        bbox = self.ax.get_window_extent().transformed(self.fig.dpi_scale_trans.inverted())
+        width, height = bbox.width, bbox.height
+        print("Axis sizes are(in pixels):", width, height)
+        self.ax.grid(which="major", linewidth = 1)
+        self.ax.grid(which="minor", linewidth = 0.2)
+        self.ax.minorticks_on()
+#        self.ax.tick_params(which = "minor", bottom = False, left = False)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=frame)
+        self.canvas.get_tk_widget().grid(column=0,row=0, sticky = 'nsew')
+
+        if (SPAN_SIZE_MHZ <= 20):
+            SWEEPPOINTS = 112
+        elif (SPAN_SIZE_MHZ >= 150):
+            SWEEPPOINTS = 512
+        else:
+            SWEEPPOINTS = 256
+
+        objRFE.SendCommand_SweepDataPointsEx(SWEEPPOINTS)
+
+        self.textwindow = Text(content, height=2, width=100, relief="ridge", bg='light grey', 
+                                bd=4, font=("Arial", 14, "bold"))
+        self.textwindow.grid(row=3, column=0, sticky='nsew')
+
+        # build the plot
+        self.build_plot(frame)
+
+
+    def build_plot(self, frame):
+        # these things must be done before you can start processing the sweeppoints
+        
+        #Request RF Explorer configuration
+        objRFE.SendCommand_RequestConfigData()
+
+        #Wait to receive Model type COFF:02
+        while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
+            objRFE.ProcessReceivedString(True)    #Process the received configuration
+
+        #If object is an analyzer, we can scan for received sweeps
+        if(not objRFE.IsAnalyzer()):
+            showinfo("Error", "Not an analyzer, exiting...", 2)
+            cleanup()
+
+        #Verify the Control settings
+        SpanSize, StartFreq, StopFreq = ControlSettings(objRFE)
+
+        if(SpanSize and StartFreq and StopFreq):
+            nInd = 0
+
+            # Program the configuration into device
+            objRFE.UpdateDeviceConfig(StartFreq, StopFreq)
+            objRFE.ProcessReceivedString(True)
+
+            # wait until we have indication that the new configuration is in device
+            while (StartFreq != objRFE.StartFrequencyMHZ):
+                objRFE.ProcessReceivedString(True)
+
+            # wait until we have received data
+            self.numitems = objRFE.SweepData.Count - 1
+            while (self.numitems <= 0):
+                objRFE.ProcessReceivedString(True);
+                self.numitems = objRFE.SweepData.Count - 1
+           
+            # display the new config info
+            if DEBUG:
+                print("config min", objRFE.StartFrequencyMHZ, "config max ", objRFE.StopFrequencyMHZ )
+
+            # process the new data
+            if (self.numitems > 0):
+                # get the singular message from the object
+                self.objSweep=objRFE.SweepData.GetData(self.numitems)
+                tot=self.objSweep.TotalDataPoints
+
+                # put the data into the freq and amp arrays
+                self.freq, self.amp = self.GetData(self.objSweep, tot)
+
+                if DEBUG:
+                    print("Freq min ", min(self.freq), " max ", max(self.freq))
+                    print("Amp min ", min(self.amp), " max ", max(self.amp))
+
+                # build the plot
+                self.line, = self.ax.plot(self.freq, self.amp)        
+                self.ax.axis([StartFreq, StopFreq, -110, 0 ])
+
+                # create the annotation
+                ymax = max(self.amp)
+                xpos = np.argmax(self.amp)
+                xmax = self.freq[xpos]
+                display_text = "x = " + str(int(xmax)) + " y = " + str(ymax)
+                self.ann = self.ax.annotate(display_text, xy=(xmax, ymax), 
+                        xytext=(xmax+5, ymax + 5), arrowprops=dict(arrowstyle="->", 
+                        facecolor='black'),)
+            else: 
+                if DEBUG:
+                    print("somethings wrong")
+        else:
+            if DEBUG:
+                print("Error: settings are wrong.\nPlease, change and try again")
+        
+
+        text = self.getDataLine(1)
+        self.textwindow.insert('1.0', text) 
+        text = self.getDataLine(2)
+        self.textwindow.insert('2.0', text) 
+
+        self.line.set_ydata(self.amp)  # update the data
+        self.line.set_xdata(self.freq)  # update the data
+
+        self.ani = animation.FuncAnimation(self.fig, self.animate, None, interval=100, blit=False)
+
+
+# if the enter is hit in the main window this gets called
+def enterhandler(e):
+    if DEBUG:
+        print("enterhandler")
+
+    go()
+
+
+# The user hit enter after picking a port
+def go():
+    global app, user_entry, user_label, user_title
+
+    portno = int(user_entry.get())
+
+    # verify the entered number
+    if portno >= len(objRFE.m_arrValidCP2102Ports) or portno < 0:
+        showinfo("Error", "Error: Invalid Port Number " + str(portno) , 2)
+        return
+
+    else:
+        PortName = objRFE.m_arrValidCP2102Ports[portno].device
+        if DEBUG:
+            print("Selected name", PortName)
+        root.wm_title('RFE Signal Analyzer ' + PortName)
+
+    #Connect to available port
+    objRFE.ConnectPort(PortName, BAUDRATE)
+    if DEBUG:
+        print("Connected...")
+
+    # remove the labels for the various ports so we can display that we are resetting 
+    # the device
+    user_label.after(10, user_label.destroy())
+    user_label.after(10, user_title.destroy())
+    user_entry.after(10, user_entry.destroy())
+    for obj in label:
+        obj.after(10, obj.destroy())
+    
+    user_label2 = Label(current_frame, text= "Resetting device ...", font=("Arial", 16))
+    user_label2.grid(row=1, column=0, padx=10, pady=10, sticky="w")
+    current_frame.pack(fill="both", expand=True)
+
+    # if configured reset the device 
+    if RESET:
+        if DEBUG:
+            print("Resetting device...")
+
+        #Reset the unit to start fresh
+        objRFE.SendCommand("r")
+
+        #Wait for unit to notify reset completed
+        while(objRFE.IsResetEvent):
+            pass
+
+        #Wait for unit to stabilize
+        # for some reason we need to do a messagebox to get this to work.
+        showinfo("Info", "Resetting Device", None)
+        time.sleep(4)
+
+    # build the main window
+    content, frame = build_window()
+
+    # initialize the main window
+    app.init_window(content)  
+
+
+# Display the window to let the user select the port desired and pick one
+def GetPort():
+    global app, current_frame, user_entry, label, user_label, user_entry, user_title
+
+    # delete one if it exists
+    current_frame.destroy()
+    frame = Frame(root)
+    current_frame = frame
+
+    # for some reason when it only goes through the for loop once if it 
+    # deletes something.  So this while loop fixes that.
+    done = False
+    while (not done):
+        deleted = False
+
+        for objPort in objRFE.m_arrValidCP2102Ports:
+            if (objPort.device == "/dev/ttyAMA0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttyACM0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART0"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART1"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART2"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttySKIQ_UART3"):
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+            if (objPort.device == "/dev/ttyS4") :
+                deleted = True
+                objRFE.m_arrValidCP2102Ports.remove(objPort)
+
+        if deleted == False:
+            done = True
+
+    # see if we have more than one valid port, if so we need to display a window with the
+    # choices
+    if len(objRFE.m_arrValidCP2102Ports) > 1:
+
+        # print the title of the window
+        user_title = Label(current_frame, text= "Available Ports:", font=("Arial", 16))
+        user_title.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+
+        # build labels that contain each available port
+        ctr = 0
+        for objPort in objRFE.m_arrValidCP2102Ports:
+            tmp_txt = str(ctr) + "     " +  objPort.device
+            label.append(Label(current_frame, text=tmp_txt, font=("Arial", 16)))
+            # Entry widgets in the row whose index is idx
+            label[ctr].grid(row=ctr+1, column=0, padx=10, pady=10, sticky="w")
+            ctr += 1
+        
+
+        # Display the label that tells the user what to do
+        user_label = Label(current_frame, text= "Enter Port Number:", font=("Arial", 16))
+        user_label.grid(row=ctr+2, column=0, padx=10, pady=10, sticky="w")
+
+        # build the Entry box for them to enter it.
+        user_entry = Entry(current_frame, width=5, font=("Ariel", 16))
+        user_entry.grid(row=ctr+2, column=1, padx=10, pady=10)
+
+        # put the cursor inside the entry box
+        user_entry.focus_set()
+
+        # display it
+        current_frame.pack(fill="both", expand=True)
+
+    # if there is exactly one port no need to select it, connect to it
+    elif len(objRFE.m_arrValidCP2102Ports) == 1:
+        PortName = objRFE.m_arrValidCP2102Ports[0].device
+        if DEBUG:
+            print("Selected name", PortName)
+       
+        root.wm_title('RFE Signal Analyzer ' + PortName)
+        #Connect to available port
+        objRFE.ConnectPort(PortName, BAUDRATE)
+        if DEBUG:
+            print("Connected...")
+
+        # if configured to reset, reset it and display that on the window.
+        if RESET:
+            user_label = Label(current_frame, text= "Resetting device ...", 
+                    font=("Arial", 16))
+            user_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+            
+            # display it
+            current_frame.pack(fill="both", expand=True)
+
+            #Reset the unit to start fresh
+            objRFE.SendCommand("r")
+
+            #Wait for unit to notify reset completed
+            while(objRFE.IsResetEvent):
+                pass
+
+            #Wait for unit to stabilize
+            showinfo("Info", "Resetting Device", None)
+            time.sleep(4)
+
+        # build the main window
+        content, frame = build_window()
+
+        # initialize the main window
+        app.init_window(content) 
+
+    else: #no valid ports
+        showinfo("Error", "No Valid Ports Found", 5)
+        
+        #remove this window
+        root.destroy()
+
+        # leave
+        cleanup()
+    
+    return True
+
+# used to display a message box describing the info
+def showinfo(msgtitle, text, waittime):
+    newroot = Tk()
+
+    
+    if waittime != None:
+        newroot.after(waittime * 1000, newroot.destroy)
+    else:
+        # if waittime is None then we just quickly display the box and move on
+        newroot.after(10, newroot.destroy)
+
+    # make this window small so it can't be seen under the message box
+    # there is no way to place the message box itself so we place the window
+    newroot.geometry('10x10+200+200')
+
+    # create and show the message box
+    try:
+        Message(title=msgtitle, message=text, master=newroot).show()
+    except TclError:
+        pass
+
+# build the bottom layer window
+def build_window():
+    global content, frame
+
+    # destroy it if it already exists
+    current_frame.destroy()
+
+    root.geometry("800x720")
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)
+
+    # make the outer frame with a ridge
+    content = ttk.Frame(root, padding=(3,3,12,12))
+    content.grid(column=0, row=0, columnspan=3, rowspan=3, sticky='nsew')
+
+    content.columnconfigure(0, weight=3)
+    content.columnconfigure(1, weight=3)
+    content.columnconfigure(2, weight=3)
+    content.rowconfigure(0, weight=1)
+    content.rowconfigure(1, weight=1)
+    content.rowconfigure(2, weight=1)
+
+    # make the inner frame that holds the plot
+    frame = ttk.Frame(content, borderwidth=5, relief="ridge", width=200, height=100)
+    frame.grid(column=0, row=0, columnspan=3, rowspan=3, sticky='nsew')
+
+    frame.columnconfigure(0, weight=1)
+    frame.rowconfigure(0, weight=1)
+
+   
+    return content, frame
+
+# if something goes wrong go here
+def cleanup():
+    # kill the main window
+    root.destroy
+
+    # close RFE
+    objRFE.Close()
+
+    # leave
+    exit()
+
+# list of port labels
+label = []
+
+
+sorted_result = []
+
+# create the RFE object
+objRFE = RFExplorer.RFECommunicator()
+
+
+# Get the connected ports tat RFE can see
+objRFE.GetConnectedPorts()
+
+# determine RFE verbose level
+objRFE.VerboseLevel = 0
+
+
+# this has to be the same as in the sigann.desktop file inside /usr/share/applications/
+# so it can be selected by the Ubuntu chooser
+root = Tk(className='annName')
+
+# main window title and location
+root.geometry('550x350+100+200')
+
+# bind the enterhandler to the Return key in the main window.
+root.bind('<Return>', enterhandler)
+
+# unsure here
+current_frame = Frame(root)
+app = Window(root)
+
+# go get the USB port the user wants
+GetPort()
+
+# spin on the tkinter mainloop
+tk.mainloop()
+
+# if this ends for any reason close up RFE 
+objRFE.Close()

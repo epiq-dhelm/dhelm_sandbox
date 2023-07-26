@@ -1,0 +1,38 @@
+Utils (Utilities) Directory
+
+This directory contains utility applications that are designed for debugging 
+purposes.
+
+The intent is to replace all of the old legacy test apps with new and 
+improved test apps.  This directory will contain those replacements.
+
+These can be built by calling make.  If you are on an x86_64 machine.  
+If not you need to set the BUILD_CONFIG parameter to the platform you want 
+to compile for.
+
+$ BUILD_CONFIG=x86_32.gcc make
+
+    aarch64.native
+    aarch64.gcc6.3
+    x86_64.gcc
+    arm_cortex-a9.gcc5.2_glibc_openwrt
+    arm_cortex-a9.gcc4.8_gnueabihf_linux
+    arm_cortex-a9.gcc4.9.2_gnueabi
+    arm_cortex-a9.gcc7.2.1_gnueabihf
+
+
+This will create a bin directory that contains the BUILD_CONFG directory and 
+then the binaries inside that directory.  This allows the ability to make the 
+applications for different platforms and not have them automatically removed 
+when compiling for a different one.
+
+
+The src directory contains utils_common files that will handle the command 
+line parameters and configure the radio for all of the applications in the 
+directory.
+
+The utils_common will ensure that the handling of command line parameters 
+and configuration is consistent across all of the applications.  Plus this 
+makes it simpler to make new applications and changing things in common 
+command line parameters and configuration can be done in one place 
+for all applications.

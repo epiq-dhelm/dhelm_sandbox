@@ -1,0 +1,215 @@
+#!/bin/python3
+#pylint: disable=trailing-whitespace, line-too-long, bad-whitespace, invalid-name, R0204, C0200
+#pylint: disable=superfluous-parens, missing-docstring, broad-except, R0801
+#pylint: disable=too-many-lines, too-many-instance-attributes, too-many-statements, too-many-nested-blocks
+#pylint: disable=too-many-branches, too-many-public-methods, too-many-locals, too-many-arguments
+
+#======================================================================================
+#This is an example code for RFExplorer python functionality. 
+#Display amplitude in dBm and frequency in MHz of the maximum value of frequency range.
+#In order to avoid USB issues, connect only RF Explorer Spectrum Analyzer to run this example
+#It is not suggested to connect RF Explorer Signal Generator at the same time
+#======================================================================================
+
+import sys
+import time
+import RFExplorer
+print(RFExplorer, __file__)
+from RFExplorer import RFE_Common 
+import math
+
+#---------------------------------------------------------
+# Helper functions
+#---------------------------------------------------------
+
+def PrintPeak(objAnalazyer):
+    global min_peak_amp
+
+    """This function prints the amplitude and frequency peak of the latest received sweep
+    """
+    nIndex = objAnalazyer.SweepData.Count-1
+    objSweepTemp = objAnalazyer.SweepData.GetData(nIndex)
+    nStep = objSweepTemp.GetPeakDataPoint()      #Get index of the peak
+    fAmplitudeDBM = objSweepTemp.GetAmplitude_DBM(nStep)    #Get amplitude of the peak
+    fCenterFreq = objSweepTemp.GetFrequencyMHZ(nStep)   #Get frequency of the peak
+    fCenterFreq = math.floor(fCenterFreq * 10 ** 3) / 10 ** 3   #truncate to 3 decimals
+    if (fAmplitudeDBM > min_peak_amp):
+        print("\n     Peak: " + "{0:.3f}".format(fCenterFreq) + "MHz  " + str(fAmplitudeDBM) + "dBm")
+    else:
+        print(". ", end='', flush=True)
+
+def ControlSettings(objAnalazyer, span, start_scan, stop_scan):
+    """This functions check user settings 
+    """
+    SpanSizeTemp = None
+    StartFreqTemp = None
+    StopFreqTemp =  None
+
+    #print user settings
+    print("User settings:" + "Span: " + str(span) +"MHz"+  " - " + "Start freq: " + str(start_scan) +"MHz"+" - " + "Stop freq: " + str(stop_scan) + "MHz")
+
+    #Control maximum Span size
+    if(objAnalazyer.MaxSpanMHZ <= span):
+        print("Max Span size: " + str(objAnalazyer.MaxSpanMHZ)+"MHz")
+    else:
+        objAnalazyer.SpanMHZ = span
+        SpanSizeTemp = objAnalazyer.SpanMHZ
+    if(SpanSizeTemp):
+        #Control minimum start frequency
+        if(objAnalazyer.MinFreqMHZ > start_scan):
+            print("Min Start freq: " + str(objAnalazyer.MinFreqMHZ)+"MHz")
+        else:
+            objAnalazyer.StartFrequencyMHZ = start_scan
+            StartFreqTemp = objAnalazyer.StartFrequencyMHZ    
+        if(StartFreqTemp):
+            #Control maximum stop frequency
+            if(objAnalazyer.MaxFreqMHZ < stop_scan):
+                print("Max Stop freq: " + str(objAnalazyer.MaxFreqMHZ)+"MHz")
+            else:
+                if((StartFreqTemp + SpanSizeTemp) > stop_scan):
+                    print("Max Stop freq (START_SCAN_MHZ + SPAN_SIZE_MHZ): " + str(stop_scan) +"MHz")
+                else:
+                    StopFreqTemp = (StartFreqTemp + SpanSizeTemp)
+    
+    return SpanSizeTemp, StartFreqTemp, StopFreqTemp
+
+#These values can be limited by specific RF Explorer Spectrum Analyzer model. 
+#Check RFE SA Comparation chart from www.rf-explorer.com\models to know what
+#frequency setting are available for your model
+#These freq settings will be updated later in SA condition.
+SPAN_SIZE_MHZ = 40           #Initialize settings
+START_SCAN_MHZ = 980
+STOP_SCAN_MHZ = 1020 
+MIN_PEAK_AMP = -80 
+RESET = False
+
+span = SPAN_SIZE_MHZ
+start_scan = START_SCAN_MHZ
+stop_scan = STOP_SCAN_MHZ
+min_peak_amp = MIN_PEAK_AMP
+reset = RESET
+#---------------------------------------------------------
+# Main processing loop
+#---------------------------------------------------------
+def main(argv=None):
+    #---------------------------------------------------------
+    # global variables and initialization
+    #---------------------------------------------------------
+
+    SERIALPORT = None    #serial port identifier, use None to autodetect  
+    #SERIALPORT = '/dev/ttyUSB0'    #serial port identifier, use None to autodetect  
+    #SERIALPORT = '/dev/ttyUSB1'    #serial port identifier, use None to autodetect  
+    BAUDRATE = 500000
+
+    objRFE = RFExplorer.RFECommunicator()     #Initialize object and thread
+    #objRFE.AutoConfigure = False
+    objRFE.AutoConfigure = True
+
+
+
+    import argparse
+    if argv is None:
+        argv = sys.argv
+
+    parser = argparse.ArgumentParser(description='peak amplitude search')
+    parser.add_argument('--span', type=int, default=SPAN_SIZE_MHZ, help='span size in MHz')
+    parser.add_argument('--start-scan', type=int, default=START_SCAN_MHZ, help='start scanning frequency in MHz' )
+    parser.add_argument('--stop-scan', type=int, default=STOP_SCAN_MHZ, help='stop scanning frequency in MHz' )
+    parser.add_argument('--min-peak-amp', type=int, default=MIN_PEAK_AMP, help='minimum peak amplitude to report' )
+    parser.add_argument('--reset', type=bool, default=RESET, help='whether to reset first' )
+
+    args = parser.parse_args(argv[1:])
+#    args = parser.parse_args()
+
+    span = args.span
+    start_scan = args.start_scan
+    stop_scan = args.stop_scan 
+    min_peak_amp = args.min_peak_amp 
+    reset = args.reset
+
+
+    try:
+        print(span, start_scan, stop_scan, min_peak_amp, reset)
+        #Find and show valid serial ports
+        objRFE.GetConnectedPorts()
+
+        #Connect to available port
+        if (objRFE.ConnectPort(SERIALPORT, BAUDRATE)): 
+            if (reset):
+                print("Reseting device...")   
+                #Reset the unit to start fresh
+                objRFE.SendCommand("r")    
+                #Wait for unit to notify reset completed
+                while(objRFE.IsResetEvent):
+                    pass
+
+                #Wait for unit to stabilize
+                time.sleep(8)
+
+
+            #Request RF Explorer configuration
+            objRFE.SendCommand_RequestConfigData()
+
+            #Wait to receive configuration and model details
+            while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
+                done, rcvd = objRFE.ProcessReceivedString(True)    #Process the received configuration
+            
+    #        objRFE.VerboseLevel= 5
+
+            #If object is an analyzer, we can scan for received sweeps
+            if(objRFE.IsAnalyzer()):
+                print("---- Peak Search ----")
+
+                #Control settings
+                SpanSize, StartFreq, StopFreq = ControlSettings(objRFE, span, start_scan, stop_scan)
+                if(SpanSize and StartFreq and StopFreq):
+                    nInd = 0
+                    while (True): 
+                        #Set new configuration into device
+                        objRFE.UpdateDeviceConfig(StartFreq, StopFreq)
+
+                        objSweep=None
+                        #Wait for new configuration to arrive (as it will clean up old sweep data)
+                        while(True):
+                            flag, objstr = objRFE.ProcessReceivedString(True);
+
+                            #need to wait until we get a good rcvd string
+                            if not flag:
+                                continue
+
+                            if objRFE.VerboseLevel > 4:
+                                print(flag, objRFE.SweepData.Count)
+
+                            if (objRFE.SweepData.Count>0):
+                                objSweep=objRFE.SweepData.GetData(objRFE.SweepData.Count-1)
+
+                                nInd += 1
+    #                            print("Freq range["+ str(nInd) + "]: " + str(StartFreq) +" - "+ str(StopFreq) + "MHz" )
+                                PrintPeak(objRFE)
+                            if(math.fabs(objRFE.StartFrequencyMHZ - StartFreq) <= 0.001):
+                                    break
+      
+                        #set new frequency range
+                        StartFreq = StopFreq
+                        StopFreq = StartFreq + SpanSize
+                        if (StopFreq > stop_scan):
+                            StopFreq = stop_scan
+
+                        if (StartFreq >= StopFreq):
+                            break
+                else:
+                    print("Error: settings are wrong.\nPlease, change and try again")
+        else:
+            print("Not Connected")
+    except Exception as obEx:
+        print("Error: " + str(obEx))
+
+    #---------------------------------------------------------
+    # Close object and release resources
+    #---------------------------------------------------------
+
+    objRFE.Close()    #Finish the thread and close port
+    objRFE = None 
+
+if __name__ == '__main__':
+      sys.exit(main())

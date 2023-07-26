@@ -1,0 +1,65 @@
+#!/bin/python3
+
+import os
+import traceback
+import time
+import socket
+import sys
+from util import testapp 
+
+span = 30
+freq = 1000
+tone_freq = 1004
+try:
+
+
+    #build client object
+    test = testapp.TestApp()
+
+    # connect to the server
+    test.connectServer()
+
+    while True:
+        for pwr in range(9):
+            print("start a continuous tone at 1 Gig at power level ", pwr)
+            test.sendStartCW(tone_freq, span, pwr)
+            time.sleep(3)
+
+            print("see what the peaksearch reports")
+            resp, peak_freq, power = test.sendPeakSearch(freq, span);
+            print("Peak Search Results: status ", resp, "freq ", peak_freq, "power", power)
+            
+            print("stop Continuous tone")
+            test.sendStopGen()
+            time.sleep(3)
+            print(" ")
+
+        print("start a sweep")
+        test.sendStartSweep(980, 7, 20, 2, 3000, span)
+        time.sleep(3)
+
+        print("send peaksearch")
+        resp, res_freq, power = test.sendPeakSearch(freq, span)
+        print("Peak Search Results: status ", resp, "freq ", res_freq, "power", power)
+        time.sleep(3)
+
+        print("send peaksearch again")
+        resp, res_freq, power = test.sendPeakSearch(freq, span)
+        print("Peak Search Results: status ", resp, "freq ", res_freq, "power", power)
+        time.sleep(3)
+
+        print("stop the sweep")
+        test.sendStopGen()
+        time.sleep(3)
+
+    test.disconnectServer()
+
+
+except Exception as e:
+
+    print(traceback.format_exc())
+    print("**Error: " + str(e))
+
+
+
+

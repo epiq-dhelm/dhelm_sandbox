@@ -1,0 +1,6 @@
+[org.gnome.shell]
+favorite-apps = ['ubiquity.desktop', 'firefox.desktop', 'google-chrome.desktop', 'chromium-browser.desktop', 'thunderbird.desktop', 'org.gnome.Nautilus.desktop', 'rhythmbox.desktop', 'libreoffice-writer.desktop', 'org.gnome.Software.desktop', 'yelp.desktop', 'ubuntu-amazon-default.desktop']
+
+[org.gnome.desktop.peripherals.touchpad]
+natural-scroll=true
+click-method = 'areas'

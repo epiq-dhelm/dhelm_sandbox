@@ -1,0 +1,3 @@
+[org.gnome.settings-daemon.plugins.power]
+sleep-inactive-ac-timeout = 1200
+sleep-inactive-battery-timeout = 1200

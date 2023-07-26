@@ -1,0 +1,21 @@
+#!/bin/bash
+
+PS4='Line ${LINENO}: '
+#set -x
+
+check_result()
+{
+    if [[ $? -ne 0 ]]
+    then 
+        exit 
+    fi
+}
+
+python3  ../util/testapp.py --cmd "GetData" --freq 1000 --span 20 
+check_result 
+
+
+
+
+
+

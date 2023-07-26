@@ -1,0 +1,63 @@
+#!/bin/python3
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def makeComplexWaveform(f,A,Fs,N,SNR=None):
+    """
+        generates a complex baseband waveform at a given frequency
+        
+        f = frequency,
+        A = amplitude, if A < 0, make I and Q each of amplitude abs(A)
+        Fs = sampling rate (same units as f),
+        N = number of samples to return,
+        SNR = add noise if provided
+        returns np.array, dtype=complex, length N
+    """
+    k = np.arange(0,N)
+    if A<0:
+        A = -A * np.sqrt(2.0)
+    x = A/np.sqrt(2.0) * (np.cos(2*np.pi*f*k/Fs) +complex(0,1)*np.sin(2*np.pi*f*k/Fs))
+    if SNR is not None:
+        npwr = 10**(-SNR/20.0) * A / 2.0
+        n = np.random.randn(N)*npwr + complex(0,1)* \
+            np.random.randn(N)*npwr
+        x = x + n
+    return x
+ 
+def complex_to_int16(dat):
+    int_dat = np.rint(dat)
+    i = np.real(int_dat)
+    q = np.imag(int_dat)
+    return np.array([q, i]).T.reshape(-1).astype('int16')
+ 
+if __name__ == '__main__':
+
+    dat_1_4 = 16 * complex_to_int16(makeComplexWaveform(1, 1023, 4, 64))
+    df = pd.DataFrame({ '1/4': dat_1_4[::2] })
+    df.plot()
+    plt.show()
+
+# 32 samples of a 1/32 fs tone
+#    dat_1_32 = 16 * complex_to_int16(makeComplexWaveform(1, 1023, 32, 32))
+#     
+#    # 32 samples of a 1/8 fs tone
+#    dat_1_8 = 16 * complex_to_int16(makeComplexWaveform(1, 1023, 8, 3200))
+#     
+#    # create a DataFrame with both waveforms to plot and enjoy
+#    df = pd.DataFrame({ '1/32': dat_1_32[::2], '1/8': dat_1_8[::2] })
+#    df.plot()
+#    plt.show()
+     
+    #
+    # create a waveform with 4*32 samples of 1/32 fs followed by 8184*32 samples of 1/8 fs
+    # 'awesome' contains 32 blocks of 8188 samples
+    #
+    # this waveform can help find out determine the start of transmission
+#    awesome = np.concatenate((np.tile(dat_1_8, 4), np.tile(dat_1_32, 8184)))
+     
+    # plot the first 1024 I (or Q) values
+#    df = pd.DataFrame({ 'wv': awesome[:1024:2]})
+#    df.plot()
+#    plt.show()

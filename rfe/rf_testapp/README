@@ -1,0 +1,23 @@
+This directory is used to do RF in the loop testing.
+
+This provides the ability to issue commands from Bash scripts or Python code to perform the following:
+
+StartCW: Send a continuous tone out to the "card under test"
+
+StartSweep: Send a tone sweeping over a frequency range to the "card under test".
+
+StopGen: Stop any tone's being sent.
+
+PeakSearch: Receive a signal from a "card under test" and look over a frequency range and report the peak frequency and power back to the test script. 
+
+The "TCP client" is called from the bash or python test code.  This establishes a TCP connection to the "TCP Server" which must exist on the host connected to the Sidekiq card used to generate or listen to the tones.  Lets call this the generator/analyzer card.
+
+Client:
+The code in the client directory is intended to show how to "call" the functions from Bash, in the "example apps" directory.  Or from python in the "libtest" file.
+
+This works because in the util directory there is a testapp.py file that actually performs the "client" functions talking to the server.
+
+Server:
+The code in the server directory actually performs the requested commands on the "generator/analyzer" Sidekiq card.  This server app must be running before any Client commands are issued.
+
+
