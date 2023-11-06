@@ -1,0 +1,24 @@
+FROM docker.epiq.rocks/epiq-sw-dev-env-ubuntu22.04
+
+# Update the package list, install sudo, create a non-root user, and grant password-less sudo permissions
+RUN apt update && apt install -y apt-utils build-essential kmod gcc
+RUN apt install -y sudo vim 
+RUN adduser --disabled-password --gecos "" sidekiq 
+RUN adduser sidekiq sudo
+RUN echo 'sidekiq ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Set the non-root user as the default user
+USER sidekiq
+
+# Set the working directory
+WORKDIR /home/sidekiq/
+
+# Create and switch to a new user
+#RUN useradd --create-home -u 1052 sidekiq
+#WORKDIR /home/sidekiq
+#USER sidekiq
+
+
+COPY install_sidekiq_complete_for_v4.17.255-169-gcf4573a12_20231102_x86.sh .
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]
