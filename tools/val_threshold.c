@@ -23,7 +23,9 @@ int main(int argc, char *argv[])
     long byteslen;
     int16_t data_block[MAX_BLOCK];
     long ctr = 0;
+    int retcode = 0;
 
+    printf("file name: %s\n", argv[1]);
     if (argc > 2)
     {
         max_data = atoi(argv[2]);
@@ -46,6 +48,8 @@ int main(int argc, char *argv[])
     int error_ctr = 0;
     int64_t  last_location = 0;
 
+    int16_t max_value = 0;
+    int16_t min_value = 0;
     while (ctr < shortslen)
     {
 //        printf("ctr %ld\n", ctr);
@@ -61,50 +65,38 @@ int main(int argc, char *argv[])
             exit(1);
         }
 
-        int16_t expected_short = data_block[0];
-
+#define THRESHOLD 10000
+    
         //validate samples
         for (int i = 0; i < shorts_read; i++)
         {
-            if (data_block[i] != expected_short)
+            if (data_block[i] > THRESHOLD || data_block[i] < -THRESHOLD)
             {
-                uint64_t location = (ctr + i) * 2;
-
-                int64_t value_delta =  data_block[i] - expected_short  ;
-
-                int64_t location_delta = location - last_location;
-
-                last_location = location;
-
-                printf("\nFail: Byte # 0x%010lX (%lu), Expected 0x%04X (%u), Actual 0x%04X (%u)\n",
-                        location, location, expected_short, expected_short, data_block[i], data_block[i]);
-
-                printf("address delta bytes %ld (0x%08lX), value delta bytes %ld (0x%08lX), samples %ld\n", 
-                        location_delta, location_delta, value_delta, value_delta, value_delta / 4);
-
-                for (int j = -5 ; j < 5; j++)
+                if (retcode == 0)
                 {
-                    printf("0x%08lX , 0x%0X (%d)\n", (location+j), data_block[(i+j)], data_block[(i+j)]); 
+                    printf("error index %d, value %d\n", i, data_block[i]);
                 }
-
-
-                error_ctr++;
-
-                if (error_ctr > 3)
-                {
-                    exit(-1);
-                }
+                retcode = -1;
             }
-            expected_short = data_block[i] + 1;
-            if (expected_short == (max_data + 1))
+            if (data_block[i] > max_value)
             {
-                expected_short = -(max_data + 1);
+                max_value = data_block[i];
             }
+            if (data_block[i] <  min_value)
+            {
+                min_value = data_block[i];
+            }
+
         }
+
         ctr += shorts_read;
     }
-
     printf("ctr %ld, bytes %ld\n", ctr, ctr * 2);
-    printf("Success\n");
+    printf("max_value %d, min_value %d\n", max_value, min_value);
+    if (retcode != 0)
+    {
+        printf(" Failure!");
+    }
 
+    return retcode;
 }
