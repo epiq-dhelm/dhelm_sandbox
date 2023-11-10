@@ -1,6 +1,7 @@
 ARG UBUNTU_VERSION=18.04 //Default value provided
 
-FROM docker.epiq.rocks/epiq-sw-dev-env-${UBUNTU_VERSION}
+#FROM docker.epiq.rocks/epiq-sw-dev-env-${UBUNTU_VERSION}
+FROM ubuntu:${UBUNTU_VERSION}
 
 # Update the package list, install sudo, create a non-root user, and grant password-less sudo permissions
 RUN apt update && apt install -y apt-utils build-essential kmod gcc
@@ -14,8 +15,6 @@ USER sidekiq
 
 # Set the working directory
 WORKDIR /home/sidekiq/
-
-COPY install_current.sh .
 
 
 ENTRYPOINT ["tail", "-f", "/dev/null"]

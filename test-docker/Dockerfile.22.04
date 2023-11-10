@@ -13,12 +13,6 @@ USER sidekiq
 # Set the working directory
 WORKDIR /home/sidekiq/
 
-# Create and switch to a new user
-#RUN useradd --create-home -u 1052 sidekiq
-#WORKDIR /home/sidekiq
-#USER sidekiq
-
-
-COPY install_sidekiq_complete_for_v4.17.255-169-gcf4573a12_20231102_x86.sh .
+COPY install_current.sh .
 
 ENTRYPOINT ["tail", "-f", "/dev/null"]
