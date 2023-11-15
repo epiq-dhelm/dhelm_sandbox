@@ -6,6 +6,8 @@ RUN apt-get install python3-pip git -y
 
 RUN apt update && apt install -y openssh-server
 
+RUN sudo apt-get install dbus dbus-x11 -y
+
 RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 EXPOSE 22
@@ -22,11 +24,10 @@ WORKDIR /home/recorderuser
 
 COPY src/  /home/recorderuser
 
-RUN sudo /home/recorderuser/install_sidekiq_complete_for_v4.17.6-26-g5517cd98432c_20230605_x86.sh
+RUN sudo /home/recorderuser/install_current.sh
 
 RUN sudo /home/recorderuser/install_grc.sh
 
-RUN sudo apt-get install dbus dbus-x11 -y
 
 RUN git clone https://github.com/epiqsolutions/gr-sidekiq.git
 
