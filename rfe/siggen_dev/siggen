@@ -64,7 +64,7 @@ STOP_SCAN_MHZ = 960
 RESET = True
 DEBUG = TRUE
 
-root = Tk(className='HappyName')
+root = Tk(className='genName')
 current_frame = Frame(root)
 
 def enterhandler(e):

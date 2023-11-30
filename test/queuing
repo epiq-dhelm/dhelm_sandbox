@@ -1,0 +1,57 @@
+#!/bin/python3
+
+from ctypes import *
+import threading
+import random
+import time
+
+class SBuf:
+    def __init__(self, maxsize):
+        import queue
+        self.q = queue.Queue()
+        self.maxsize = maxsize
+        self.nonempty = threading.Condition()
+
+    def get(self):
+        with self.nonempty:
+            while not self.q.qsize():
+                self.nonempty.wait()
+            print("get: q.qsize ", self.q.qsize())
+            assert self.q.qsize()
+            return self.q.get()
+
+    def put(self, v):
+        with self.nonempty:
+            print("put: q.qsize ", self.q.qsize())
+            while self.q.qsize() >= self.maxsize:
+                 self.q.get()
+            self.q.put(v)
+            assert 0 < self.q.qsize() <= self.maxsize
+            self.nonempty.notify_all()
+
+def testBufferget(myQueue):
+    myName = threading.currentThread().getName()
+    for i in range(20):
+#        randomTime = random.randint(1,100)
+#        randomTime %= 5
+#        time.sleep(randomTime+1)
+#        print ('{0} requesting buffer from queue.'.format(myName))
+        node = myQueue.get()
+        print ('{0} recieved buffer from queue.'.format(myName), node)
+
+def testBufferput(myQueue):
+    myName = threading.currentThread().getName()
+    for i in range(20):
+#        time.sleep(2)
+        print ('{0} putting item.'.format(myName))
+        myQueue.put("item " + str(i))
+
+if __name__== "__main__":
+    myQueue = SBuf(9)
+    t1 = threading.Thread(target=testBufferget, name='ThreadGet',args=(myQueue,))
+    t2 = threading.Thread(target=testBufferput, name='ThreadPut',args=(myQueue,))
+ 
+    t2.start()
+    t1.start()
+    t1.join()
+    t2.join()
