@@ -22,6 +22,8 @@ USER recorderuser
 
 WORKDIR /home/recorderuser
 
+# need to make sure the complete installer is renamed install_current.sh and put into src directory
+
 COPY src/  /home/recorderuser
 
 RUN sudo /home/recorderuser/install_current.sh
