@@ -25,7 +25,6 @@ git pull
 git subm
 
 echo "see if container running"
-
 if [ "$( docker container inspect -f '{{.State.Running}}' ubuname )" == "true" ]
 then 
     docker stop ubuname
