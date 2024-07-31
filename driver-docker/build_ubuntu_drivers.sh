@@ -6,9 +6,9 @@ set -e
 
 os_version=22.04
 
-sidekiq_version=4.17.6
+sidekiq_version=4.18.0
 
-kernel_version=5.19.0-83-generic
+kernel_version=6.5.0-generic
 
 
 source ./arg_parser.sh
