@@ -1,0 +1,72 @@
+#!/bin/python3
+
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+import struct
+
+# Set parameters
+sample_rate = 50_000_000  # 50 MHz sample rate
+duration = 0.001           # 10 ms duration
+amplitude = 20000         # Fixed amplitude for I and Q
+initial_segment_length = int(sample_rate * 0.00015)  # Length for initial long square wave
+
+# Calculate total number of samples
+num_samples = int(sample_rate * duration)
+
+# Generate I/Q data
+i_data = []
+q_data = []
+
+initial_time = initial_segment_length / sample_rate
+tot_time = initial_time
+initial_bytes = initial_segment_length * 4
+tot_bytes = initial_bytes
+
+print(f"num samples: {num_samples}, initial_segment_length {initial_segment_length}, segment_time {initial_time:.9f}, seg bytes {initial_bytes:x}")
+
+# Add initial long square wave segment
+for _ in range(initial_segment_length):
+    i_data.append(amplitude)
+    q_data.append(0)
+
+# Generate pseudorandom square wave with fixed amplitude and varying widths
+remaining_samples = num_samples - initial_segment_length
+
+ctr = 0
+while remaining_samples > 0:
+    ctr += 1
+    segment_length = random.randint(int(sample_rate * 0.00001), int(sample_rate * 0.00008))  # Varying segment width
+    value = amplitude if ctr % 2 == 0 else -amplitude  # Alternate high and low
+    segment_length = min(segment_length, remaining_samples)  # Ensure we don't exceed total samples
+   
+    i_data.extend([value] * segment_length)
+    q_data.extend([0] * segment_length)
+    
+    remaining_samples -= segment_length
+    segment_time = segment_length / sample_rate
+    tot_time += segment_time
+
+    segment_bytes = segment_length * 4
+    tot_bytes += segment_bytes
+    print(f"{ctr}, seg length {segment_length}, seg time {segment_time:.9f}, tot time {tot_time:.9f}, tot bytes {tot_bytes:x}")
+
+# Truncate to exact number of samples
+i_data = i_data[:num_samples]
+q_data = q_data[:num_samples]
+
+# Write to file as interleaved 16-bit I/Q samples
+with open("varying_width_square_wave_iq_samples_16bit.bin", "wb") as f:
+    for i, q in zip(i_data, q_data):
+        f.write(struct.pack('<hh', i, q))
+
+# Plot the generated waveform
+time = np.arange(num_samples) / sample_rate
+plt.plot(time, i_data, label='I')
+plt.plot(time, q_data, label='Q')
+plt.title("Time-Domain Baseband Signal with Varying Widths")
+plt.xlabel("Time (s)")
+plt.ylabel("Amplitude")
+plt.legend()
+plt.xticks(np.arange(duration, step=0.0001))  
+plt.show()
