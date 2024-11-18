@@ -5,7 +5,7 @@ RUN yum update -y
 RUN yum install -y  sudo
 
 RUN sudo yum groupinstall -y "Development Tools"
-sudo dnf install libtirpc.x86_64
+RUN sudo yum install libtirpc.x86_64
 
 
 

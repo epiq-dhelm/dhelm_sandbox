@@ -18,21 +18,29 @@ from RFExplorer import RFE_Common
 
 """
 Power Table:
-    0   -35.2
-    1   -33.2
-    2   -29.2
-    3   -26.2
-    4   -5.7
-    5   -2.7
-    6    0.3
-    7   +2.8
-
-
+    Listed          Actual
+    0   -35.2       -42
+    1   -33.2       -39
+    2   -29.2       -35
+    3   -26.2       -33
+    4   -5.7        -10
+    5   -2.7        -7.3
+    6    0.3        -6
+    7   +2.8        -5
 """
 
 #---------------------------------------------------------
 # global variables and initialization
 #---------------------------------------------------------
+
+power_table = {0: '-42.0 dBm',
+               1: '-39.0 dBm',
+               2: '-35.0 dBm',
+               3: '-33.0 dBm',
+               4: '-10.0 dBm',
+               5: '-7.3 dBm',
+               6: '-6.0 dBm',
+               7: '-5.0 dBm'}
 
 # List of field labels
 labels = [
@@ -91,7 +99,7 @@ def power_off():
     objRFE.SendCommand("CP0")
 
 def continuous_power_on():
-    global cw_freq, cw_power, current_color, on_button
+    global cw_freq, cw_power, current_color, on_button, spinbox
 
     current_color = "red"
     on_button.configure(bg= "red")
@@ -110,9 +118,11 @@ def continuous_power_on():
     if DEBUG:
         print("float freq ", floatfreq, "int freq ", intfreq)
 
-    power = int(cw_power.get())
+    # get the power from the spinbox and display power level
+    power = int(spinbox.get())
+    cw_power_dbm.config(text=power_table[power])
 
-    if power > 3 or power < 0:
+    if power > 7 or power < 0:
         showinfo("Error", "invalid power level", 3)
         power = 0
     
@@ -131,8 +141,15 @@ def continuous_power_on():
 
     objRFE.SendCommand(cmd)
 
+def on_spinbox_click(event):
+    global current_frame
+
+    # need to wait a bit before we get the contents of the spinbox
+    current_frame.after(10, continuous_power_on)
+
+
 def continuous_wave():
-    global current_frame, cw_freq, cw_power, current_state, on_button
+    global current_frame, cw_freq, cw_power, cw_power_dbm, current_state, on_button, spinbox
     
     current_state = "continuous_wave"
 
@@ -145,23 +162,35 @@ def continuous_wave():
 
     label = Label(master=current_frame, text="Frequency MHz: ", font=("Arial", 16))
     label.grid(row = 0, column = 0, padx = 20, pady = 10)
+
     cw_freq = Entry(master=current_frame, width = 10, font=("Ariel", 16))
-    cw_freq.insert(0, "1000.0")
+    cw_freq.insert(0, "1002.0")
     cw_freq.focus_set()
     cw_freq.grid(row = 0, column = 1, padx = 20, pady = 10)
 
-    label2 = Label(master=current_frame, text="Power (0-3) : ", font=("Arial", 16))
+    label2 = Label(master=current_frame, text="Power (0-7) : ", font=("Arial", 16), bd=2)
     label2.grid(row = 1, column = 0, padx = 20, pady = 10)
-    cw_power = Entry(master=current_frame, width = 10, font=("Ariel", 16))
-    cw_power.insert(0, "0")
-    cw_power.grid(row = 1, column = 1, padx = 20, pady = 10)
+
+    # use an up down click instead of an Entry
+    spinbox = tk.Spinbox(master=current_frame, from_=0, to=7, width=10, font=("Arial", 16), 
+                        highlightthickness=1, highlightbackground="black")
+    spinbox.grid(row = 1, column = 1, padx = 20, pady = 10)
+
+    spinbox.bind("<<Increment>>", on_spinbox_click) 
+    spinbox.bind("<<Decrement>>", on_spinbox_click) 
+    spinbox.bind("<ButtonRelease-1>", on_spinbox_click) 
+
+    cw_power_dbm = Label(master=current_frame, text="-42.0 dBm", font=("Arial", 16))
+    cw_power_dbm.grid(row = 1, column = 2, padx = 20, pady = 10)
 
     on_button = Button(current_frame, text = 'Power On') 
-#    on_button.configure(font=("Arial", 16), command = lambda name= on_button: continuous_power_on(name) )
     on_button.configure(font=("Arial", 16), command = continuous_power_on )
     on_button.grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Power Off', font=("Arial", 16), command = power_off).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Back', font=("Arial", 16), command = top_window).grid(row = 2, column = 2, sticky = W, padx = 20, pady = 10)
+
+    Button(current_frame, text = 'Power Off', font=("Arial", 16), 
+           command = power_off).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
+    Button(current_frame, text = 'Back', font=("Arial", 16), 
+           command = top_window).grid(row = 2, column = 2, sticky = W, padx = 20, pady = 10)
     current_frame.pack(fill="both", expand=True)
 
 def start_sweep():
@@ -255,6 +284,7 @@ def frequency_sweep():
     Button(current_frame, text = 'Clear', font=("Arial", 16), command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
     Button(current_frame, text = 'Back', font=("Arial", 16), command = top_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
     current_frame.pack(fill="both", expand=True)
+
 
 def top_window():
     global current_frame, root

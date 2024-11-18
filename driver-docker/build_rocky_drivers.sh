@@ -4,7 +4,7 @@ PS4='Line ${LINENO}: '
 set -x
 set -e
 
-os_version=8
+os_version=9.3
 
 sidekiq_version=4.17.6
 
@@ -13,7 +13,7 @@ kernel_version=4.18.0-477.15.1.el8_8.x86_64
 
 
 # the ending is different per kernel, so look it up here https://download.rockylinux.org/pub/rocky/8/Devel/x86_64/os/Packages/k/
-kernel_version_ending=el8_9
+kernel_version_ending=el9_3
 
 long_kernel_version=$kernel_version_ending.x86_64
 

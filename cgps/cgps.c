@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 	int i;
 	char *field[20];
 
-	if ((fd = OpenGPSPort("/dev/ttySKIQ_UART1")) < 0)
+	if ((fd = OpenGPSPort("/dev/ttySKIQ_UART2")) < 0)
 	{
 		printf("Cannot open GPS port\r\n.");
 		return 0;
