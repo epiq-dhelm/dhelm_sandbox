@@ -1,0 +1,74 @@
+#!/bin/python3
+
+import numpy as np
+import struct
+import argparse
+
+phase_blk_start = 0
+phase_incr = 0
+block_len = 0
+
+def init(f_norm, block_size):
+    global phase_blk_start, phase_incr, block_len
+    phase_blk_start = 0.0
+    phase_incr = 2 * np.pi * f_norm
+    block_len = block_size
+
+def gen_tone_block():
+    global phase_blk_start, phase_incr, block_len
+    """Generate a single block of the tone in interleaved I/Q format."""
+
+    iq_blk = []
+
+    phase = phase_blk_start
+    for idx_samp in range(block_len):
+        I = (np.cos(phase) * 32767).astype(np.int16)
+        Q = (np.sin(phase) * 32767).astype(np.int16)
+
+        phase += phase_incr
+        phase = phase % (2 * np.pi)
+
+        iq_blk.append(I)
+        iq_blk.append(Q)
+
+    phase_blk_start = phase 
+
+    return np.array(iq_blk, dtype=np.int16)
+
+
+
+def write_tone_to_file(filename, num_blocks, block_size):
+    iq_tone = np.array([], dtype=np.int16)  # Initialize as an empty NumPy array
+
+    for idx_blk in range(num_blocks):
+        tone_block = gen_tone_block()
+        iq_tone = np.concatenate((iq_tone, tone_block))  # Concatenate arrays
+
+    """Write the tone data to a binary file."""
+    with open(filename, "wb") as f:
+        f.write(iq_tone.tobytes())
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate a tone and save it to a binary file.")
+    parser.add_argument("--sample_rate", type=int, required=True, help="Sample rate in Hz.")
+    parser.add_argument("--tone_frequency", type=float, required=True, help="Tone frequency in Hz.")
+    parser.add_argument("--block_size", type=int, required=True, help="Number of samples per block.")
+    parser.add_argument("--num_blocks", type=int, required=True, help="Number of blocks to generate.")
+    parser.add_argument("--output_file", type=str, required=True, help="Output binary file.")
+
+    args = parser.parse_args()
+
+    f_norm = args.tone_frequency / args.sample_rate  
+
+    # must be in [-0.5, 0.5); I chose small value so it looks nicer when plotted
+    print(f"f_norm: {f_norm}")
+
+    init(f_norm, args.block_size)
+    
+    # Write the data to the binary file
+    write_tone_to_file(args.output_file, args.num_blocks, args.block_size)
+    print(f"Tone data written to {args.output_file}")
+
+if __name__ == "__main__":
+    main()
+
