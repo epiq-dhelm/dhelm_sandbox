@@ -1,0 +1,92 @@
+#!/bin/python3
+
+import random
+import subprocess
+import numpy as np
+
+MIN_SAMPLE_RATE = 100000
+MAX_SAMPLE_RATE = 500000000
+MIN_TONE_FREQ = 100000
+MAX_TONE_FREQ = 20000000
+BLOCK_SIZE_ITRS = 256
+
+# Function to detect discontinuities in the I/Q data
+def detect_discontinuities(iq_data, phase_threshold=0.3, amplitude_threshold=1000):
+    # Calculate the phase and amplitude of the I/Q data
+    phases = np.angle(iq_data)
+    amplitudes = np.abs(iq_data)
+    
+    # Calculate the differences in phase and amplitude
+    phase_diff = np.diff(phases)
+    amplitude_diff = np.diff(amplitudes)
+   
+    # Handle phase wraparound: ensure the phase difference is correctly calculated
+    phase_diff = np.unwrap(phase_diff)  # Unwrap the phase difference to avoid discontinuities due to the -π to π range
+
+    # Detect discontinuities based on phase and amplitude differences
+    phase_discontinuity = np.any(np.abs(phase_diff) > phase_threshold)
+    amplitude_discontinuity = np.any(amplitude_diff > amplitude_threshold)
+    
+    if phase_discontinuity:
+        print("Discontinuity detected in phase.")
+    if amplitude_discontinuity:
+        print("Discontinuity detected in amplitude.")
+    
+    # Return True if any discontinuity is detected, else False
+    return phase_discontinuity or amplitude_discontinuity
+
+# Example of reading I/Q data from a file (assuming the file contains pairs of int16_t values)
+def read_iq_file(file_path):
+    # Read the file as int16_t (16-bit signed integers)
+    iq_data = np.fromfile(file_path, dtype=np.int16)
+    
+    # Reshape the data into pairs of (I, Q) values (each pair forms a complex number)
+    iq_data = iq_data.reshape(-1, 2)
+    
+    # Convert the I/Q pairs into complex numbers
+    iq_data = iq_data[:, 0] + 1j * iq_data[:, 1]
+    
+    return iq_data
+
+blk_itr = 4
+num_blocks = 10
+
+for block_size_idx in range(BLOCK_SIZE_ITRS):
+    block_size = 256 * blk_itr - 4
+    blk_itr += 1
+    
+    tone_freq_inc = random.randint(MIN_TONE_FREQ, MAX_TONE_FREQ) 
+    print(f"\ntone_freq_inc {tone_freq_inc:,}\n")
+    
+    for tone_freq_hz in range(MIN_TONE_FREQ, MAX_TONE_FREQ, tone_freq_inc):
+        sample_rate_inc = random.randint(MIN_SAMPLE_RATE, MAX_SAMPLE_RATE)
+        print(f"\nsample_rate_inc {sample_rate_inc:,}\n")
+
+        for sample_rate in range(MIN_SAMPLE_RATE, MAX_SAMPLE_RATE, sample_rate_inc):
+            if tone_freq_hz > sample_rate/2:
+                print("skip test")
+            else:
+                command = ["./tone_gen", f"--sample_rate={sample_rate}", f"--tone_frequency={tone_freq_hz}", f"--block_size={block_size}", f"--num_blocks={num_blocks}", "--output_file=samples.cs16"]
+
+                command_str = " ".join(command)
+                print(command_str)
+
+                try:
+                    subprocess.run(command, check=True)
+                except subprocess.CalledProcessError as e:
+                    print("test failed")
+                    exit(-1)
+
+                iq_data = read_iq_file("samples.bin")  # Replace with your I/Q file path
+
+                if detect_discontinuities(iq_data):
+                    print("The I/Q file contains a discontinuity.")
+                    exit(-1)
+                else:
+                    print("The I/Q file does not contain a discontinuity.")
+
+
+                
+            
+
+

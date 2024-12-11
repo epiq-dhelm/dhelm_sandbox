@@ -22,8 +22,8 @@ def gen_tone_block():
 
     phase = phase_blk_start
     for idx_samp in range(block_len):
-        I = (np.cos(phase) * 32767).astype(np.int16)
-        Q = (np.sin(phase) * 32767).astype(np.int16)
+        I = (np.cos(phase) * (32767 * 0.8)).astype(np.int16)
+        Q = (np.sin(phase) * (32767 * 0.8)).astype(np.int16)
 
         phase += phase_incr
         phase = phase % (2 * np.pi)
@@ -34,8 +34,6 @@ def gen_tone_block():
     phase_blk_start = phase 
 
     return np.array(iq_blk, dtype=np.int16)
-
-
 
 def write_tone_to_file(filename, num_blocks, block_size):
     iq_tone = np.array([], dtype=np.int16)  # Initialize as an empty NumPy array
@@ -60,7 +58,11 @@ def main():
 
     f_norm = args.tone_frequency / args.sample_rate  
 
-    # must be in [-0.5, 0.5); I chose small value so it looks nicer when plotted
+    # must be in [-0.5, 0.5); 
+    if f_norm < -0.5 or f_norm > 0.5:
+        print(f"f_norm out of range {f_norm}")
+        exit(-1)
+
     print(f"f_norm: {f_norm}")
 
     init(f_norm, args.block_size)
