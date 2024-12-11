@@ -11,7 +11,7 @@ MAX_TONE_FREQ = 20000000
 BLOCK_SIZE_ITRS = 256
 
 # Function to detect discontinuities in the I/Q data
-def detect_discontinuities(iq_data, phase_threshold=0.3, amplitude_threshold=1000):
+def detect_discontinuities(iq_data, phase_threshold=np.pi, amplitude_threshold=1000):
     # Calculate the phase and amplitude of the I/Q data
     phases = np.angle(iq_data)
     amplitudes = np.abs(iq_data)
@@ -26,11 +26,17 @@ def detect_discontinuities(iq_data, phase_threshold=0.3, amplitude_threshold=100
     # Detect discontinuities based on phase and amplitude differences
     phase_discontinuity = np.any(np.abs(phase_diff) > phase_threshold)
     amplitude_discontinuity = np.any(amplitude_diff > amplitude_threshold)
-    
+
+    # Loop through the data to find where the discontinuities happen
     if phase_discontinuity:
-        print("Discontinuity detected in phase.")
+        # Find where phase differences exceed the threshold and print the index of the sample
+        discontinuity_indices = np.where(np.abs(phase_diff) > phase_threshold)[0]
+        print("Phase discontinuity detected at sample indices:", discontinuity_indices)
+
     if amplitude_discontinuity:
-        print("Discontinuity detected in amplitude.")
+        # Find where amplitude differences exceed the threshold and print the index of the sample
+        discontinuity_indices = np.where(amplitude_diff > amplitude_threshold)[0]
+        print("Amplitude discontinuity detected at sample indices:", discontinuity_indices)
     
     # Return True if any discontinuity is detected, else False
     return phase_discontinuity or amplitude_discontinuity
@@ -49,41 +55,44 @@ def read_iq_file(file_path):
     return iq_data
 
 blk_itr = 4
-num_blocks = 10
+num_blocks = 4
+test = 0
 
 for block_size_idx in range(BLOCK_SIZE_ITRS):
     block_size = 256 * blk_itr - 4
     blk_itr += 1
     
-    tone_freq_inc = random.randint(MIN_TONE_FREQ, MAX_TONE_FREQ) 
-    print(f"\ntone_freq_inc {tone_freq_inc:,}\n")
+    tone_freq_inc = random.randint(MIN_TONE_FREQ, 5000000) 
+    print(f"\nblock_size {block_size:,}, tone_freq_inc {tone_freq_inc:,}\n")
     
     for tone_freq_hz in range(MIN_TONE_FREQ, MAX_TONE_FREQ, tone_freq_inc):
-        sample_rate_inc = random.randint(MIN_SAMPLE_RATE, MAX_SAMPLE_RATE)
-        print(f"\nsample_rate_inc {sample_rate_inc:,}\n")
+        sample_rate_inc = random.randint(MIN_SAMPLE_RATE, 100000000)
+        print(f"\nblock_size {block_size:,}, tone_freq_inc {tone_freq_inc:,}, sample_rate_inc {sample_rate_inc:,}\n")
 
         for sample_rate in range(MIN_SAMPLE_RATE, MAX_SAMPLE_RATE, sample_rate_inc):
-            if tone_freq_hz > sample_rate/2:
-                print("skip test")
-            else:
+            if tone_freq_hz <= sample_rate/2:
+                test += 1
                 command = ["./tone_gen", f"--sample_rate={sample_rate}", f"--tone_frequency={tone_freq_hz}", f"--block_size={block_size}", f"--num_blocks={num_blocks}", "--output_file=samples.cs16"]
 
                 command_str = " ".join(command)
-                print(command_str)
+                failure_str = f"test: {test:,}  " + command_str
+                success_str = f"test: {test:,}  " 
 
-                try:
-                    subprocess.run(command, check=True)
-                except subprocess.CalledProcessError as e:
-                    print("test failed")
+                result = subprocess.run(command, capture_output=True, text=True)
+                if result.returncode != 0:
+                    print(f"Test failed with return code {result.returncode}")
+                    print(failure_str)
+                    print(result.stderr, result.stdout)
                     exit(-1)
+                else:
+                    print(success_str)
 
-                iq_data = read_iq_file("samples.bin")  # Replace with your I/Q file path
+                iq_data = read_iq_file("samples.cs16")  
 
                 if detect_discontinuities(iq_data):
                     print("The I/Q file contains a discontinuity.")
+                    print(falure_str)
                     exit(-1)
-                else:
-                    print("The I/Q file does not contain a discontinuity.")
 
 
                 
