@@ -1,3 +1,4 @@
+#!/bin/python3
 #
 #
 # relay controller
@@ -26,7 +27,7 @@ class RelayNotFoundError(Exception):
 
 class RF_Relay(object):
     def __init__(self,switch_box,which_switch='A'):
-        #print "getting RF_Relay({},{})".format(switch_box,which_switch)
+        #print( "getting RF_Relay({},{})".format(switch_box,which_switch)
         self.switch_box = switch_box
         which_switch = which_switch.upper()
 
@@ -49,13 +50,13 @@ class RF_Relay(object):
             raise Exception("Unknown model type {}".format(model))
 
     def set_pos_mech(self,state):
-        print "setting {} to {}".format(self.name,state-1)
+        print( "setting {} to {}".format(self.name,state-1))
         self.switch_box.setRelayState(self.relay_num,state-1)
     def get_pos_mech(self):
         return self.switch_box.getRelayState(self.relay_num)+1
 
     def set_pos_ss(self,state):
-        print "setting {} to {}".format(self.name,state)
+        print( "setting {} to {}".format(self.name,state))
         self.switch_box.sendSCPI( self.cmd + ":{}".format(state))
 
     def get_pos_ss(self):
@@ -106,7 +107,7 @@ class MCRelay(RelayClass):
 
     def __init__(self,serial_in="*",model_in="*",open_relay=True,name=None):
         self.name = name
-        print "opening ",name," serial=",serial_in
+        print( "opening ",name," serial=",serial_in)
         if open_relay:
             self._open_relay(serial_in,model_in)
         else:
@@ -174,7 +175,7 @@ class MCRelay(RelayClass):
     def _open_relay(self,serial_in="*",model_in="*"):
 
         try:
-            sn,model,device_info = self._get_all_relays(serial_in,model_in).next()
+            sn,model,device_info = next(self._get_all_relays(serial_in,model_in))
         except StopIteration:
             raise RelayNotFoundError
 
@@ -210,7 +211,7 @@ class MCRelay(RelayClass):
         sn = self.write(bytearray([41]),end_points)
         end_pos = bytes(sn).find(b"\0")
         if end_pos==-1:
-            print "failed to read S/N correctly"
+            print( "failed to read S/N correctly")
         sn = sn[1:end_pos].decode('utf-8')
         return sn
 
@@ -224,7 +225,7 @@ class MCRelay(RelayClass):
         model = self.write(bytearray([40]),end_points)
         end_pos = bytes(model).find(b"\0")
         if end_pos==-1:
-            print "failed to read model correctly"
+            print( "failed to read model correctly")
         model = model[1:end_pos].decode('utf-8')
         return model
 
@@ -299,15 +300,15 @@ if __name__=='__main__':
     if args.list:
         r = Relay('mc', open_relay=False)
         for sn,model in r.get_relay_list(args.sn, args.model):
-            print "Model %s SN %s" % (model,sn)
+            print( "Model %s SN %s" % (model,sn))
 
 
     else:
         r = Relay('mc',serial_in=args.sn,model_in=args.model)
         if args.info:
-            print "Model = %s, SN = %s" % (r.getModel(), r.getSN())
+            print( "Model = %s, SN = %s" % (r.getModel(), r.getSN()))
         if args.read:
-            print "State = %02x" % (r.getAllRelays())
+            print( "State = %02x" % (r.getAllRelays()))
 
         if args.state!=None:
             r.setAllRelays( args.state )

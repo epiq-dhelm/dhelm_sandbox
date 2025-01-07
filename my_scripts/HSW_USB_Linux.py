@@ -14,7 +14,7 @@ for configuration in dev:
          continue
       try:
          dev.detach_kernel_driver(ifnum)
-      except usb.core.USBError, e:
+      except (usb.core.USBError, e):
          pass
 
 #set the active configuration. with no args we use first config.
@@ -56,7 +56,7 @@ AttResp=""
 while (resp[i]<255 and resp[i]>0):  
    AttResp=AttResp+chr(resp[i])
    i=i+1 
-print AttResp
+print (AttResp)
 
 # Read switch state (SP16T)
 dev.write(1,"*:SP16T:STATE?")
@@ -66,4 +66,4 @@ AttResp=""
 while (resp[i]<255 and resp[i]>0):  
    AttResp=AttResp+chr(resp[i])
    i=i+1 
-print AttResp
+print (AttResp)
