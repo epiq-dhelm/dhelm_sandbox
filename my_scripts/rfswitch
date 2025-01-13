@@ -1,5 +1,36 @@
+#!/bin/python3
+
 import usb.core
 import usb.util
+
+def write_switch(switch, port):
+    print(f"connect switch {switch} comm port to port {port}")
+
+    # Set switch state (SP4T)
+    command = f"*:SP4T:{switch}:STATE:{port}"
+    #print(command);
+#    dev.write(1,"*:SP4T:A:STATE:1")
+    dev.write(1, command)
+    resp=dev.read(0x81,64)
+    i=1
+    AttResp=""
+    while (resp[i]<255 and resp[i]>0):  
+       AttResp=AttResp+chr(resp[i])
+       i=i+1 
+    if float(AttResp) != 1:
+        print(f"Writing to switch {switch} failed resp: {AttResp}")
+    
+
+def read_switch(switch):
+    # Read switch state (SP4T)
+    dev.write(1,f"*:SP4T:{switch}:STATE?")
+    resp=dev.read(0x81,64)
+    i=1
+    AttResp=""
+    while (resp[i]<255 and resp[i]>0):  
+       AttResp=AttResp+chr(resp[i])
+       i=i+1 
+    print(f"switch {switch} comm port is connected to {AttResp}")
 
 #find our device
 dev = usb.core.find(idVendor=0x20ce, idProduct=0x0022)
@@ -44,26 +75,33 @@ while (sn[i]<255 and sn[i]>0):
    Fw=Fw+chr(sn[i])
    i=i+1
 
-print (ModelN)
-print (SerialN)
-print (Fw)
+print(f"Model: {ModelN}")
+print(f"Serial: {SerialN}")
+print (f"Fw: {Fw}")
 
-# Set switch state (SP16T)
-dev.write(1,"*:SP16T:STATE:16;")
+write_switch("A", 3)
+read_switch("A")
+write_switch("B", 3)
+read_switch("B")
+
+"""
+# Set switch state (SP4T)
+dev.write(1,"*:SP4T:A:STATE:1")
 resp=dev.read(0x81,64)
 i=1
 AttResp=""
 while (resp[i]<255 and resp[i]>0):  
    AttResp=AttResp+chr(resp[i])
    i=i+1 
-print (AttResp)
+print(AttResp)
 
-# Read switch state (SP16T)
-dev.write(1,"*:SP16T:STATE?")
+# Read switch state (SP4T)
+dev.write(1,"*:SP4T:A:STATE?")
 resp=dev.read(0x81,64)
 i=1
 AttResp=""
 while (resp[i]<255 and resp[i]>0):  
    AttResp=AttResp+chr(resp[i])
    i=i+1 
-print (AttResp)
+print(AttResp)
+"""
