@@ -2,106 +2,129 @@
 
 import usb.core
 import usb.util
+import argparse
+import sys
+
 
 def write_switch(switch, port):
+    global dev
     print(f"connect switch {switch} comm port to port {port}")
 
     # Set switch state (SP4T)
     command = f"*:SP4T:{switch}:STATE:{port}"
-    #print(command);
-#    dev.write(1,"*:SP4T:A:STATE:1")
     dev.write(1, command)
-    resp=dev.read(0x81,64)
-    i=1
-    AttResp=""
-    while (resp[i]<255 and resp[i]>0):  
-       AttResp=AttResp+chr(resp[i])
-       i=i+1 
+    resp = dev.read(0x81, 64)
+    i = 1
+    AttResp = ""
+    while (resp[i] < 255 and resp[i] > 0):
+        AttResp = AttResp + chr(resp[i])
+        i = i + 1
     if float(AttResp) != 1:
         print(f"Writing to switch {switch} failed resp: {AttResp}")
-    
+
 
 def read_switch(switch):
+    global dev
     # Read switch state (SP4T)
-    dev.write(1,f"*:SP4T:{switch}:STATE?")
-    resp=dev.read(0x81,64)
-    i=1
-    AttResp=""
-    while (resp[i]<255 and resp[i]>0):  
-       AttResp=AttResp+chr(resp[i])
-       i=i+1 
+    dev.write(1, f"*:SP4T:{switch}:STATE?")
+    resp = dev.read(0x81, 64)
+    i = 1
+    AttResp = ""
+    while (resp[i] < 255 and resp[i] > 0):
+        AttResp = AttResp + chr(resp[i])
+        i = i + 1
     print(f"switch {switch} comm port is connected to {AttResp}")
 
-#find our device
-dev = usb.core.find(idVendor=0x20ce, idProduct=0x0022)
 
-if dev is None:
-   raise ValueError('Device not found')
+def find_device():
+    global dev
+    # find our device
+    dev = usb.core.find(idVendor=0x20ce, idProduct=0x0022)
 
-for configuration in dev:
-   for interface in configuration:
-      ifnum = interface.bInterfaceNumber
-      if not dev.is_kernel_driver_active(ifnum):
-         continue
-      try:
-         dev.detach_kernel_driver(ifnum)
-      except (usb.core.USBError, e):
-         pass
+    if dev is None:
+        raise ValueError('Device not found')
 
-#set the active configuration. with no args we use first config.
-dev.set_configuration()
-SerialN=""
-ModelN=""
-Fw=""
+    for configuration in dev:
+        for interface in configuration:
+            ifnum = interface.bInterfaceNumber
+            if not dev.is_kernel_driver_active(ifnum):
+                continue
+            try:
+                dev.detach_kernel_driver(ifnum)
+            except (usb.core.USBError, e):
+                pass
 
-dev.write(1,"*:SN?") 
-sn=dev.read(0x81,64) 
-i=1
-while (sn[i]<255 and sn[i]>0):  
-   SerialN=SerialN+chr(sn[i])
-   i=i+1
-   
-dev.write(1,"*:MN?") 
-mn=dev.read(0x81,64) 
-i=1
-while (mn[i]<255 and mn[i]>0):  
-   ModelN=ModelN+chr(mn[i])
-   i=i+1
-   
-dev.write(1,"*:FIRMWARE?") 
-sn=dev.read(0x81,64) 
-i=1
-while (sn[i]<255 and sn[i]>0):  
-   Fw=Fw+chr(sn[i])
-   i=i+1
+    # set the active configuration. with no args we use first config.
+    dev.set_configuration()
 
-print(f"Model: {ModelN}")
-print(f"Serial: {SerialN}")
-print (f"Fw: {Fw}")
 
-write_switch("A", 3)
-read_switch("A")
-write_switch("B", 3)
-read_switch("B")
+def get_model():
+    global dev
+    SerialN = ""
+    ModelN = ""
+    Fw = ""
 
-"""
-# Set switch state (SP4T)
-dev.write(1,"*:SP4T:A:STATE:1")
-resp=dev.read(0x81,64)
-i=1
-AttResp=""
-while (resp[i]<255 and resp[i]>0):  
-   AttResp=AttResp+chr(resp[i])
-   i=i+1 
-print(AttResp)
+    dev.write(1, "*:SN?")
+    sn = dev.read(0x81, 64)
+    i = 1
+    while (sn[i] < 255 and sn[i] > 0):
+        SerialN = SerialN + chr(sn[i])
+        i = i + 1
 
-# Read switch state (SP4T)
-dev.write(1,"*:SP4T:A:STATE?")
-resp=dev.read(0x81,64)
-i=1
-AttResp=""
-while (resp[i]<255 and resp[i]>0):  
-   AttResp=AttResp+chr(resp[i])
-   i=i+1 
-print(AttResp)
-"""
+    dev.write(1, "*:MN?")
+    mn = dev.read(0x81, 64)
+    i = 1
+    while (mn[i] < 255 and mn[i] > 0):
+        ModelN = ModelN + chr(mn[i])
+        i = i + 1
+
+    dev.write(1, "*:FIRMWARE?")
+    sn = dev.read(0x81, 64)
+    i = 1
+    while (sn[i] < 255 and sn[i] > 0):
+        Fw = Fw + chr(sn[i])
+        i = i + 1
+
+    print(f"Model: {ModelN}")
+    print(f"Serial: {SerialN}")
+    print(f"Fw: {Fw}")
+
+
+def main(mode):
+    if mode == "default":
+        write_switch("A", 1)
+        read_switch("A")
+        write_switch("B", 1)
+        read_switch("B")
+    elif mode == "loopback":
+        write_switch("A", 3)
+        read_switch("A")
+        write_switch("B", 3)
+        read_switch("B")
+    elif mode == "pytest":
+        write_switch("A", 2)
+        read_switch("A")
+        write_switch("B", 2)
+        read_switch("B")
+    else:
+        print(f"invalid mode: {mode}")
+
+
+def parse_command_line_arguments():
+    """ Create command line options  """
+    help_formatter = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(description='rfswitch',
+                                     formatter_class=help_formatter)
+
+    parser.add_argument('--mode', type=str, required=True, dest='mode',
+                        default="default", help='default, pytest, loopback')
+    return parser.parse_args(sys.argv[1:])
+
+
+if __name__ == '__main__':
+    pars = parse_command_line_arguments()
+
+    find_device()
+    get_model()
+
+    main(pars.mode)
