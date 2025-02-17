@@ -33,7 +33,8 @@ def read_switch(switch):
     while (resp[i] < 255 and resp[i] > 0):
         AttResp = AttResp + chr(resp[i])
         i = i + 1
-    print(f"switch {switch} comm port is connected to {AttResp}")
+    #print(f"switch {switch} comm port is connected to {AttResp}")
+    return AttResp
 
 
 def find_device():
@@ -58,7 +59,7 @@ def find_device():
     dev.set_configuration()
 
 
-def get_model():
+def get_model(debug):
     global dev
     SerialN = ""
     ModelN = ""
@@ -85,27 +86,53 @@ def get_model():
         Fw = Fw + chr(sn[i])
         i = i + 1
 
-    print(f"Model: {ModelN}")
-    print(f"Serial: {SerialN}")
-    print(f"Fw: {Fw}")
+    if debug == "PRINT":
+        print(f"Model: {ModelN}")
+        print(f"Serial: {SerialN}")
+        print(f"Fw: {Fw}")
+
+def read_config():
+    respA = read_switch("A")
+    respB = read_switch("B")
+
+    if (respA == "1" and respB == "1"):
+        return "default"
+
+    if (respA == "2" and respB == "2"):
+        return "pytest"
+
+    if (respA == "3" and respB == "3"):
+        return "loopback"
 
 
-def main(mode):
+def handle_mode(mode):
     if mode == "default":
+        find_device()
+        get_model("PRINT")
+
         write_switch("A", 1)
         read_switch("A")
         write_switch("B", 1)
         read_switch("B")
     elif mode == "loopback":
+        find_device()
+        get_model("PRINT")
         write_switch("A", 3)
         read_switch("A")
         write_switch("B", 3)
         read_switch("B")
     elif mode == "pytest":
+        find_device()
+        get_model("PRINT")
         write_switch("A", 2)
         read_switch("A")
         write_switch("B", 2)
         read_switch("B")
+    elif mode == "read":
+        find_device()
+        get_model("NOPRINT")
+        config = read_config()
+        print(config)
     else:
         print(f"invalid mode: {mode}")
 
@@ -124,7 +151,4 @@ def parse_command_line_arguments():
 if __name__ == '__main__':
     pars = parse_command_line_arguments()
 
-    find_device()
-    get_model()
-
-    main(pars.mode)
+    handle_mode(pars.mode)
