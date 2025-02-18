@@ -6,6 +6,8 @@ import time
 import math
 import array as arr
 
+import pyudev 
+
 import RFExplorer
 print(RFExplorer.__file__)
 from RFExplorer import RFE_Common
@@ -714,48 +716,36 @@ def go():
 def GetPort():
     global app, current_frame, user_entry, label, user_label, user_entry, user_title
 
+    TARGET_VENDOR_ID = "10c4"
+    TARGET_PRODUCT_ID = "ea60"
+
+    context = pyudev.Context()
+
+    dev_list = []
+
+    for device in context.list_devices(subsystem="tty"):
+        if device.get("ID_VENDOR_ID") == TARGET_VENDOR_ID and device.get("ID_MODEL_ID") == TARGET_PRODUCT_ID:
+            print(f"Found device: {device.device_node}")  # e.g., /dev/ttyUSB0
+
+            dev_list.append(device.device_node)
+            print(device.device_node)
+
+    print(dev_list)
+    print(len(dev_list))
+
     # delete one if it exists
     current_frame.destroy()
     frame = Frame(root)
     current_frame = frame
 
-    # for some reason when it only goes through the for loop once if it 
-    # deletes something.  So this while loop fixes that.
-    done = False
-    while (not done):
-        deleted = False
-
-        for objPort in objRFE.m_arrValidCP2102Ports:
-            if (objPort.device == "/dev/ttyAMA0"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttyACM0"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttySKIQ_UART0"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttySKIQ_UART1"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttySKIQ_UART2"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttySKIQ_UART3"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttyS4") :
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-        if deleted == False:
-            done = True
+    print(len(objRFE.m_arrValidCP2102Ports))
+    for objPort in objRFE.m_arrValidCP2102Ports:
+        print(objPort)
+        if objPort.device != dev_list[0] and objPort.device != dev_list[1]:
+            print(f"removed port {objPort}")
+            objRFE.m_arrValidCP2102Ports.remove(objPort)
+        else:
+            print(f"saved port {objPort}")
 
     # see if we have more than one valid port, if so we need to display a window with the
     # choices
