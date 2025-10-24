@@ -6,7 +6,7 @@ import random
 import struct
 
 # Set parameters
-sample_rate = 100_000_000  # sample rate
+sample_rate = 250_000_000  # sample rate
 duration = 0.001           # 10 ms duration
 amplitude = 20000         # Fixed amplitude for I and Q
 initial_segment_length = int(sample_rate * 0.00015)  # Length for initial long square wave
@@ -30,7 +30,6 @@ for _ in range(initial_segment_length):
     i_data.append(amplitude)
     q_data.append(0)
 
-"""
 # Generate pseudorandom square wave with fixed amplitude and varying widths
 remaining_samples = num_samples - initial_segment_length
 
@@ -51,7 +50,6 @@ while remaining_samples > 0:
     segment_bytes = segment_length * 4
     tot_bytes += segment_bytes
     print(f"{ctr}, seg length {segment_length}, seg time {segment_time:.9f}, tot time {tot_time:.9f}, tot bytes {tot_bytes:x}")
-"""
 
 # Truncate to exact number of samples
 i_data = i_data[:num_samples]

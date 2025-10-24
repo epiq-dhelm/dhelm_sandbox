@@ -1,0 +1,154 @@
+#!/bin/python3
+
+import usb.core
+import usb.util
+import argparse
+import sys
+
+
+def write_switch(switch, port):
+    global dev
+    print(f"connect switch {switch} comm port to port {port}")
+
+    # Set switch state (SP4T)
+    command = f"*:SP4T:{switch}:STATE:{port}"
+    dev.write(1, command)
+    resp = dev.read(0x81, 64)
+    i = 1
+    AttResp = ""
+    while (resp[i] < 255 and resp[i] > 0):
+        AttResp = AttResp + chr(resp[i])
+        i = i + 1
+    if float(AttResp) != 1:
+        print(f"Writing to switch {switch} failed resp: {AttResp}")
+
+
+def read_switch(switch):
+    global dev
+    # Read switch state (SP4T)
+    dev.write(1, f"*:SP4T:{switch}:STATE?")
+    resp = dev.read(0x81, 64)
+    i = 1
+    AttResp = ""
+    while (resp[i] < 255 and resp[i] > 0):
+        AttResp = AttResp + chr(resp[i])
+        i = i + 1
+    #print(f"switch {switch} comm port is connected to {AttResp}")
+    return AttResp
+
+
+def find_device():
+    global dev
+    # find our device
+    dev = usb.core.find(idVendor=0x20ce, idProduct=0x0022)
+
+    if dev is None:
+        raise ValueError('Device not found')
+
+    for configuration in dev:
+        for interface in configuration:
+            ifnum = interface.bInterfaceNumber
+            if not dev.is_kernel_driver_active(ifnum):
+                continue
+            try:
+                dev.detach_kernel_driver(ifnum)
+            except (usb.core.USBError, e):
+                pass
+
+    # set the active configuration. with no args we use first config.
+    dev.set_configuration()
+
+
+def get_model(debug):
+    global dev
+    SerialN = ""
+    ModelN = ""
+    Fw = ""
+
+    dev.write(1, "*:SN?")
+    sn = dev.read(0x81, 64)
+    i = 1
+    while (sn[i] < 255 and sn[i] > 0):
+        SerialN = SerialN + chr(sn[i])
+        i = i + 1
+
+    dev.write(1, "*:MN?")
+    mn = dev.read(0x81, 64)
+    i = 1
+    while (mn[i] < 255 and mn[i] > 0):
+        ModelN = ModelN + chr(mn[i])
+        i = i + 1
+
+    dev.write(1, "*:FIRMWARE?")
+    sn = dev.read(0x81, 64)
+    i = 1
+    while (sn[i] < 255 and sn[i] > 0):
+        Fw = Fw + chr(sn[i])
+        i = i + 1
+
+    if debug == "PRINT":
+        print(f"Model: {ModelN}")
+        print(f"Serial: {SerialN}")
+        print(f"Fw: {Fw}")
+
+def read_config():
+    respA = read_switch("A")
+    respB = read_switch("B")
+
+    if (respA == "1" and respB == "1"):
+        return "default"
+
+    if (respA == "2" and respB == "2"):
+        return "pytest"
+
+    if (respA == "3" and respB == "3"):
+        return "loopback"
+
+
+def handle_mode(mode):
+    if mode == "default":
+        find_device()
+        get_model("PRINT")
+
+        write_switch("A", 1)
+        read_switch("A")
+        write_switch("B", 1)
+        read_switch("B")
+    elif mode == "loopback":
+        find_device()
+        get_model("PRINT")
+        write_switch("A", 3)
+        read_switch("A")
+        write_switch("B", 3)
+        read_switch("B")
+    elif mode == "pytest":
+        find_device()
+        get_model("PRINT")
+        write_switch("A", 2)
+        read_switch("A")
+        write_switch("B", 2)
+        read_switch("B")
+    elif mode == "read":
+        find_device()
+        get_model("NOPRINT")
+        config = read_config()
+        print(config)
+    else:
+        print(f"invalid mode: {mode}")
+
+
+def parse_command_line_arguments():
+    """ Create command line options  """
+    help_formatter = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(description='rfswitch',
+                                     formatter_class=help_formatter)
+
+    parser.add_argument('--mode', type=str, required=True, dest='mode',
+                        default="default", help='default, pytest, loopback')
+    return parser.parse_args(sys.argv[1:])
+
+
+if __name__ == '__main__':
+    pars = parse_command_line_arguments()
+
+    handle_mode(pars.mode)
