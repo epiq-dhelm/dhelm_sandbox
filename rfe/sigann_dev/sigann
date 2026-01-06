@@ -881,6 +881,55 @@ def build_window():
    
     return content, frame
 
+def AutoConnectAnalyzer():
+    TARGET_VENDOR_ID = "10c4"
+    TARGET_PRODUCT_ID = "ea60"
+
+    context = pyudev.Context()
+    ports = []
+
+    for device in context.list_devices(subsystem="tty"):
+        if (device.get("ID_VENDOR_ID") == TARGET_VENDOR_ID and
+            device.get("ID_MODEL_ID") == TARGET_PRODUCT_ID):
+            ports.append(device.device_node)
+
+    if DEBUG:
+        print("Candidate CP210x ports:", ports)
+
+    if not ports:
+        raise RuntimeError("No RFExplorer devices found")
+
+    for port in ports:
+        try:
+            if DEBUG:
+                print(f"Trying port {port}")
+
+            objRFE.ConnectPort(port, BAUDRATE)
+
+            # Give the device time to respond
+            time.sleep(0.5)
+
+            # --- IDENTIFICATION STEP ---
+            if objRFE.IsAnalyzer:
+                print(f"Attached to RFE Signal Analyzer on {port}")
+                root.wm_title('RFE Signal Analyzer ' + port)
+                return port
+
+            else:
+                if DEBUG:
+                    print(f"{port} is not an analyzer, disconnecting")
+                objRFE.DisconnectPort()
+
+        except Exception as e:
+            if DEBUG:
+                print(f"Failed on {port}: {e}")
+            try:
+                objRFE.DisconnectPort()
+            except:
+                pass
+
+    raise RuntimeError("No Signal Analyzer found")
+
 # if something goes wrong go here
 def cleanup():
     # kill the main window
@@ -891,6 +940,23 @@ def cleanup():
 
     # leave
     exit()
+
+def show_connecting_screen():
+    for w in current_frame.winfo_children():
+        w.destroy()
+
+    label = Label(
+        current_frame,
+        text="Connecting to RFExplorer Signal Analyzer...\nPlease wait.",
+        font=("Arial", 16)
+    )
+    label.pack(expand=True, pady=40)
+
+    current_frame.pack(fill="both", expand=True)
+
+    # 🔑 Force Tk to draw NOW
+    root.update_idletasks()
+    root.update()
 
 # list of port labels
 label = []
@@ -923,8 +989,27 @@ root.bind('<Return>', enterhandler)
 current_frame = Frame(root)
 app = Window(root)
 
-# go get the USB port the user wants
-GetPort()
+
+show_connecting_screen()
+
+# automatically find and attach to the Signal Analyzer
+try:
+    AutoConnectAnalyzer()
+except RuntimeError:
+    root.destroy()
+    cleanup()
+    sys.exit(1)
+
+# optional reset (same behavior as before)
+if RESET:
+    objRFE.SendCommand("r")
+    while objRFE.IsResetEvent:
+        pass
+    time.sleep(4)
+
+# build and initialize the main window
+content, frame = build_window()
+app.init_window(content)
 
 # spin on the tkinter mainloop
 tk.mainloop()
