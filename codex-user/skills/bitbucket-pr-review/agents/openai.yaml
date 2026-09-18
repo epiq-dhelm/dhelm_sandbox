@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bitbucket PR Review"
+  short_description: "Review and address Bitbucket PR comments"
+  default_prompt: "Use $bitbucket-pr-review to review unresolved comments on this Bitbucket pull request."
