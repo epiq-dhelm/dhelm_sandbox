@@ -24,6 +24,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 DEBUG = True
 
 BAUDRATE = 500000
+DEVICE_RESPONSE_TIMEOUT = 5.0
+SERIAL_POLL_INTERVAL = 0.01
 
 SPAN_SIZE_MHZ = 50           # Initialize settings
 START_SCAN_MHZ = 975
@@ -34,6 +36,28 @@ SWEEPDATA = (SWEEPPOINTS + 1) * 16
 RESET = True
 num_markers = 0
 MAX_MARKERS = 5
+
+
+def WaitForDevice(condition, description, timeout=DEVICE_RESPONSE_TIMEOUT):
+    """Process serial input until condition is true or the device times out."""
+    deadline = time.monotonic() + timeout
+
+    while not condition():
+        objRFE.ProcessReceivedString(True)
+        if time.monotonic() >= deadline:
+            raise TimeoutError(f"Timed out waiting for {description}")
+        time.sleep(SERIAL_POLL_INTERVAL)
+
+
+def CloseDevicePort():
+    """Close the port even if RFExplorer cleanup hits a serial I/O error."""
+    objRFE.ClosePort()
+
+    # RFExplorer.ClosePort() skips its close call if one of its cleanup writes
+    # fails. That is common for an unresponsive USB candidate and would prevent
+    # the next candidate from being opened with the shared Serial instance.
+    if objRFE.m_objSerialPort.is_open:
+        objRFE.m_objSerialPort.close()
 
 
 # test settings to make sure they are valid
@@ -615,8 +639,10 @@ class Window(Frame):
         objRFE.SendCommand_RequestConfigData()
 
         # Wait to receive Model type COFF:02
-        while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
-            objRFE.ProcessReceivedString(True)    # Process the received configuration
+        WaitForDevice(
+            lambda: objRFE.ActiveModel != RFExplorer.RFE_Common.eModel.MODEL_NONE,
+            "analyzer model information",
+        )
 
         # If object is an analyzer, we can scan for received sweeps
         if(not objRFE.IsAnalyzer()):
@@ -632,14 +658,18 @@ class Window(Frame):
             objRFE.ProcessReceivedString(True)
 
             # wait until we have indication that the new configuration is in device
-            while (StartFreq != objRFE.StartFrequencyMHZ):
-                objRFE.ProcessReceivedString(True)
+            WaitForDevice(
+                lambda: StartFreq == objRFE.StartFrequencyMHZ,
+                "the requested analyzer configuration",
+            )
 
             # wait until we have received data
             self.numitems = objRFE.SweepData.Count - 1
-            while (self.numitems <= 0):
-                objRFE.ProcessReceivedString(True)
-                self.numitems = objRFE.SweepData.Count - 1
+            WaitForDevice(
+                lambda: objRFE.SweepData.Count > 1,
+                "the first analyzer sweep",
+            )
+            self.numitems = objRFE.SweepData.Count - 1
 
             # display the new config info
             if DEBUG:
@@ -772,6 +802,10 @@ def AutoConnectAnalyzer():
         ):
             ports.append(device.device_node)
 
+    # Device numbering can change after a reboot or USB reconnect. Probe every
+    # candidate instead of assuming that the first CP210x device is the analyzer.
+    ports.sort()
+
     if DEBUG:
         print("Candidate CP210x ports:", ports)
 
@@ -779,33 +813,39 @@ def AutoConnectAnalyzer():
         raise RuntimeError("No RFExplorer devices found")
 
     for port in ports:
+        connected = False
+        accepted = False
         try:
             if DEBUG:
                 print(f"Trying port {port}")
 
-            objRFE.ConnectPort(port, BAUDRATE)
+            connected = objRFE.ConnectPort(port, BAUDRATE)
+            if not connected:
+                if DEBUG:
+                    print(f"Could not open {port}")
+                continue
 
-            # Give the device time to respond
-            time.sleep(0.5)
+            WaitForDevice(
+                lambda: objRFE.ActiveModel != RFExplorer.RFE_Common.eModel.MODEL_NONE,
+                f"model information from {port}",
+            )
 
             # --- IDENTIFICATION STEP ---
-            if objRFE.IsAnalyzer:
+            if objRFE.IsAnalyzer():
                 print(f"Attached to RFE Signal Analyzer on {port}")
                 root.wm_title('RFE Signal Analyzer ' + port)
+                accepted = True
                 return port
 
-            else:
-                if DEBUG:
-                    print(f"{port} is not an analyzer, disconnecting")
-                objRFE.DisconnectPort()
+            if DEBUG:
+                print(f"{port} is not an analyzer, disconnecting")
 
-        except Exception as e:
+        except (OSError, TimeoutError) as e:
             if DEBUG:
                 print(f"Failed on {port}: {e}")
-            try:
-                objRFE.DisconnectPort()
-            except Exception:
-                pass
+        finally:
+            if connected and not accepted:
+                CloseDevicePort()
 
     raise RuntimeError("No Signal Analyzer found")
 
