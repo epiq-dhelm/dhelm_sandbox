@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Siggen
+Comment=Control an RF Explorer signal generator
+Exec=/usr/bin/siggen
+Icon=/usr/share/pixmaps/monodoc.xpm
+Terminal=false
+StartupWMClass=genName
+Categories=Science;

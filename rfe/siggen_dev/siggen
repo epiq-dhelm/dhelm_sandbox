@@ -1,551 +1,405 @@
-#!/bin/python3
+#!/usr/bin/python3
+"""Tk control panel for an RF Explorer signal generator."""
 
+from __future__ import annotations
+
+import logging
+import signal
 import sys
-
 import tkinter as tk
-from tkinter import ttk
-from tkinter import *
-from tkinter.messagebox import Message
-
-import time
-import math
-
-import RFExplorer
-print(RFExplorer.__file__)
-from RFExplorer import RFE_Common
-
-
-
-"""
-Power Table:
-    Listed          Actual
-    0   -35.2       -42
-    1   -33.2       -39
-    2   -29.2       -35
-    3   -26.2       -33
-    4   -5.7        -10
-    5   -2.7        -7.3
-    6    0.3        -6
-    7   +2.8        -5
-"""
-
-#---------------------------------------------------------
-# global variables and initialization
-#---------------------------------------------------------
-
-power_table = {0: '-42.0 dBm',
-               1: '-39.0 dBm',
-               2: '-35.0 dBm',
-               3: '-33.0 dBm',
-               4: '-10.0 dBm',
-               5: '-7.3 dBm',
-               6: '-6.0 dBm',
-               7: '-5.0 dBm'}
-
-# List of field labels
-labels = [
-    "Start Freq MHz:",
-    "Power Level (0 - 3):",
-    "Number of Steps:",
-    "Freq Step in KHz:",
-    "Step Time in ms:",
-]
-
-init_vals = [
-    "997.0",
-    "0",
-    "10",
-    "1002",
-    "1000",
-]
-
-user_entry = []
-usb_port = ''
-current_state = ""
-
-SERIALPORT = None    #serial port identifier, use None to autodetect
-BAUDRATE = 500000
-
-SPAN_SIZE_MHZ = 50           #Initialize settings
-START_SCAN_MHZ = 50
-STOP_SCAN_MHZ = 960
-RESET = True
-DEBUG = TRUE
-
-root = Tk(className='genName')
-current_frame = Frame(root)
-
-def enterhandler(e):
-    global current_state
-
-    if DEBUG:
-        print("enterhandler", current_state, e)
-
-    if current_state == "get_port":
-        go()
-    elif current_state == "continuous_wave":
-        continuous_power_on()
-    elif current_state == "frequency_sweep":
-        start_sweep()
-
-
-def power_off():
-    global on_button
-
-    if DEBUG:
-        print("power off")
-    on_button.configure(bg = "#f0f0f0")
-    
-    objRFE.SendCommand("CP0")
-
-def continuous_power_on():
-    global cw_freq, cw_power, current_color, on_button, spinbox
-
-    current_color = "red"
-    on_button.configure(bg= "red")
-    
-    if DEBUG:
-        print("power on")
-
-    frequency = cw_freq.get()
-    if DEBUG:
-        print("frequency str ", frequency)
-
-    floatfreq = float(frequency) * 1000
-
-    intfreq = int(floatfreq)
-
-    if DEBUG:
-        print("float freq ", floatfreq, "int freq ", intfreq)
-
-    # get the power from the spinbox and display power level
-    power = int(spinbox.get())
-    cw_power_dbm.config(text=power_table[power])
-
-    if power > 7 or power < 0:
-        showinfo("Error", "invalid power level", 3)
-        power = 0
-    
-    if power > 3:
-        config_power = power - 4
-        highpower = 1
-    else:
-        config_power = power
-        highpower = 0
-
-    if DEBUG:
-        print("power", power)
-
-
-    cmd = "C3-F:" + "{:07d}".format(intfreq) + ","+ str(highpower)+ "," + str(config_power)
-
-    objRFE.SendCommand(cmd)
-
-def on_spinbox_click(event):
-    global current_frame
-
-    # need to wait a bit before we get the contents of the spinbox
-    current_frame.after(10, continuous_power_on)
-
-
-def continuous_wave():
-    global current_frame, cw_freq, cw_power, cw_power_dbm, current_state, on_button, spinbox
-    
-    current_state = "continuous_wave"
-
-    if DEBUG:
-        print("continuous wave")
-
-    current_frame.destroy()
-    root.geometry('550x200')
-    current_frame = Frame(root)
-
-    label = Label(master=current_frame, text="Frequency MHz: ", font=("Arial", 16))
-    label.grid(row = 0, column = 0, padx = 20, pady = 10)
-
-    cw_freq = Entry(master=current_frame, width = 10, font=("Ariel", 16))
-    cw_freq.insert(0, "1002.0")
-    cw_freq.focus_set()
-    cw_freq.grid(row = 0, column = 1, padx = 20, pady = 10)
-
-    label2 = Label(master=current_frame, text="Power (0-7) : ", font=("Arial", 16), bd=2)
-    label2.grid(row = 1, column = 0, padx = 20, pady = 10)
-
-    # use an up down click instead of an Entry
-    spinbox = tk.Spinbox(master=current_frame, from_=0, to=7, width=10, font=("Arial", 16), 
-                        highlightthickness=1, highlightbackground="black")
-    spinbox.grid(row = 1, column = 1, padx = 20, pady = 10)
-
-    spinbox.bind("<<Increment>>", on_spinbox_click) 
-    spinbox.bind("<<Decrement>>", on_spinbox_click) 
-    spinbox.bind("<ButtonRelease-1>", on_spinbox_click) 
-
-    cw_power_dbm = Label(master=current_frame, text="-42.0 dBm", font=("Arial", 16))
-    cw_power_dbm.grid(row = 1, column = 2, padx = 20, pady = 10)
-
-    on_button = Button(current_frame, text = 'Power On') 
-    on_button.configure(font=("Arial", 16), command = continuous_power_on )
-    on_button.grid(row = 2, column = 0, sticky = W, padx = 20, pady = 10)
-
-    Button(current_frame, text = 'Power Off', font=("Arial", 16), 
-           command = power_off).grid(row = 2, column = 1, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Back', font=("Arial", 16), 
-           command = top_window).grid(row = 2, column = 2, sticky = W, padx = 20, pady = 10)
-    current_frame.pack(fill="both", expand=True)
-
-def start_sweep():
-    global user_entry, current_color, on_button
-
-    if DEBUG:
-        print("start sweep")
-    
-    on_button.configure(bg= "red")
-    current_color = "red"
-
-    frequency = user_entry[0].get()
-
-    if DEBUG:
-        print("frequency str ", frequency)
-
-    floatfreq = float(frequency) * 1000
-
-    intfreq = int(floatfreq)
-
-    if DEBUG:
-        print("float freq ", floatfreq, "int freq ", intfreq)
-
-    power = int(user_entry[1].get())
-    if power > 7 or power < 0:
-        print("invalid power", power, "changing to 7")
-        power = 7
-
-    if power > 3:
-        config_power = power - 4
-        highpower = 1
-    else:
-        config_power = power
-        highpower = 0
-    
-    steps = user_entry[2].get()
-
-    step_width = user_entry[3].get()
-
-    step_time = user_entry[4].get()
-
-    cmd = "C3-F:" + "{:07d}".format(intfreq) + "," + str(highpower) + "," + str(config_power) + "," + "{:04d}".format(int(steps)) + "," + "{:07d}".format(int(step_width)) + "," + "{:05d}".format(int(step_time))
- 
-    objRFE.SendCommand(cmd)
-    
-def clear():
-    if DEBUG:
-        print("clear")
-
-    for idx, text in enumerate(labels):
-        user_entry[idx].delete(0, END)
-
-
-
-def frequency_sweep():
-    global current_frame, user_entry, current_state, on_button
-
-    current_state = "frequency_sweep"
-
-    current_frame.destroy()
-    root.geometry('750x350')
-    frame = Frame(root)
-    current_frame = frame
-
-    user_entry = []
-
-    # Loop over the list of field labels
-    for idx, text in enumerate(labels):
-
-        # Create a Label widget with the text from the labels list
-        label = Label(current_frame, text=text, font=("Arial", 16))
-
-        # Create an Entry widget
-        user_entry.append(Entry(current_frame, width=20, font=("Ariel", 16)))
-
-        user_entry[idx].insert(0, init_vals[idx])
-
-        if idx == 0:
-            user_entry[0].focus_set()
-
-        # Use the grid geometry manager to place the Label and
-        # Entry widgets in the row whose index is idx
-        label.grid(row=idx, column=0, padx=10, pady=10, sticky="e")
-
-        user_entry[idx].grid(row=idx, column=1, padx=10, pady=10)
-
-    on_button = Button(current_frame, text = 'Start Sweep') 
-    on_button.configure(font=("Arial", 16), command = start_sweep )
-    on_button.grid(row = idx+1, column = 0, sticky = W, padx = 10, pady = 10)
-    Button(current_frame, text = 'Stop Sweep', font=("Arial", 16), command = power_off).grid(row = idx+1, column = 1, sticky = NSEW, padx = 10, pady = 10)
-    Button(current_frame, text = 'Clear', font=("Arial", 16), command = clear).grid(row = idx+1, column = 2, sticky = NSEW, padx = 10, pady = 10)
-    Button(current_frame, text = 'Back', font=("Arial", 16), command = top_window).grid(row = idx+1, column = 3, sticky = NSEW, padx = 10, pady = 10)
-    current_frame.pack(fill="both", expand=True)
-
-
-def top_window():
-    global current_frame, root
- 
-    #Wait to receive COFF:02
-    while(objRFE.ActiveModel == RFExplorer.RFE_Common.eModel.MODEL_NONE):
-        objRFE.ProcessReceivedString(True)    #Process the received configuration
-
-    #If object is an analyzer, we can scan for received sweeps
-    if(not objRFE.IsGenerator()):
-        showinfo("Error", "Not a generator, exiting...", 2)
-        cleanup()
-
-    current_state = ""
-    current_frame.destroy()
-    root.geometry('650x100')
-    current_frame = Frame(root)
-    Button(current_frame, text = 'Frequency Sweep', font=("Arial", 16), command = frequency_sweep).grid(row = 1, column = 0, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Continuous Wave', font=("Arial", 16), command = continuous_wave).grid(row = 1, column = 1, sticky = W, padx = 20, pady = 10)
-    Button(current_frame, text = 'Exit', font=("Arial", 16), command = exit_program).grid(row = 1, column = 3, sticky = W, padx = 20, pady = 10)
-    current_frame.pack(fill="both", expand=True)
-
-
-
-def exit_program():
-    global port
-    if DEBUG:
-        print("exit program")
-    cleanup() 
-
-# The user hit enter after picking a port
-def go():
-    global app, user_entry
-    portno = int(user_entry.get())
-
-    # verify the entered number
-    if portno >= len(objRFE.m_arrValidCP2102Ports) or portno < 0:
-        showinfo("Error", "Error: Invalid Port Number " + str(portno) , 2)
-        return
-
-    else:
-        PortName = objRFE.m_arrValidCP2102Ports[portno].device
-        if DEBUG:
-            print("Selected name", PortName)
-        root.wm_title('RFE Signal Generator ' + PortName)
-
-    #Connect to available port
-    objRFE.ConnectPort(PortName, BAUDRATE)
-    if DEBUG:
-        print("Connected...")
-
-    # remove the labels for the various ports so we can display that we are resetting 
-    # the device
-    for obj in label:
-        obj.after(10, obj.destroy())
-    
-    user_label2 = Label(current_frame, text= "Resetting device ...", font=("Arial", 16))
-    user_label2.grid(row=1, column=0, padx=10, pady=10, sticky="w")
-    current_frame.pack(fill="both", expand=True)
-
-    # if configured reset the device 
-    if RESET:
-        if DEBUG:
-            print("Resetting device...")
-
-        #Reset the unit to start fresh
-        objRFE.SendCommand("r")
-
-        #Wait for unit to notify reset completed
-        while(objRFE.IsResetEvent):
-            pass
-
-        #Wait for unit to stabilize
-        # for some reason we need to do a messagebox to get this to work.
-        showinfo("Info", "Resetting Device", None)
-        time.sleep(4)
-
-    top_window()
-
-
-# Display the window to let the user select the port desired and pick one
-def GetPort():
-    global app, current_frame, user_entry, current_state
-
-    current_state = "get_port"
-
-    # delete one if it exists
-    current_frame.destroy()
-    frame = Frame(root)
-    current_frame = frame
-
-    # for some reason when it only goes through the for loop once if it 
-    # deletes something.  So this while loop fixes that.
-    done = False
-    while (not done):
-        deleted = False
-
-        for objPort in objRFE.m_arrValidCP2102Ports:
-            if (objPort.device == "/dev/ttyAMA0"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttyACM0"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttySKIQ_UART0"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttySKIQ_UART1"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttySKIQ_UART2"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttySKIQ_UART3"):
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-            if (objPort.device == "/dev/ttyS4") :
-                deleted = True
-                objRFE.m_arrValidCP2102Ports.remove(objPort)
-
-        if deleted == False:
-            done = True
-
-    # see if we have more than one valid port, if so we need to display a window with the
-    # choices
-    if len(objRFE.m_arrValidCP2102Ports) > 1:
-        # print the title of the window
-        title = Label(current_frame, text= "Available Ports:", font=("Arial", 16))
-        title.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
-
-        # build labels that contain each available port
-        ctr = 0
-        for objPort in objRFE.m_arrValidCP2102Ports:
-            tmp_txt = str(ctr) + "     " +  objPort.device
-            label.append(Label(current_frame, text=tmp_txt, font=("Arial", 16)))
-            # Entry widgets in the row whose index is idx
-            label[ctr].grid(row=ctr+1, column=0, padx=10, pady=10, sticky="w")
-            ctr += 1
-        
-
-        # Display the label that tells the user what to do
-        user_label = Label(current_frame, text= "Enter Port Number:", font=("Arial", 16))
-        user_label.grid(row=ctr+2, column=0, padx=10, pady=10, sticky="w")
-
-        # build the Entry box for them to enter it.
-        user_entry = Entry(current_frame, width=5, font=("Ariel", 16))
-        user_entry.grid(row=ctr+2, column=1, padx=10, pady=10)
-
-        # put the cursor inside the entry box
-        user_entry.focus_set()
-
-        # display it
-        current_frame.pack(fill="both", expand=True)
-
-    # if there is exactly one port no need to select it, connect to it
-    elif len(objRFE.m_arrValidCP2102Ports) == 1:
-        PortName = objRFE.m_arrValidCP2102Ports[0].device
-        if DEBUG:
-            print("Selected name", PortName)
-
-        root.wm_title('RFE Signal Generator ' + PortName)
-        #Connect to available port
-        objRFE.ConnectPort(PortName, BAUDRATE)
-        if DEBUG:
-            print("Connected...")
-
-        # if configured to reset, reset it and display that on the window.
-        if RESET:
-            user_label = Label(current_frame, text= "Resetting device ...", 
-                    font=("Arial", 16))
-            user_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
-            
-            # display it
-            current_frame.pack(fill="both", expand=True)
-
-            #Reset the unit to start fresh
-            objRFE.SendCommand("r")
-
-            #Wait for unit to notify reset completed
-            while(objRFE.IsResetEvent):
-                pass
-
-            #Wait for unit to stabilize
-            showinfo("Info", "Resetting Device", None)
-            time.sleep(4)
-
-        top_window()
-        """
-        # build the main window
-        content, frame = build_window()
-
-        # initialize the main window
-        app.init_window(content) 
-        """
-
-    else: #no valid ports
-        showinfo("Error", "No Valid Ports Found", 5)
-        
-        #remove this window
-        root.destroy()
-
-        # leave
-        cleanup()
-    
-    return True
-
-# used to display a message box describing the info
-def showinfo(msgtitle, text, waittime):
-    newroot = Tk()
-
-
-    if waittime != None:
-        newroot.after(waittime * 1000, newroot.destroy)
-    else:
-        # if waittime is None then we just quickly display the box and move on
-        newroot.after(10, newroot.destroy)
-
-    # make this window small so it can't be seen under the message box
-    # there is no way to place the message box itself so we place the window
-    newroot.geometry('10x10+200+200')
-
-    # create and show the message box
+from tkinter import messagebox, ttk
+
+from siggen_core import (
+    ConnectionState,
+    ControllerEvent,
+    CWSettings,
+    EventKind,
+    GeneratorController,
+    POWER_DBM_BY_LEVEL,
+    SweepSettings,
+)
+from siggen_rfexplorer import RFExplorerGenerator
+
+
+LOG = logging.getLogger("siggen")
+POLL_INTERVAL_MS = 100
+RECONNECT_INTERVAL_MS = 1000
+
+
+class SiggenApp:
+    """Own the interface and translate controller events into UI updates."""
+
+    def __init__(self, root: tk.Tk, controller: GeneratorController):
+        self.root = root
+        self.controller = controller
+        self._closing = False
+        self._poll_id = None
+        self._retry_id = None
+        self._command_buttons = []
+
+        self.root.title("RFE Signal Generator")
+        self.root.geometry("700x430+100+200")
+        self.root.minsize(620, 390)
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        content = ttk.Frame(self.root, padding=12)
+        content.grid(row=0, column=0, sticky="nsew")
+        content.columnconfigure(0, weight=1)
+        content.rowconfigure(1, weight=1)
+
+        header = ttk.Frame(content)
+        header.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        header.columnconfigure(0, weight=1)
+        self.connection_var = tk.StringVar(value="Starting...")
+        ttk.Label(
+            header,
+            textvariable=self.connection_var,
+            font=("Arial", 11, "bold"),
+        ).grid(row=0, column=0, sticky="w")
+        self.output_label = tk.Label(
+            header,
+            text="RF OUTPUT OFF",
+            bg="#d9d9d9",
+            fg="black",
+            padx=10,
+            pady=4,
+        )
+        self.output_label.grid(row=0, column=1, sticky="e")
+
+        notebook = ttk.Notebook(content)
+        notebook.grid(row=1, column=0, sticky="nsew")
+
+        cw_frame = ttk.Frame(notebook, padding=16)
+        sweep_frame = ttk.Frame(notebook, padding=16)
+        notebook.add(cw_frame, text="Continuous Wave")
+        notebook.add(sweep_frame, text="Frequency Sweep")
+        self._build_cw_panel(cw_frame)
+        self._build_sweep_panel(sweep_frame)
+
+        footer = ttk.Frame(content)
+        footer.grid(row=2, column=0, sticky="ew", pady=(10, 0))
+        footer.columnconfigure(0, weight=1)
+        self.detail_var = tk.StringVar(
+            value="Searching for an RF Explorer signal generator..."
+        )
+        ttk.Label(footer, textvariable=self.detail_var).grid(
+            row=0, column=0, sticky="w"
+        )
+        ttk.Button(footer, text="Exit", command=self.close).grid(
+            row=0, column=1, sticky="e"
+        )
+
+        self._set_controls_enabled(False)
+
+    def _build_cw_panel(self, frame: ttk.Frame) -> None:
+        frame.columnconfigure(1, weight=1)
+        self.cw_frequency_var = tk.StringVar(value="1002.0")
+        self.cw_power_var = tk.StringVar(value="0")
+        self.cw_power_text = tk.StringVar()
+
+        ttk.Label(frame, text="Frequency (MHz):").grid(
+            row=0, column=0, sticky="e", padx=(0, 10), pady=10
+        )
+        ttk.Entry(
+            frame,
+            textvariable=self.cw_frequency_var,
+            width=16,
+        ).grid(row=0, column=1, sticky="w", pady=10)
+
+        ttk.Label(frame, text="Power level (0–7):").grid(
+            row=1, column=0, sticky="e", padx=(0, 10), pady=10
+        )
+        ttk.Spinbox(
+            frame,
+            from_=0,
+            to=7,
+            width=8,
+            textvariable=self.cw_power_var,
+        ).grid(row=1, column=1, sticky="w", pady=10)
+        ttk.Label(frame, textvariable=self.cw_power_text).grid(
+            row=1, column=2, sticky="w", padx=(10, 0), pady=10
+        )
+        self.cw_power_var.trace_add("write", self._update_power_labels)
+
+        controls = ttk.Frame(frame)
+        controls.grid(row=2, column=0, columnspan=3, sticky="w", pady=(18, 0))
+        start = ttk.Button(controls, text="Power On", command=self.start_cw)
+        start.grid(row=0, column=0, padx=(0, 8))
+        stop = ttk.Button(controls, text="Power Off", command=self.power_off)
+        stop.grid(row=0, column=1)
+        self._command_buttons.extend((start, stop))
+        self._update_power_labels()
+
+    def _build_sweep_panel(self, frame: ttk.Frame) -> None:
+        frame.columnconfigure(1, weight=1)
+        self.sweep_vars = {
+            "start": tk.StringVar(value="997.0"),
+            "power": tk.StringVar(value="0"),
+            "steps": tk.StringVar(value="10"),
+            "step": tk.StringVar(value="1002"),
+            "delay": tk.StringVar(value="1000"),
+        }
+        fields = (
+            ("Start frequency (MHz):", "start"),
+            ("Power level (0–7):", "power"),
+            ("Number of steps:", "steps"),
+            ("Frequency step (kHz):", "step"),
+            ("Step time (ms):", "delay"),
+        )
+        for row, (label, key) in enumerate(fields):
+            ttk.Label(frame, text=label).grid(
+                row=row, column=0, sticky="e", padx=(0, 10), pady=6
+            )
+            if key == "power":
+                widget = ttk.Spinbox(
+                    frame,
+                    from_=0,
+                    to=7,
+                    width=8,
+                    textvariable=self.sweep_vars[key],
+                )
+            else:
+                widget = ttk.Entry(
+                    frame,
+                    width=16,
+                    textvariable=self.sweep_vars[key],
+                )
+            widget.grid(row=row, column=1, sticky="w", pady=6)
+
+        self.sweep_power_text = tk.StringVar()
+        ttk.Label(frame, textvariable=self.sweep_power_text).grid(
+            row=1, column=2, sticky="w", padx=(10, 0), pady=6
+        )
+        self.sweep_stop_text = tk.StringVar(value="Stop frequency: —")
+        ttk.Label(frame, textvariable=self.sweep_stop_text).grid(
+            row=5, column=0, columnspan=3, sticky="w", pady=(8, 0)
+        )
+        for variable in self.sweep_vars.values():
+            variable.trace_add("write", self._update_sweep_summary)
+
+        controls = ttk.Frame(frame)
+        controls.grid(row=6, column=0, columnspan=3, sticky="w", pady=(16, 0))
+        start = ttk.Button(controls, text="Start Sweep", command=self.start_sweep)
+        start.grid(row=0, column=0, padx=(0, 8))
+        stop = ttk.Button(controls, text="Stop Sweep", command=self.power_off)
+        stop.grid(row=0, column=1)
+        self._command_buttons.extend((start, stop))
+        self._update_sweep_summary()
+
+    def start(self) -> None:
+        self._begin_connect("Connecting to RF Explorer signal generator...")
+        self._schedule_poll()
+
+    def run(self) -> None:
+        self.start()
+        self.root.mainloop()
+
+    def _schedule_poll(self) -> None:
+        if not self._closing:
+            self._poll_id = self.root.after(POLL_INTERVAL_MS, self._poll)
+
+    def _poll(self) -> None:
+        self._poll_id = None
+        if self._closing:
+            return
+
+        for event in self.controller.drain_events():
+            self._handle_event(event)
+
+        if self.controller.state == ConnectionState.READY:
+            try:
+                problem = self.controller.connection_problem()
+                if problem is not None:
+                    self._set_output(False)
+                    self._begin_connect(
+                        f"Connection lost: {problem}; reconnecting..."
+                    )
+            except Exception as error:
+                LOG.exception("Generator health check failed")
+                self._set_output(False)
+                self._begin_connect(f"Connection check failed: {error}")
+
+        self._schedule_poll()
+
+    def _handle_event(self, event: ControllerEvent) -> None:
+        LOG.info(event.message)
+        if event.kind == EventKind.CONNECTED:
+            self.connection_var.set(event.message)
+            self.detail_var.set(
+                "Expansion generator detected"
+                if event.info and event.info.expansion_active
+                else "Standard generator detected"
+            )
+            if event.info:
+                self.root.title(f"RFE Signal Generator — {event.info.port}")
+            self._set_output(False)
+            self._set_controls_enabled(True)
+            return
+
+        if event.kind == EventKind.COMMAND_SUCCEEDED:
+            self.detail_var.set(event.message)
+            if event.output_active is not None:
+                self._set_output(event.output_active)
+            self._set_controls_enabled(True)
+            return
+
+        if event.kind == EventKind.FAILED:
+            self.connection_var.set("Signal generator disconnected")
+            self.detail_var.set(f"{event.message}. Retrying...")
+            self.root.title("RFE Signal Generator — disconnected")
+            self._set_output(False)
+            self._set_controls_enabled(False)
+            self._schedule_retry()
+
+    def _begin_connect(self, status: str) -> None:
+        if self._closing:
+            return
+        if self._retry_id is not None:
+            self.root.after_cancel(self._retry_id)
+            self._retry_id = None
+        if self.controller.connect(reason=status.rstrip(".")):
+            self.connection_var.set(status)
+            self.detail_var.set("Searching available USB devices...")
+            self._set_controls_enabled(False)
+
+    def _schedule_retry(self) -> None:
+        if self._closing or self._retry_id is not None:
+            return
+        self._retry_id = self.root.after(RECONNECT_INTERVAL_MS, self._retry_connect)
+
+    def _retry_connect(self) -> None:
+        self._retry_id = None
+        self._begin_connect("Waiting for RF Explorer signal generator...")
+
+    def _set_controls_enabled(self, enabled: bool) -> None:
+        state = "normal" if enabled else "disabled"
+        for button in self._command_buttons:
+            button.configure(state=state)
+
+    def _set_busy(self, message: str) -> None:
+        self.detail_var.set(message)
+        self._set_controls_enabled(False)
+
+    def _set_output(self, active: bool) -> None:
+        if active:
+            self.output_label.configure(
+                text="RF OUTPUT ON",
+                bg="#c62828",
+                fg="white",
+            )
+        else:
+            self.output_label.configure(
+                text="RF OUTPUT OFF",
+                bg="#d9d9d9",
+                fg="black",
+            )
+
+    def _update_power_labels(self, *_args) -> None:
+        try:
+            level = int(self.cw_power_var.get())
+            text = f"{POWER_DBM_BY_LEVEL[level]:.1f} dBm nominal"
+        except (ValueError, KeyError):
+            text = "Invalid power level"
+        self.cw_power_text.set(text)
+
+    def _update_sweep_summary(self, *_args) -> None:
+        try:
+            level = int(self.sweep_vars["power"].get())
+            self.sweep_power_text.set(
+                f"{POWER_DBM_BY_LEVEL[level]:.1f} dBm nominal"
+            )
+        except (ValueError, KeyError):
+            self.sweep_power_text.set("Invalid power level")
+        try:
+            settings = self._sweep_settings()
+            self.sweep_stop_text.set(
+                f"Stop frequency: {settings.stop_mhz:.3f} MHz"
+            )
+        except ValueError:
+            self.sweep_stop_text.set("Stop frequency: —")
+
+    def _sweep_settings(self) -> SweepSettings:
+        return SweepSettings.from_strings(
+            self.sweep_vars["start"].get(),
+            self.sweep_vars["power"].get(),
+            self.sweep_vars["steps"].get(),
+            self.sweep_vars["step"].get(),
+            self.sweep_vars["delay"].get(),
+        )
+
+    def start_cw(self) -> None:
+        try:
+            settings = CWSettings.from_strings(
+                self.cw_frequency_var.get(),
+                self.cw_power_var.get(),
+            )
+        except ValueError as error:
+            messagebox.showerror("Invalid CW settings", str(error), parent=self.root)
+            return
+        if self.controller.start_cw(settings):
+            self._set_busy("Starting continuous-wave output...")
+
+    def start_sweep(self) -> None:
+        try:
+            settings = self._sweep_settings()
+        except ValueError as error:
+            messagebox.showerror(
+                "Invalid sweep settings",
+                str(error),
+                parent=self.root,
+            )
+            return
+        if self.controller.start_sweep(settings):
+            self._set_busy("Starting frequency sweep...")
+
+    def power_off(self) -> None:
+        if self.controller.power_off():
+            self._set_busy("Turning RF output off...")
+
+    def close(self) -> None:
+        if self._closing:
+            return
+        self._closing = True
+        self.detail_var.set("Turning RF output off and closing...")
+        if self._poll_id is not None:
+            self.root.after_cancel(self._poll_id)
+            self._poll_id = None
+        if self._retry_id is not None:
+            self.root.after_cancel(self._retry_id)
+            self._retry_id = None
+        self.controller.shutdown()
+        self.root.destroy()
+
+
+def configure_logging() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
+
+def main() -> int:
+    configure_logging()
+    root = tk.Tk(className="genName")
+    controller = GeneratorController(RFExplorerGenerator)
+    app = SiggenApp(root, controller)
+
+    def request_close(_signum=None, _frame=None):
+        if not app._closing:
+            root.after(0, app.close)
+
+    signal.signal(signal.SIGINT, request_close)
     try:
-        Message(title=msgtitle, message=text, master=newroot).show()
-    except TclError:
-        pass
+        app.run()
+    finally:
+        app.close()
+    return 0
 
-# if something goes wrong go here
-def cleanup():
-    # kill the main window
-    root.destroy
 
-    # close RFE
-    objRFE.Close()
-
-    # leave
-    exit()
-
-root.geometry('550x350+100+200')
-root.resizable(True, True)
-root.bind('<Return>', enterhandler)
-
-# list of port labels
-label = []
-
-objRFE = RFExplorer.RFECommunicator()
-
-objRFE.GetConnectedPorts()
-
-objRFE.VerboseLevel = 10
-PortName = " "
-
-GetPort()
-
-root.mainloop()
-
-objRFE.Close()
-
+if __name__ == "__main__":
+    sys.exit(main())
