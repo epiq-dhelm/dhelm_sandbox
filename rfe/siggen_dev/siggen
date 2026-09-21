@@ -24,6 +24,8 @@ from siggen_rfexplorer import RFExplorerGenerator
 LOG = logging.getLogger("siggen")
 POLL_INTERVAL_MS = 100
 RECONNECT_INTERVAL_MS = 1000
+UI_FONT = ("Arial", 16)
+STATUS_FONT = ("Arial", 13)
 
 
 class SiggenApp:
@@ -37,9 +39,19 @@ class SiggenApp:
         self._retry_id = None
         self._command_buttons = []
 
+        self.style = ttk.Style(self.root)
+        self.style.configure("TLabel", font=UI_FONT)
+        self.style.configure("TButton", font=UI_FONT, padding=(10, 6))
+        self.style.configure("TNotebook.Tab", font=UI_FONT, padding=(14, 8))
+        self.style.configure("Status.TLabel", font=STATUS_FONT)
+        self.style.configure(
+            "Connection.TLabel",
+            font=("Arial", 14, "bold"),
+        )
+
         self.root.title("RFE Signal Generator")
-        self.root.geometry("700x430+100+200")
-        self.root.minsize(620, 390)
+        self.root.geometry("820x540+100+200")
+        self.root.minsize(740, 500)
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
@@ -59,7 +71,7 @@ class SiggenApp:
         ttk.Label(
             header,
             textvariable=self.connection_var,
-            font=("Arial", 11, "bold"),
+            style="Connection.TLabel",
         ).grid(row=0, column=0, sticky="w")
         self.output_label = tk.Label(
             header,
@@ -68,6 +80,7 @@ class SiggenApp:
             fg="black",
             padx=10,
             pady=4,
+            font=("Arial", 14, "bold"),
         )
         self.output_label.grid(row=0, column=1, sticky="e")
 
@@ -87,7 +100,11 @@ class SiggenApp:
         self.detail_var = tk.StringVar(
             value="Searching for an RF Explorer signal generator..."
         )
-        ttk.Label(footer, textvariable=self.detail_var).grid(
+        ttk.Label(
+            footer,
+            textvariable=self.detail_var,
+            style="Status.TLabel",
+        ).grid(
             row=0, column=0, sticky="w"
         )
         ttk.Button(footer, text="Exit", command=self.close).grid(
@@ -105,21 +122,27 @@ class SiggenApp:
         ttk.Label(frame, text="Frequency (MHz):").grid(
             row=0, column=0, sticky="e", padx=(0, 10), pady=10
         )
-        ttk.Entry(
+        tk.Entry(
             frame,
             textvariable=self.cw_frequency_var,
             width=16,
+            font=UI_FONT,
+            relief="sunken",
+            borderwidth=1,
         ).grid(row=0, column=1, sticky="w", pady=10)
 
         ttk.Label(frame, text="Power level (0–7):").grid(
             row=1, column=0, sticky="e", padx=(0, 10), pady=10
         )
-        ttk.Spinbox(
+        tk.Spinbox(
             frame,
             from_=0,
             to=7,
             width=8,
             textvariable=self.cw_power_var,
+            font=UI_FONT,
+            relief="sunken",
+            borderwidth=1,
         ).grid(row=1, column=1, sticky="w", pady=10)
         ttk.Label(frame, textvariable=self.cw_power_text).grid(
             row=1, column=2, sticky="w", padx=(10, 0), pady=10
@@ -156,18 +179,24 @@ class SiggenApp:
                 row=row, column=0, sticky="e", padx=(0, 10), pady=6
             )
             if key == "power":
-                widget = ttk.Spinbox(
+                widget = tk.Spinbox(
                     frame,
                     from_=0,
                     to=7,
                     width=8,
                     textvariable=self.sweep_vars[key],
+                    font=UI_FONT,
+                    relief="sunken",
+                    borderwidth=1,
                 )
             else:
-                widget = ttk.Entry(
+                widget = tk.Entry(
                     frame,
                     width=16,
                     textvariable=self.sweep_vars[key],
+                    font=UI_FONT,
+                    relief="sunken",
+                    borderwidth=1,
                 )
             widget.grid(row=row, column=1, sticky="w", pady=6)
 
