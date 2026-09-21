@@ -2,11 +2,13 @@
 
 # --------- Imports
 
+import os
 import sys
 import time
 import array as arr
 
 import pyudev
+import serial.tools.list_ports
 
 import RFExplorer
 
@@ -26,6 +28,8 @@ DEBUG = True
 BAUDRATE = 500000
 DEVICE_RESPONSE_TIMEOUT = 5.0
 SERIAL_POLL_INTERVAL = 0.01
+SWEEP_TIMEOUT = 3.0
+RECONNECT_RETRY_INTERVAL = 1.0
 
 SPAN_SIZE_MHZ = 50           # Initialize settings
 START_SCAN_MHZ = 975
@@ -49,15 +53,64 @@ def WaitForDevice(condition, description, timeout=DEVICE_RESPONSE_TIMEOUT):
         time.sleep(SERIAL_POLL_INTERVAL)
 
 
-def CloseDevicePort():
+def CloseDevicePort(communicator=None):
     """Close the port even if RFExplorer cleanup hits a serial I/O error."""
-    objRFE.ClosePort()
+    communicator = communicator or objRFE
+    communicator.ClosePort()
 
     # RFExplorer.ClosePort() skips its close call if one of its cleanup writes
     # fails. That is common for an unresponsive USB candidate and would prevent
     # the next candidate from being opened with the shared Serial instance.
-    if objRFE.m_objSerialPort.is_open:
-        objRFE.m_objSerialPort.close()
+    if communicator.m_objSerialPort.is_open:
+        communicator.m_objSerialPort.close()
+
+
+def AbandonDevicePort(communicator):
+    """Stop a communicator whose USB device has disappeared.
+
+    RFExplorer's receive thread catches serial exceptions internally without
+    clearing PortConnected. Avoid the normal shutdown commands here because
+    writes to a disconnected device only generate more I/O errors.
+    """
+    if communicator is None:
+        return
+
+    communicator.PortConnected = False
+    communicator.RunReceiveThread = False
+    try:
+        communicator.m_hSerialPortLock.acquire()
+        if communicator.m_objSerialPort.is_open:
+            communicator.m_objSerialPort.close()
+    except OSError as error:
+        if DEBUG:
+            print(f"Error closing disconnected port: {error}")
+    finally:
+        communicator.m_hSerialPortLock.release()
+
+
+def CandidateAnalyzerPorts():
+    """Return current CP210x analyzer candidates as pyserial port objects."""
+    target_vendor_id = "10c4"
+    target_product_id = "ea60"
+    context = pyudev.Context()
+    device_nodes = {
+        device.device_node
+        for device in context.list_devices(subsystem="tty")
+        if (
+            device.get("ID_VENDOR_ID") == target_vendor_id
+            and device.get("ID_MODEL_ID") == target_product_id
+        )
+    }
+
+    # ConnectPort requires entries from pyserial's port-info collection.
+    return sorted(
+        (
+            port
+            for port in serial.tools.list_ports.comports()
+            if port.device in device_nodes
+        ),
+        key=lambda port: port.device,
+    )
 
 
 # test settings to make sure they are valid
@@ -402,6 +455,72 @@ class Window(Frame):
         self.freqwindow = FreqWindow(self.master)
         self.spanwindow = SpanWindow(self.master)
         self.markerwindow = MarkerWindow(self.master)
+        self.connected_port = None
+        self.reconnecting = False
+        self.last_sweep_time = time.monotonic()
+
+    def start_reconnect(self, reason):
+        """Stop acquisition and schedule non-blocking reconnect attempts."""
+        if self.reconnecting:
+            return
+
+        self.reconnecting = True
+        print(f"Analyzer connection lost: {reason}")
+        self.ani.event_source.stop()
+        self.textwindow.delete("1.0", tk.END)
+        self.textwindow.insert(
+            "1.0",
+            "Analyzer disconnected. Reconnecting...",
+        )
+        root.after(0, self.prepare_reconnect)
+
+    def prepare_reconnect(self):
+        """Discard the stale serial object before looking for a new device."""
+        global objRFE
+
+        AbandonDevicePort(objRFE)
+        objRFE = None
+        root.after(0, self.try_reconnect)
+
+    def try_reconnect(self):
+        """Reconnect after USB re-enumeration, retrying without freezing Tk."""
+        global objRFE
+
+        if not self.reconnecting:
+            return
+
+        if not CandidateAnalyzerPorts():
+            root.after(
+                int(RECONNECT_RETRY_INTERVAL * 1000),
+                self.try_reconnect,
+            )
+            return
+
+        try:
+            self.connected_port = AutoConnectAnalyzer()
+
+            # Reapply the requested settings to the newly created communicator.
+            # Rebuilding the axes also drops data from the disconnected device.
+            self.ax.clear()
+            self.ax.grid(which="major", linewidth=1)
+            self.ax.grid(which="minor", linewidth=0.2)
+            self.ax.minorticks_on()
+            self.textwindow.delete("1.0", tk.END)
+            self.configure_sweep_points()
+            self.build_plot(frame)
+            self.last_sweep_time = time.monotonic()
+            self.reconnecting = False
+            self.ani.event_source.start()
+            self.canvas.draw_idle()
+            print(f"Analyzer reconnected on {self.connected_port}")
+        except (OSError, RuntimeError, TimeoutError) as error:
+            print(f"Reconnect attempt failed: {error}")
+            AbandonDevicePort(objRFE)
+            objRFE = None
+            root.after(
+                int(RECONNECT_RETRY_INTERVAL * 1000),
+                self.try_reconnect,
+            )
 
     # RFExplorer contains the received sweep data and that object knows
     # the amplitude and frequency for each data point
@@ -503,12 +622,20 @@ class Window(Frame):
         global sorted_result
         self.objSweep = None
 
+        if self.reconnecting:
+            return self.line,
+
+        if not self.connected_port or not os.path.exists(self.connected_port):
+            self.start_reconnect("USB serial device disappeared")
+            return self.line,
+
         # wait till we get a new sweepdata msg
         objRFE.ProcessReceivedString(True)
 
         # see if we actually got a new one
         num = objRFE.SweepData.Count
         if self.numitems != num:
+            self.last_sweep_time = time.monotonic()
             self.numitems = num
             if (self.numitems > 0):
                 # get the object with the latest msg
@@ -544,6 +671,9 @@ class Window(Frame):
                     self.markerwindow.redraw_markerinfo()
 
                 objRFE.CleanSweepData()
+
+        elif time.monotonic() - self.last_sweep_time > SWEEP_TIMEOUT:
+            self.start_reconnect("no sweep data received")
 
         return self.line,
 
@@ -608,14 +738,7 @@ class Window(Frame):
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
         # ---------- Sweep Configuration ----------
-        if SPAN_SIZE_MHZ <= 20:
-            sweep_points = 112
-        elif SPAN_SIZE_MHZ >= 150:
-            sweep_points = 512
-        else:
-            sweep_points = 256
-
-        objRFE.SendCommand_SweepDataPointsEx(sweep_points)
+        self.configure_sweep_points()
 
         # ---------- Info Text Window ----------
         self.textwindow = tk.Text(
@@ -631,6 +754,17 @@ class Window(Frame):
 
         # ---------- Build Plot ----------
         self.build_plot(frame)
+
+    def configure_sweep_points(self):
+        """Configure the sweep resolution for the current span."""
+        if SPAN_SIZE_MHZ <= 20:
+            sweep_points = 112
+        elif SPAN_SIZE_MHZ >= 150:
+            sweep_points = 512
+        else:
+            sweep_points = 256
+
+        objRFE.SendCommand_SweepDataPointsEx(sweep_points)
 
     def build_plot(self, frame):
         # these things must be done before you can start processing the sweeppoints
@@ -789,30 +923,22 @@ def build_window():
 
 
 def AutoConnectAnalyzer():
-    TARGET_VENDOR_ID = "10c4"
-    TARGET_PRODUCT_ID = "ea60"
+    global objRFE
 
-    context = pyudev.Context()
-    ports = []
-
-    for device in context.list_devices(subsystem="tty"):
-        if (
-            device.get("ID_VENDOR_ID") == TARGET_VENDOR_ID
-            and device.get("ID_MODEL_ID") == TARGET_PRODUCT_ID
-        ):
-            ports.append(device.device_node)
-
-    # Device numbering can change after a reboot or USB reconnect. Probe every
-    # candidate instead of assuming that the first CP210x device is the analyzer.
-    ports.sort()
+    ports = CandidateAnalyzerPorts()
 
     if DEBUG:
-        print("Candidate CP210x ports:", ports)
+        print("Candidate CP210x ports:", [port.device for port in ports])
 
     if not ports:
         raise RuntimeError("No RFExplorer devices found")
 
-    for port in ports:
+    for port_info in ports:
+        port = port_info.device
+        communicator = RFExplorer.RFECommunicator()
+        communicator.VerboseLevel = 0
+        communicator.m_arrValidCP2102Ports = ports
+        objRFE = communicator
         connected = False
         accepted = False
         try:
@@ -845,7 +971,9 @@ def AutoConnectAnalyzer():
                 print(f"Failed on {port}: {e}")
         finally:
             if connected and not accepted:
-                CloseDevicePort()
+                CloseDevicePort(communicator)
+            if not accepted:
+                AbandonDevicePort(communicator)
 
     raise RuntimeError("No Signal Analyzer found")
 
@@ -856,7 +984,8 @@ def cleanup():
     root.destroy
 
     # close RFE
-    objRFE.Close()
+    if objRFE is not None:
+        objRFE.Close()
 
     # leave
     exit()
@@ -881,14 +1010,7 @@ def show_connecting_screen():
 
 
 if __name__ == "__main__":
-    # create the RFE object
-    objRFE = RFExplorer.RFECommunicator()
-
-    # Get the connected ports tat RFE can see
-    objRFE.GetConnectedPorts()
-
-    # determine RFE verbose level
-    objRFE.VerboseLevel = 0
+    objRFE = None
 
     # this has to be the same as in the sigann.desktop file inside /usr/share/applications/
     # so it can be selected by the Ubuntu chooser
@@ -905,7 +1027,7 @@ if __name__ == "__main__":
 
     # automatically find and attach to the Signal Analyzer
     try:
-        AutoConnectAnalyzer()
+        app.connected_port = AutoConnectAnalyzer()
     except RuntimeError:
         root.destroy()
         cleanup()

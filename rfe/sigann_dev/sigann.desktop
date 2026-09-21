@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Sigann
+Comment=Control RFE Signal Analyzer
+Path=/usr/bin
+Exec=/usr/bin/sigann
+TryExec=/usr/bin/sigann
+Icon=/usr/share/pixmaps/faces/lightning.jpg
+Terminal=false
+StartupWMClass=annName
+Categories=Science;
