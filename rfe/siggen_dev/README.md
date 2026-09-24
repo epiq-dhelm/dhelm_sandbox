@@ -3,6 +3,9 @@
 Siggen is a Tk control panel for an RF Explorer signal generator. It supports
 continuous-wave output and stepped frequency sweeps.
 
+For a build that carries Python and its packages to another Linux machine, see
+[portable builds](../portable/README.md).
+
 The application automatically examines attached RF Explorer USB devices and
 connects only to a signal generator. An attached spectrum analyzer is skipped.
 If the generator disconnects or receives a different /dev/ttyUSB number,
@@ -17,6 +20,20 @@ Run all fake-hardware tests and static checks with:
 The tests never energize RF hardware.
 
 ## Installation
+
+`siggen` uses `/usr/bin/python3`. Install its runtime dependencies for that
+interpreter before running it or installing the launcher:
+
+    sudo apt install python3-tk
+    /usr/bin/python3 -m pip install --user pyudev RFExplorer
+
+RFExplorer installs PySerial as a dependency. The `--user` packages are
+available when you run `siggen` as the same user.
+
+On Linux, the USB serial device is usually owned by the `dialout` group. Add
+your user to that group, then start a new login session before running Siggen:
+
+    sudo usermod -aG dialout "$USER"
 
     sudo make install
 

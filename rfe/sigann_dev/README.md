@@ -2,6 +2,9 @@
 
 Sigann is a desktop spectrum display for an RF Explorer signal analyzer.
 
+For a build that carries Python and its packages to another Linux machine, see
+[portable builds](../portable/README.md).
+
 ## Install
 
 From this directory, run:

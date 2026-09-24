@@ -1,3 +1,7 @@
-To run siggen
-sudo pip3 install RFExplorer tkinter
-./siggen
+RF Explorer desktop apps
+
+For bundles that run without installing Python packages on the target machine,
+see portable/README.md.
+
+For source and system installation instructions, see siggen_dev/README.md and
+sigann_dev/README.md.
