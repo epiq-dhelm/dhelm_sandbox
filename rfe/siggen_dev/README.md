@@ -8,6 +8,8 @@ For a build that carries Python and its packages to another Linux machine, see
 
 The application automatically examines attached RF Explorer USB devices and
 connects only to a signal generator. An attached spectrum analyzer is skipped.
+It uses the connected generator's reported frequency range for continuous-wave
+and sweep settings, including the 0.1 MHz minimum of Combo generators.
 If the generator disconnects or receives a different /dev/ttyUSB number,
 Siggen waits for it and reconnects.
 

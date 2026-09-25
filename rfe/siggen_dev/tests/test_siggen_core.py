@@ -10,6 +10,7 @@ from siggen_core import (
     CWSettings,
     EventKind,
     GeneratorController,
+    GeneratorInfo,
     SweepSettings,
 )
 from tests.fakes import FakeFactory, FakeGenerator
@@ -56,8 +57,57 @@ class TestSettings:
         with pytest.raises(ValueError):
             SweepSettings.from_strings(*values)
 
+    def test_cw_uses_connected_generator_range(self):
+        combo = GeneratorInfo("/dev/ttyUSB0", True, 0.1, 6000.0)
+        standard = GeneratorInfo("/dev/ttyUSB1", False, 23.438, 6000.0)
+
+        settings = CWSettings.from_strings("0.1", "0", info=combo)
+        assert settings.frequency_mhz == 0.1
+        with pytest.raises(ValueError, match="between 23.438 and 6000 MHz"):
+            CWSettings.from_strings("0.1", "0", info=standard)
+
+    def test_sweep_uses_connected_generator_range(self):
+        combo = GeneratorInfo("/dev/ttyUSB0", True, 0.1, 6000.0)
+
+        settings = SweepSettings.from_strings(
+            "0.1", "0", "2", "100", "10", info=combo
+        )
+        assert settings.stop_mhz == pytest.approx(0.3)
+        with pytest.raises(ValueError, match="between 0.1 and 6000 MHz"):
+            SweepSettings.from_strings(
+                "0.05", "0", "2", "100", "10", info=combo
+            )
+
+    def test_rejects_invalid_device_range(self):
+        with pytest.raises(ValueError, match="invalid frequency range"):
+            GeneratorInfo("/dev/ttyUSB0", True, 6000.0, 0.1)
+
 
 class TestGeneratorController:
+    def test_controller_accepts_connected_expansion_range(self):
+        device = FakeGenerator()
+        device.info = GeneratorInfo(device.port, True, 0.1, 6000.0)
+        controller = GeneratorController(FakeFactory(device))
+        controller.connect()
+        wait_for_event(controller, EventKind.CONNECTED)
+
+        settings = CWSettings(0.1, 0)
+        assert controller.start_cw(settings)
+        wait_for_event(controller, EventKind.COMMAND_SUCCEEDED)
+        assert device.commands == [("cw", settings)]
+        controller.shutdown()
+
+    def test_controller_rejects_frequency_outside_connected_range(self):
+        device = FakeGenerator()
+        controller = GeneratorController(FakeFactory(device))
+        controller.connect()
+        wait_for_event(controller, EventKind.CONNECTED)
+
+        with pytest.raises(ValueError, match="between 23.438 and 6000 MHz"):
+            controller.start_cw(CWSettings(0.1, 0))
+        assert device.commands == []
+        controller.shutdown()
+
     def test_connect_and_start_cw(self):
         device = FakeGenerator(port="/dev/ttyUSB7")
         controller = GeneratorController(FakeFactory(device))

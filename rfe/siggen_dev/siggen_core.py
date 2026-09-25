@@ -48,18 +48,23 @@ def _parse_int(value: str, description: str) -> int:
         raise ValueError(f"{description} must be a whole number") from error
 
 
-def _validate_frequency(frequency_mhz: float, description: str) -> None:
-    if not MIN_FREQUENCY_MHZ <= frequency_mhz <= MAX_FREQUENCY_MHZ:
+def _validate_frequency(
+    frequency_mhz: float, description: str, info: GeneratorInfo | None = None
+) -> None:
+    minimum = info.min_frequency_mhz if info is not None else MIN_FREQUENCY_MHZ
+    maximum = info.max_frequency_mhz if info is not None else MAX_FREQUENCY_MHZ
+    if not minimum <= frequency_mhz <= maximum:
         raise ValueError(
-            f"{description} must be between {MIN_FREQUENCY_MHZ:g} and "
-            f"{MAX_FREQUENCY_MHZ:g} MHz"
+            f"{description} must be between {minimum:g} and "
+            f"{maximum:g} MHz"
         )
 
 
 def _validate_power(power_level: int) -> None:
     if not MIN_POWER_LEVEL <= power_level <= MAX_POWER_LEVEL:
         raise ValueError(
-            f"Power level must be between {MIN_POWER_LEVEL} and {MAX_POWER_LEVEL}"
+            f"Power level must be between {MIN_POWER_LEVEL} and "
+            f"{MAX_POWER_LEVEL}"
         )
 
 
@@ -69,15 +74,17 @@ class CWSettings:
     power_level: int = 0
 
     @classmethod
-    def from_strings(cls, frequency: str, power: str) -> "CWSettings":
+    def from_strings(
+        cls, frequency: str, power: str, *, info: GeneratorInfo | None = None
+    ) -> "CWSettings":
         settings = cls(
             _parse_float(frequency, "Frequency"),
             _parse_int(power, "Power level"),
         )
-        return settings.validate()
+        return settings.validate(info)
 
-    def validate(self) -> "CWSettings":
-        _validate_frequency(self.frequency_mhz, "Frequency")
+    def validate(self, info: GeneratorInfo | None = None) -> "CWSettings":
+        _validate_frequency(self.frequency_mhz, "Frequency", info)
         _validate_power(self.power_level)
         return self
 
@@ -102,6 +109,8 @@ class SweepSettings:
         steps: str,
         step_khz: str,
         step_time_ms: str,
+        *,
+        info: GeneratorInfo | None = None,
     ) -> "SweepSettings":
         settings = cls(
             start_mhz=_parse_float(start, "Start frequency"),
@@ -110,11 +119,11 @@ class SweepSettings:
             step_khz=_parse_float(step_khz, "Frequency step"),
             step_time_ms=_parse_int(step_time_ms, "Step time"),
         )
-        return settings.validate()
+        return settings.validate(info)
 
-    def validate(self) -> "SweepSettings":
-        _validate_frequency(self.start_mhz, "Start frequency")
-        _validate_frequency(self.stop_mhz, "Stop frequency")
+    def validate(self, info: GeneratorInfo | None = None) -> "SweepSettings":
+        _validate_frequency(self.start_mhz, "Start frequency", info)
+        _validate_frequency(self.stop_mhz, "Stop frequency", info)
         _validate_power(self.power_level)
         if not MIN_SWEEP_STEPS <= self.steps <= MAX_SWEEP_STEPS:
             raise ValueError(
@@ -135,6 +144,16 @@ class SweepSettings:
 class GeneratorInfo:
     port: str
     expansion_active: bool = False
+    min_frequency_mhz: float = MIN_FREQUENCY_MHZ
+    max_frequency_mhz: float = MAX_FREQUENCY_MHZ
+
+    def __post_init__(self) -> None:
+        if not (
+            math.isfinite(self.min_frequency_mhz)
+            and math.isfinite(self.max_frequency_mhz)
+            and 0 < self.min_frequency_mhz < self.max_frequency_mhz
+        ):
+            raise ValueError("Generator reported an invalid frequency range")
 
 
 class GeneratorDevice(Protocol):
@@ -253,10 +272,15 @@ class GeneratorController:
                 except Exception:
                     pass
             with self._lock:
-                if generation != self._generation or self._state == ConnectionState.STOPPED:
+                if (
+                    generation != self._generation
+                    or self._state == ConnectionState.STOPPED
+                ):
                     return
                 self._state = ConnectionState.DISCONNECTED
-            self._events.put(ControllerEvent(EventKind.FAILED, f"{reason}: {error}"))
+            self._events.put(
+                ControllerEvent(EventKind.FAILED, f"{reason}: {error}")
+            )
             return
 
         with self._lock:
@@ -280,7 +304,7 @@ class GeneratorController:
         )
 
     def start_cw(self, settings: CWSettings) -> bool:
-        settings.validate()
+        settings.validate(self.info)
         return self._start_command(
             "Starting continuous-wave output",
             lambda device: device.start_cw(settings),
@@ -289,7 +313,7 @@ class GeneratorController:
         )
 
     def start_sweep(self, settings: SweepSettings) -> bool:
-        settings.validate()
+        settings.validate(self.info)
         return self._start_command(
             "Starting frequency sweep",
             lambda device: device.start_sweep(settings),
@@ -354,11 +378,16 @@ class GeneratorController:
             except Exception:
                 pass
             with self._lock:
-                if generation != self._generation or self._state == ConnectionState.STOPPED:
+                if (
+                    generation != self._generation
+                    or self._state == ConnectionState.STOPPED
+                ):
                     return
                 self._device = None
                 self._state = ConnectionState.DISCONNECTED
-            self._events.put(ControllerEvent(EventKind.FAILED, f"{name} failed: {error}"))
+            self._events.put(
+                ControllerEvent(EventKind.FAILED, f"{name} failed: {error}")
+            )
             return
 
         with self._lock:

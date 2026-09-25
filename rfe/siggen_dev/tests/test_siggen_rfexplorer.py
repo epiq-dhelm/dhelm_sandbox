@@ -6,7 +6,7 @@ import pytest
 
 import RFExplorer
 
-from siggen_core import CWSettings, SweepSettings
+from siggen_core import CWSettings, GeneratorInfo, SweepSettings
 from siggen_rfexplorer import RFExplorerGenerator
 
 
@@ -21,6 +21,8 @@ class FakeCommunicator:
     def __init__(self, *, generator, expansion=False):
         self.ActiveModel = RFExplorer.RFE_Common.eModel.MODEL_RFGEN
         self.ExpansionBoardActive = expansion
+        self.MinFreqMHZ = 0.1 if expansion else 23.438
+        self.MaxFreqMHZ = 6000.0
         self.PortConnected = False
         self.RunReceiveThread = True
         self.VerboseLevel = 0
@@ -90,6 +92,24 @@ def test_connect_skips_analyzer_and_selects_generator():
     assert generator.requested_configuration
     assert generator.off_calls == 1
     assert info.port == "/dev/ttyUSB3"
+    assert info.min_frequency_mhz == 23.438
+    assert info.max_frequency_mhz == 6000.0
+
+
+def test_connect_uses_expansion_generator_frequency_range():
+    port = SimpleNamespace(device="/dev/ttyUSB3")
+    generator = FakeCommunicator(generator=True, expansion=True)
+    generator.MaxFreqMHZ = 2500.0
+    device = RFExplorerGenerator(
+        port_provider=lambda: [port],
+        communicator_factory=communicator_factory(generator),
+    )
+
+    info = device.connect()
+
+    assert info.expansion_active
+    assert info.min_frequency_mhz == 0.1
+    assert info.max_frequency_mhz == 2500.0
 
 
 def test_standard_generator_commands_use_library_api():
@@ -122,8 +142,22 @@ def test_expansion_generator_uses_dbm_power():
     communicator = FakeCommunicator(generator=True, expansion=True)
     device = RFExplorerGenerator()
     device._communicator = communicator
+    device.info = GeneratorInfo("/dev/ttyUSB0", True, 0.1, 6000.0)
 
-    device.start_cw(CWSettings(1000.0, 4))
+    device.start_cw(CWSettings(0.1, 4))
 
     assert communicator.RFGenExpansionPowerDBM == -10.0
+    assert communicator.RFGenCWFrequencyMHZ == 0.1
     assert communicator.cw_calls == 1
+
+
+def test_standard_generator_rejects_frequency_below_reported_range():
+    communicator = FakeCommunicator(generator=True)
+    device = RFExplorerGenerator()
+    device._communicator = communicator
+    device.info = GeneratorInfo("/dev/ttyUSB0", False, 23.438, 6000.0)
+
+    with pytest.raises(ValueError, match="between 23.438 and 6000 MHz"):
+        device.start_cw(CWSettings(0.1, 0))
+
+    assert communicator.cw_calls == 0

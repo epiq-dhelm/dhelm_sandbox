@@ -1,2 +1,3 @@
 .build/
-dist/
+dist/*
+!dist/rfe-portable-linux-x86_64.tar.gz

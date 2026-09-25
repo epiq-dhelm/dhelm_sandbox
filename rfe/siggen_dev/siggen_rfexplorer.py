@@ -43,7 +43,9 @@ class RFExplorerGenerator:
         self._clock = clock
         self._sleep = sleep
         self._port_provider = port_provider or self.candidate_ports
-        self._communicator_factory = communicator_factory or self._new_communicator
+        self._communicator_factory = (
+            communicator_factory or self._new_communicator
+        )
 
     @staticmethod
     def candidate_ports():
@@ -129,11 +131,14 @@ class RFExplorerGenerator:
                 # Reconnection must start from a known safe state. The RF
                 # generator can continue its prior output after a USB outage.
                 communicator.SendCommand_GeneratorRFPowerOFF()
-                self.port = port_info.device
-                self.info = GeneratorInfo(
-                    port=self.port,
+                info = GeneratorInfo(
+                    port=port_info.device,
                     expansion_active=bool(communicator.ExpansionBoardActive),
+                    min_frequency_mhz=float(communicator.MinFreqMHZ),
+                    max_frequency_mhz=float(communicator.MaxFreqMHZ),
                 )
+                self.port = info.port
+                self.info = info
                 accepted = True
                 return self.info
             except (OSError, TimeoutError):
@@ -148,20 +153,22 @@ class RFExplorerGenerator:
     @staticmethod
     def _set_power(communicator, power_level: int) -> None:
         if communicator.ExpansionBoardActive:
-            communicator.RFGenExpansionPowerDBM = POWER_DBM_BY_LEVEL[power_level]
+            communicator.RFGenExpansionPowerDBM = (
+                POWER_DBM_BY_LEVEL[power_level]
+            )
         else:
             communicator.RFGenHighPowerSwitch = power_level > 3
             communicator.RFGenPowerLevel = power_level % 4
 
     def start_cw(self, settings: CWSettings) -> None:
-        settings.validate()
+        settings.validate(self.info)
         communicator = self._require_communicator()
         communicator.RFGenCWFrequencyMHZ = settings.frequency_mhz
         self._set_power(communicator, settings.power_level)
         communicator.SendCommand_GeneratorCW()
 
     def start_sweep(self, settings: SweepSettings) -> None:
-        settings.validate()
+        settings.validate(self.info)
         communicator = self._require_communicator()
         communicator.RFGenStartFrequencyMHZ = settings.start_mhz
         communicator.RFGenStopFrequencyMHZ = settings.stop_mhz

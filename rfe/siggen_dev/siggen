@@ -213,7 +213,9 @@ class SiggenApp:
 
         controls = ttk.Frame(frame)
         controls.grid(row=6, column=0, columnspan=3, sticky="w", pady=(16, 0))
-        start = ttk.Button(controls, text="Start Sweep", command=self.start_sweep)
+        start = ttk.Button(
+            controls, text="Start Sweep", command=self.start_sweep
+        )
         start.grid(row=0, column=0, padx=(0, 8))
         stop = ttk.Button(controls, text="Stop Sweep", command=self.power_off)
         stop.grid(row=0, column=1)
@@ -259,11 +261,16 @@ class SiggenApp:
         LOG.info(event.message)
         if event.kind == EventKind.CONNECTED:
             self.connection_var.set(event.message)
-            self.detail_var.set(
-                "Expansion generator detected"
-                if event.info and event.info.expansion_active
-                else "Standard generator detected"
-            )
+            if event.info:
+                model = (
+                    "Expansion generator" if event.info.expansion_active
+                    else "Standard generator"
+                )
+                self.detail_var.set(
+                    f"{model} detected: {event.info.min_frequency_mhz:g}–"
+                    f"{event.info.max_frequency_mhz:g} MHz"
+                )
+                self._update_sweep_summary()
             if event.info:
                 self.root.title(f"RFE Signal Generator — {event.info.port}")
             self._set_output(False)
@@ -299,7 +306,9 @@ class SiggenApp:
     def _schedule_retry(self) -> None:
         if self._closing or self._retry_id is not None:
             return
-        self._retry_id = self.root.after(RECONNECT_INTERVAL_MS, self._retry_connect)
+        self._retry_id = self.root.after(
+            RECONNECT_INTERVAL_MS, self._retry_connect
+        )
 
     def _retry_connect(self) -> None:
         self._retry_id = None
@@ -359,6 +368,7 @@ class SiggenApp:
             self.sweep_vars["steps"].get(),
             self.sweep_vars["step"].get(),
             self.sweep_vars["delay"].get(),
+            info=self.controller.info,
         )
 
     def start_cw(self) -> None:
@@ -366,9 +376,12 @@ class SiggenApp:
             settings = CWSettings.from_strings(
                 self.cw_frequency_var.get(),
                 self.cw_power_var.get(),
+                info=self.controller.info,
             )
         except ValueError as error:
-            messagebox.showerror("Invalid CW settings", str(error), parent=self.root)
+            messagebox.showerror(
+                "Invalid CW settings", str(error), parent=self.root
+            )
             return
         if self.controller.start_cw(settings):
             self._set_busy("Starting continuous-wave output...")
